@@ -1,0 +1,292 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Paleta (R G B). Modo claro por defecto; .dark en <html> activa el oscuro.
+   --------------------------------------------------------------------------- */
+@layer base {
+  :root,
+  .force-light {
+    --tinta: 11 29 51;
+    --tinta-700: 22 50 90;
+    --tinta-500: 43 74 117;
+    --tinta-ink: 11 29 51;
+    --chispa: 240 180 41;
+    --chispa-600: 214 154 18;
+    --chispa-100: 253 241 211;
+    --papel: 244 246 249;
+    --superficie: 255 255 255;
+    --linea: 220 227 236;
+    --texto: 27 36 51;
+    --texto-suave: 91 107 130;
+    --estado-ok: 30 142 90;
+    --estado-tarde: 184 114 15;
+    --estado-alerta: 196 65 47;
+    --estado-info: 37 99 235;
+    /* Gráficos: escala divergente de niveles (azul = logro, rojo = proceso/inicio) y medidores */
+    --lv-ad: #1c5cab; --lv-a: #86b6ef; --lv-b: #f19a90; --lv-c: #b8322f;
+    --meter-fill: #2a78d6; --meter-track: #cde2fb;
+    color-scheme: light;
+  }
+
+  .dark {
+    --tinta: 38 70 122;
+    --tinta-700: 50 88 148;
+    --tinta-500: 140 176 230;
+    --tinta-ink: 233 238 245;
+    --chispa: 240 180 41;
+    --chispa-600: 245 196 80;
+    --chispa-100: 60 47 16;
+    --papel: 10 16 25;
+    --superficie: 19 28 41;
+    --linea: 40 52 70;
+    --texto: 230 235 242;
+    --texto-suave: 152 166 187;
+    --estado-ok: 64 196 128;
+    --estado-tarde: 232 165 64;
+    --estado-alerta: 240 112 92;
+    --estado-info: 102 153 250;
+    --lv-ad: #86b6ef; --lv-a: #184f95; --lv-b: #8e2c2a; --lv-c: #f08a80;
+    --meter-fill: #3987e5; --meter-track: #17345c;
+    color-scheme: dark;
+  }
+
+  /* Sobre fondo dorado el texto tinta siempre es azul oscuro. */
+  .bg-chispa { --tinta-ink: 11 29 51; }
+
+  :root { -webkit-tap-highlight-color: transparent; }
+  html, body, #root { min-height: 100%; }
+  body {
+    @apply bg-papel font-sans text-texto antialiased;
+    font-size: 16px;
+    line-height: 1.5;
+    transition: background-color 0.2s ease;
+  }
+  h1, h2, h3 { text-wrap: balance; }
+  ::selection { background: #F0B429; color: #0B1D33; }
+  :focus-visible { outline: 3px solid #F0B429; outline-offset: 2px; border-radius: 6px; }
+  input[type='file'] { @apply text-sm file:mr-3 file:rounded-md file:border-0 file:bg-papel file:px-3 file:py-1.5 file:font-bold file:text-texto; }
+  .dark img.logo-chip { background: #fff; }
+}
+
+/* Lomo del cuaderno: una textura sutil de tela, como el forro de los cuadernos. */
+.notebook-spine {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 5px);
+  box-shadow: inset -6px 0 0 rgba(0, 0, 0, 0.12);
+}
+
+/* Portada de cuaderno: tela forrada con brillo diagonal. */
+.notebook-cover {
+  background-image:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 38%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 5px);
+}
+
+/* Bobinas de Tesla: anillos concéntricos decorativos en la pantalla de ingreso. */
+.login-coils {
+  background: repeating-radial-gradient(circle at center, transparent 0 22px, rgba(240, 180, 41, 0.16) 22px 24px);
+  mask-image: radial-gradient(circle at center, black 25%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle at center, black 25%, transparent 70%);
+}
+
+/* ---------------------------------------------------------------------------
+   Perfil Tesla: marcos de avatar, medallas por rareza y barra de XP.
+   --------------------------------------------------------------------------- */
+.medal-BRONZE, .frame-bronze { --metal: conic-gradient(from 210deg, #7a4520, #d08a4e, #8c5226, #e8a874, #7a4520); }
+.medal-SILVER, .frame-silver { --metal: conic-gradient(from 210deg, #66768c, #e6ecf3, #8796ab, #f7f9fc, #66768c); }
+.medal-GOLD, .frame-gold { --metal: conic-gradient(from 210deg, #a8740c, #ffe08a, #c99319, #fff1bf, #a8740c); }
+.medal-PLATINUM, .frame-platinum { --metal: conic-gradient(from 210deg, #4fa9bd, #e9fbff, #9b8fe0, #dff7ff, #4fa9bd); }
+.medal-BRONZE, .medal-SILVER, .medal-GOLD, .medal-PLATINUM { background: var(--metal); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+.medal-locked { background: rgb(var(--linea)); filter: grayscale(1); opacity: 0.75; }
+.medal-PLATINUM { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.15), 0 0 14px rgba(120, 220, 240, 0.45); }
+
+.tesla-frame { isolation: isolate; }
+.tesla-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 9999px;
+  background: var(--metal, rgb(var(--linea)));
+}
+.frame-spark::before { background: repeating-conic-gradient(#f0b429 0 15deg, #fff3c4 15deg 30deg); animation: tesla-spin 9s linear infinite; }
+.frame-spark { box-shadow: 0 0 10px rgba(240, 180, 41, 0.45); }
+.frame-coil::before { background: conic-gradient(from 0deg, #0b1d33, #2563eb, #86b6ef, #f0b429, #0b1d33); animation: tesla-spin 3.2s linear infinite; }
+.frame-coil { box-shadow: 0 0 16px rgba(37, 99, 235, 0.45); }
+@keyframes tesla-spin { to { transform: rotate(360deg); } }
+
+.xp-fill { background: linear-gradient(90deg, var(--xp-a, #f0b429), var(--xp-b, #ffd36b)); }
+.level-chip { background: linear-gradient(160deg, #0b1d33, #22477a); color: #fff; box-shadow: 0 4px 12px rgba(11, 29, 51, 0.25); }
+.level-chip span:first-child { color: #f0b429; }
+
+/* Chispas suaves sobre el banner del perfil. */
+.tesla-sparks {
+  background-image:
+    radial-gradient(circle at 15% 30%, rgba(255, 255, 255, 0.35) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 70% 20%, rgba(255, 255, 255, 0.3) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 85% 70%, rgba(255, 255, 255, 0.35) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 40% 75%, rgba(255, 255, 255, 0.25) 0 1px, transparent 1.5px),
+    repeating-radial-gradient(circle at 92% 110%, transparent 0 18px, rgba(255, 255, 255, 0.08) 18px 20px);
+}
+
+/* Logro recién obtenido: brillo que cruza la medalla una vez. */
+@keyframes medal-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.medal-pop { animation: medal-pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+
+/* Estrellas Tesla: pin de rango. La Gran Estrella lleva un aura eléctrica. */
+.rank-pin svg { filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)); }
+.rank-pin-off { filter: grayscale(1); opacity: 0.45; }
+.rank-pin-aura {
+  position: absolute;
+  inset: -16% -16% 2%;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, transparent, rgba(125, 211, 252, 0.8), transparent 25%, rgba(250, 204, 21, 0.8), transparent 50%, rgba(125, 211, 252, 0.8), transparent 75%, rgba(250, 204, 21, 0.8), transparent);
+  filter: blur(5px);
+  animation: tesla-spin 3.5s linear infinite;
+}
+.rank-pin-grand svg { animation: pin-glow 2.4s ease-in-out infinite alternate; }
+@keyframes pin-glow {
+  from { filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 2px rgba(250, 204, 21, 0.4)); }
+  to { filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 10px rgba(250, 204, 21, 0.9)); }
+}
+
+/* ---------------------------------------------------------------------------
+   Movimiento: sobrio en todo, salvo el sello de "Entregado".
+   --------------------------------------------------------------------------- */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toast-in { animation: toast-in 0.2s ease-out; }
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+dialog[open].modal-in { animation: modal-in 0.18s ease-out; }
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+dialog[open].sheet-in { animation: sheet-up 0.26s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.sheet-up { animation: sheet-up 0.26s cubic-bezier(0.2, 0.9, 0.3, 1); }
+
+@keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+.backdrop-in { animation: backdrop-in 0.2s ease-out; }
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.page-in { animation: page-in 0.22s ease-out; }
+
+/* Sello de "Entregado": cae, rebota y queda inclinado. */
+@keyframes stamp {
+  0% { opacity: 0; transform: rotate(-14deg) scale(2.4); }
+  55% { opacity: 1; transform: rotate(-14deg) scale(0.92); }
+  75% { transform: rotate(-14deg) scale(1.04); }
+  100% { opacity: 1; transform: rotate(-14deg) scale(1); }
+}
+.stamp-in { animation: stamp 0.55s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+@keyframes stamp-ink {
+  0% { opacity: 0; transform: scale(0.6); }
+  60% { opacity: 0.35; }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+.stamp-ink { animation: stamp-ink 0.7s ease-out 0.25s both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Impresión de libretas y fichas: una hoja A4 por alumno, sin menús y siempre en claro. */
+/* ---------------------------------------------------------------------------
+   Lectura y accesibilidad (Ajustes): texto grande, menos movimiento, contraste.
+   --------------------------------------------------------------------------- */
+html.text-large { font-size: 112.5%; }
+html.text-large body { font-size: 17.5px; }
+html.motion-off *, html.motion-off *::before, html.motion-off *::after { animation: none !important; transition: none !important; }
+html.contrast-high { --texto-suave: 55 65 81; --linea: 160 174 192; }
+html.dark.contrast-high { --texto-suave: 210 218 230; --linea: 110 125 150; }
+html.contrast-high :focus-visible { outline-width: 4px; }
+
+/* Modo concentración: sin menús mientras se rinde una evaluación. */
+html.focus-mode .shell-chrome { display: none !important; }
+html.focus-mode main { padding-top: 1.25rem; }
+
+/* Check que aparece al guardar. */
+@keyframes check-pop { 0% { transform: scale(0.3) rotate(-30deg); opacity: 0; } 60% { transform: scale(1.25) rotate(8deg); opacity: 1; } 100% { transform: none; } }
+.check-pop { animation: check-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.3) both; }
+
+/* Botón de entregar: barra de progreso que se llena. */
+.progress-fill { position: relative; overflow: hidden; }
+.progress-fill::after {
+  content: ''; position: absolute; inset: 0; transform-origin: left; transform: scaleX(0);
+  background: rgba(255, 255, 255, 0.28); animation: progress-fill 1.6s ease-out forwards;
+}
+@keyframes progress-fill { to { transform: scaleX(0.92); } }
+
+/* Transiciones entre pantallas (navegadores con View Transitions). */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.22s; }
+::view-transition-group(*) { animation-duration: 0.35s; animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+
+/* Saludo del inicio según la hora. */
+.greeting-orb { position: absolute; right: -40px; top: -60px; width: 220px; height: 220px; border-radius: 9999px; filter: blur(2px); }
+.greeting-morning { background: radial-gradient(circle, #fff7d6 0 30%, rgba(253, 224, 71, 0.6) 45%, transparent 70%); animation: orb-float 8s ease-in-out infinite alternate; }
+.greeting-afternoon { background: radial-gradient(circle, #fffbeb 0 25%, rgba(251, 191, 36, 0.55) 40%, transparent 70%); animation: orb-float 9s ease-in-out infinite alternate; }
+.greeting-night { background: radial-gradient(circle at 35% 35%, #f8fafc 0 22%, rgba(226, 232, 240, 0.35) 34%, transparent 60%); box-shadow: inset -30px -10px 0 0 transparent; animation: orb-float 10s ease-in-out infinite alternate; }
+@keyframes orb-float { from { transform: translate(0, 0); } to { transform: translate(-12px, 10px); } }
+
+/* Decoraciones por fecha. */
+.season-flags { position: absolute; inset: 0 0 auto 0; display: flex; justify-content: space-around; pointer-events: none; }
+.season-flags span { width: 18px; height: 22px; clip-path: polygon(0 0, 100% 0, 50% 100%); opacity: 0.85; animation: flag-swing 2.4s ease-in-out infinite alternate; transform-origin: top; }
+.season-flags span:nth-child(odd) { animation-delay: -1.2s; }
+@keyframes flag-swing { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+.season-snow span, .season-confetti span { position: absolute; top: -10px; width: 7px; height: 7px; border-radius: 9999px; background: #fff; opacity: 0.85; animation: season-fall linear infinite; }
+.season-confetti span { width: 6px; height: 10px; border-radius: 2px; }
+@keyframes season-fall { to { transform: translateY(260px) rotate(360deg); } }
+
+/* Gráficos: las barras crecen al aparecer. */
+@keyframes bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes bar-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.bar-grow { transform-origin: bottom; animation: bar-grow 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.bar-grow-x { transform-origin: left; animation: bar-grow-x 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+
+/* Tarjetas de curso con escena: la portada se agranda un poco al pasar. */
+.course-cover .scene { transition: transform 0.4s ease; }
+.course-cover:hover .scene { transform: scale(1.06); }
+
+/* Grabación de audio: punto que late. */
+@keyframes rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.rec-dot { animation: rec-pulse 1s ease-in-out infinite; }
+
+/* Tres puntos de "escribiendo…". */
+.typing-dots span { display: inline-block; width: 6px; height: 6px; margin: 0 1px; border-radius: 9999px; background: currentColor; animation: typing 1.2s infinite ease-in-out; }
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+  :root, .dark {
+    --papel: 255 255 255; --superficie: 255 255 255; --texto: 0 0 0; --texto-suave: 91 107 130;
+    --linea: 200 208 220; --tinta: 11 29 51; --tinta-ink: 11 29 51;
+  }
+  body { background: #fff; }
+  .report-card { break-after: page; }
+  .report-card:last-child { break-after: auto; }
+}
+.bar-grow-left { transform-origin: right; animation: bar-grow-x 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) both; }

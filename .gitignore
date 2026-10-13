@@ -1,0 +1,20 @@
+# Dependencias y compilados
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Secretos y configuración local (NUNCA subir)
+.env
+.env.*
+!.env.example
+supabase/push-secrets.env
+supabase/*.local.sql
+supabase/.temp/
+supabase/.branches/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

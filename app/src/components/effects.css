@@ -1,0 +1,140 @@
+/* ---------------------------------------------------------------------------
+   Perfil Tesla: efectos del nombre y auras del avatar.
+   --------------------------------------------------------------------------- */
+
+/* --- Efectos del nombre ---------------------------------------------------- */
+.name-fx { position: relative; display: inline-block; max-width: 100%; }
+.name-fx-oro, .name-fx-hielo, .name-fx-electrico, .name-fx-arcoiris, .name-fx-fuego {
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  background-size: 250% 100%; animation: fx-shine 4s linear infinite;
+}
+@keyframes fx-shine { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+.name-fx-oro { background-image: linear-gradient(100deg, #a8740c 0%, #f5c451 30%, #fff6cf 45%, #f5c451 60%, #a8740c 100%); filter: drop-shadow(0 1px 0 rgba(107, 73, 6, 0.35)); }
+.name-fx-hielo { background-image: linear-gradient(100deg, #0e7490 0%, #67e8f9 30%, #ffffff 45%, #67e8f9 60%, #0e7490 100%); filter: drop-shadow(0 0 6px rgba(103, 232, 249, 0.45)); }
+.name-fx-electrico {
+  background-image: linear-gradient(100deg, #1d4ed8 0%, #60a5fa 25%, #ffffff 40%, #22d3ee 55%, #1d4ed8 100%);
+  animation: fx-shine 1.8s linear infinite, fx-zap 3s steps(1) infinite; filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.8));
+}
+@keyframes fx-zap { 0%, 92%, 100% { opacity: 1; } 93% { opacity: 0.4; } 95% { opacity: 1; } 96% { opacity: 0.6; } }
+.name-fx-arcoiris { background-image: linear-gradient(90deg, #ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #6366f1, #d946ef, #ef4444); animation-duration: 3s; }
+.name-fx-fuego {
+  background-image: linear-gradient(0deg, #b91c1c 0%, #f97316 35%, #facc15 70%, #fff7ed 100%);
+  background-size: 100% 250%; animation: fx-flame 1.6s ease-in-out infinite alternate; filter: drop-shadow(0 -2px 6px rgba(249, 115, 22, 0.7));
+}
+@keyframes fx-flame { from { background-position: 0 0; } to { background-position: 0 100%; } }
+.name-fx-neon { color: #fdf4ff; text-shadow: 0 0 4px #f0abfc, 0 0 10px #e879f9, 0 0 22px #c026d3; animation: fx-neon 4s infinite; }
+@keyframes fx-neon { 0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; } 20%, 24%, 55% { opacity: 0.55; } }
+.name-fx-glitch { color: inherit; }
+.name-fx-glitch::before, .name-fx-glitch::after {
+  content: attr(data-text); position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.name-fx-glitch::before { color: #22d3ee; transform: translate(-2px, 0); clip-path: inset(0 0 60% 0); animation: fx-glitch-a 2.6s infinite steps(1); mix-blend-mode: screen; }
+.name-fx-glitch::after { color: #f43f5e; transform: translate(2px, 0); clip-path: inset(55% 0 0 0); animation: fx-glitch-b 2.2s infinite steps(1); mix-blend-mode: screen; }
+@keyframes fx-glitch-a { 0%, 100% { clip-path: inset(0 0 60% 0); transform: translate(-2px, 0); } 30% { clip-path: inset(20% 0 50% 0); transform: translate(3px, -1px); } 60% { clip-path: inset(70% 0 5% 0); transform: translate(-3px, 1px); } }
+@keyframes fx-glitch-b { 0%, 100% { clip-path: inset(55% 0 0 0); transform: translate(2px, 0); } 40% { clip-path: inset(10% 0 70% 0); transform: translate(-3px, 1px); } 70% { clip-path: inset(40% 0 30% 0); transform: translate(3px, 0); } }
+
+/* --- Auras del avatar ------------------------------------------------------ */
+.aura { position: absolute; inset: -22%; z-index: -2; border-radius: 9999px; pointer-events: none; }
+.aura::before, .aura::after { content: ''; position: absolute; inset: 0; border-radius: 9999px; }
+
+.aura-chispas::before {
+  background: repeating-conic-gradient(#fde047 0 5deg, transparent 5deg 30deg);
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%, #000 66%, transparent 69%);
+  mask: radial-gradient(circle, transparent 58%, #000 60%, #000 66%, transparent 69%);
+  filter: drop-shadow(0 0 4px #facc15); animation: tesla-spin 6s linear infinite;
+}
+.aura-chispas::after {
+  inset: 8%; background: repeating-conic-gradient(#fff7cc 0 3deg, transparent 3deg 45deg);
+  -webkit-mask: radial-gradient(circle, transparent 66%, #000 68%, #000 72%, transparent 74%);
+  mask: radial-gradient(circle, transparent 66%, #000 68%, #000 72%, transparent 74%);
+  animation: tesla-spin 4s linear infinite reverse;
+}
+
+.aura-halo::before { background: radial-gradient(circle, transparent 52%, rgba(255, 255, 255, 0.85) 60%, rgba(255, 236, 179, 0.4) 66%, transparent 74%); animation: aura-pulse 2.6s ease-in-out infinite; }
+@keyframes aura-pulse { 0%, 100% { transform: scale(0.96); opacity: 0.75; } 50% { transform: scale(1.05); opacity: 1; } }
+
+.aura-orbita::before, .aura-orbita::after { inset: 10% -4%; border: 2px solid rgba(103, 232, 249, 0.85); box-shadow: 0 0 8px rgba(34, 211, 238, 0.7); border-left-color: transparent; }
+.aura-orbita::before { animation: aura-orbit-a 3.2s linear infinite; }
+.aura-orbita::after { animation: aura-orbit-b 4.4s linear infinite; border-color: rgba(250, 204, 21, 0.85); border-right-color: transparent; }
+@keyframes aura-orbit-a { from { transform: rotate(60deg) scaleY(0.38) rotate(0); } to { transform: rotate(60deg) scaleY(0.38) rotate(360deg); } }
+@keyframes aura-orbit-b { from { transform: rotate(-60deg) scaleY(0.38) rotate(0); } to { transform: rotate(-60deg) scaleY(0.38) rotate(-360deg); } }
+
+.aura-plasma::before {
+  background: conic-gradient(from 0deg, #a855f7, #22d3ee, #6366f1, #ec4899, #a855f7);
+  -webkit-mask: radial-gradient(circle, transparent 54%, #000 62%, transparent 74%);
+  mask: radial-gradient(circle, transparent 54%, #000 62%, transparent 74%);
+  filter: blur(3px); animation: tesla-spin 2.4s linear infinite, aura-flicker 1.4s ease-in-out infinite alternate;
+}
+@keyframes aura-flicker { from { opacity: 0.65; } to { opacity: 1; } }
+
+.aura-petalos::before {
+  background: repeating-conic-gradient(#f9a8d4 0 9deg, transparent 9deg 40deg);
+  -webkit-mask: radial-gradient(circle, transparent 57%, #000 60%, #000 68%, transparent 71%);
+  mask: radial-gradient(circle, transparent 57%, #000 60%, #000 68%, transparent 71%);
+  animation: tesla-spin 10s linear infinite; filter: drop-shadow(0 0 3px rgba(244, 114, 182, 0.8));
+}
+
+.aura-estelar { inset: -34%; }
+.aura-estelar::before {
+  background: repeating-conic-gradient(rgba(253, 224, 71, 0.75) 0 2deg, transparent 2deg 15deg);
+  -webkit-mask: radial-gradient(circle, transparent 40%, #000 45%, transparent 72%);
+  mask: radial-gradient(circle, transparent 40%, #000 45%, transparent 72%);
+  animation: tesla-spin 24s linear infinite;
+}
+.aura-estelar::after { inset: 16%; background: radial-gradient(circle, rgba(250, 204, 21, 0.45), transparent 70%); animation: aura-pulse 3s ease-in-out infinite; }
+
+.aura-corona { inset: -30%; }
+.aura-corona::before {
+  background: repeating-conic-gradient(from 0deg, #facc15 0 4deg, #67e8f9 4deg 6deg, transparent 6deg 24deg);
+  -webkit-mask: radial-gradient(circle, transparent 44%, #000 48%, transparent 70%);
+  mask: radial-gradient(circle, transparent 44%, #000 48%, transparent 70%);
+  filter: drop-shadow(0 0 5px #22d3ee); animation: tesla-spin 8s linear infinite, aura-flicker 0.9s steps(2) infinite alternate;
+}
+.aura-corona::after { inset: 14%; background: radial-gradient(circle, rgba(103, 232, 249, 0.4), transparent 68%); animation: aura-pulse 1.8s ease-in-out infinite; }
+
+/* --- Celebración de nivel y de Estrella ------------------------------------ */
+.celebrate-rays {
+  position: absolute; left: 50%; top: 42%; width: 160vmax; height: 160vmax; transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(rgba(250, 204, 21, 0.16) 0 8deg, transparent 8deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 0, transparent 45%); mask: radial-gradient(circle, #000 0, transparent 45%);
+  animation: celebrate-spin 30s linear infinite;
+}
+@keyframes celebrate-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.celebrate-pin { animation: celebrate-drop 0.9s cubic-bezier(0.2, 0.8, 0.3, 1.25) both 0.15s; }
+@keyframes celebrate-drop {
+  0% { opacity: 0; transform: translateY(-60vh) rotate(-30deg) scale(2.4); }
+  70% { opacity: 1; transform: translateY(0) rotate(6deg) scale(0.92); }
+  100% { opacity: 1; transform: none; }
+}
+.celebrate-shock {
+  position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; border-radius: 9999px; transform: translate(-50%, -50%);
+  border: 3px solid rgba(250, 204, 21, 0.9); animation: celebrate-shock 0.8s ease-out both 0.75s;
+}
+@keyframes celebrate-shock { from { opacity: 1; width: 10px; height: 10px; } to { opacity: 0; width: 320px; height: 320px; } }
+.celebrate-text { animation: celebrate-text 0.6s ease-out both 0.9s; }
+@keyframes celebrate-text { from { opacity: 0; transform: translateY(14px) scale(0.95); } to { opacity: 1; transform: none; } }
+.confetti { position: absolute; top: -5vh; width: 9px; height: 14px; border-radius: 2px; animation: confetti-fall linear forwards; }
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(115vh) rotate(var(--spin, 720deg)) translateX(var(--drift, 40px)); opacity: 0.9; }
+}
+
+/* --- Cofres --------------------------------------------------------------- */
+.chest-shake { animation: chest-shake 0.9s ease-in-out both; }
+@keyframes chest-shake {
+  0%, 100% { transform: none; } 15% { transform: rotate(-8deg) scale(1.05); } 30% { transform: rotate(8deg) scale(1.08); }
+  45% { transform: rotate(-10deg) scale(1.1); } 60% { transform: rotate(10deg) scale(1.14); } 80% { transform: scale(1.3); opacity: 1; }
+}
+.chest-reveal { animation: chest-reveal 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.3) both; }
+@keyframes chest-reveal { from { opacity: 0; transform: scale(0.3) rotate(-12deg); } to { opacity: 1; transform: none; } }
+.chest-glow-BRONZE { box-shadow: 0 0 40px 6px rgba(208, 138, 78, 0.55); }
+.chest-glow-SILVER { box-shadow: 0 0 40px 6px rgba(203, 213, 225, 0.6); }
+.chest-glow-GOLD { box-shadow: 0 0 50px 10px rgba(250, 204, 21, 0.6); }
+.chest-glow-PLATINUM { box-shadow: 0 0 60px 14px rgba(103, 232, 249, 0.7); }
+
+/* Vidrio sobre el fondo del perfil */
+.tesla-glass .bg-superficie { background-color: rgb(var(--superficie) / 0.82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .name-fx, .name-fx::before, .name-fx::after, .aura, .aura::before, .aura::after { animation: none !important; }
+}

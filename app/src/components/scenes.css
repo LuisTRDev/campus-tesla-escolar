@@ -1,0 +1,253 @@
+/* ---------------------------------------------------------------------------
+   Escenas del Perfil Tesla (banners y fondos). Solo se animan transform y
+   opacity, salvo la rejilla de Synthwave. Los tamaños usan unidades de
+   contenedor (cqmin, cqh) para verse bien en un banner y en toda la pantalla.
+   --------------------------------------------------------------------------- */
+.scene { position: absolute; inset: 0; overflow: hidden; container-type: size; isolation: isolate; }
+.sc-layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sc-ground { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; }
+
+.sc-twinkle { animation: sc-twinkle 4s ease-in-out infinite; }
+@keyframes sc-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+/* Partículas: la capa ocupa toda la escena y se desplaza su propio alto. */
+.sc-fall, .sc-rise { position: absolute; inset: 0; pointer-events: none; animation-timing-function: linear; animation-iteration-count: infinite; }
+.sc-fall { animation-name: sc-fall; }
+.sc-rise { animation-name: sc-rise; }
+@keyframes sc-fall { from { transform: translateY(-12%); } to { transform: translateY(112%); } }
+@keyframes sc-rise { from { transform: translateY(12%); } to { transform: translateY(-115%); } }
+.sc-particle { position: absolute; animation: sc-sway var(--sway, 3s) ease-in-out infinite alternate; }
+.sc-fall > .sc-particle { top: -4%; }
+.sc-rise > .sc-particle { top: 100%; }
+@keyframes sc-sway { from { transform: translateX(-12px) rotate(-25deg); } to { transform: translateX(12px) rotate(35deg); } }
+
+/* --- Noche estrellada ------------------------------------------------------ */
+.sc-galaxia {
+  background:
+    radial-gradient(ellipse at 25% 15%, rgba(91, 33, 182, 0.55), transparent 55%),
+    radial-gradient(ellipse at 85% 85%, rgba(14, 116, 144, 0.45), transparent 50%),
+    linear-gradient(160deg, #04040f, #0b1030 55%, #160a2e);
+}
+.sc-nebula { position: absolute; border-radius: 50%; filter: blur(24px); mix-blend-mode: screen; animation: sc-drift 26s ease-in-out infinite alternate; }
+.sc-nebula-a { width: 70%; height: 90%; left: -10%; top: -20%; background: radial-gradient(circle, rgba(168, 85, 247, 0.45), transparent 65%); }
+.sc-nebula-b { width: 60%; height: 80%; right: -15%; bottom: -25%; background: radial-gradient(circle, rgba(56, 189, 248, 0.35), transparent 65%); animation-duration: 34s; animation-direction: alternate-reverse; }
+@keyframes sc-drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(8%, 6%) scale(1.15); } }
+.sc-planet {
+  position: absolute; right: 9%; bottom: 14%; width: 60px; height: 60px; width: 22cqmin; height: 22cqmin; border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #fde68a, #f97316 45%, #7c2d12 80%);
+  box-shadow: inset -10px -8px 22px rgba(0, 0, 0, 0.55), 0 0 30px rgba(249, 115, 22, 0.35);
+  animation: sc-float 9s ease-in-out infinite alternate;
+}
+.sc-planet-ring {
+  position: absolute; left: -38%; top: 38%; width: 176%; height: 26%; border-radius: 50%;
+  border: 3px solid rgba(253, 230, 138, 0.65); border-top-color: transparent; transform: rotate(-16deg);
+}
+@keyframes sc-float { from { transform: translateY(-4%); } to { transform: translateY(5%); } }
+.sc-shooting {
+  position: absolute; width: 130px; height: 2px; border-radius: 2px; opacity: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff);
+  animation: sc-shoot 8s ease-in infinite;
+}
+@keyframes sc-shoot {
+  0%, 80% { opacity: 0; transform: rotate(155deg) translateX(0); }
+  82% { opacity: 1; }
+  92%, 100% { opacity: 0; transform: rotate(155deg) translateX(420px); }
+}
+
+/* --- Aurora ---------------------------------------------------------------- */
+.sc-aurora { background: linear-gradient(180deg, #020617 0%, #052e3a 55%, #0a3a3a 100%); }
+.sc-aurora-band {
+  position: absolute; left: -25%; top: 4%; width: 150%; height: 58%; border-radius: 50%;
+  background: linear-gradient(90deg, transparent, rgba(45, 212, 191, 0.75), rgba(132, 204, 22, 0.55), rgba(167, 139, 250, 0.7), transparent);
+  filter: blur(24px); mix-blend-mode: screen; transform-origin: 50% 0;
+  animation: sc-aurora 15s ease-in-out infinite alternate;
+}
+@keyframes sc-aurora {
+  0% { transform: translateX(-10%) skewX(-14deg) scaleY(0.75); opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { transform: translateX(10%) skewX(12deg) scaleY(1.2); opacity: 0.8; }
+}
+
+/* --- Bobina de Tesla ------------------------------------------------------- */
+.sc-bobina { background: radial-gradient(circle at 50% 58%, #1d4ed8 0%, #0b1d33 32%, #020617 75%); }
+.sc-coil-rings {
+  position: absolute; inset: -30%;
+  background: repeating-radial-gradient(circle at 50% 56%, transparent 0 22px, rgba(125, 211, 252, 0.12) 22px 24px);
+  animation: sc-pulse-rings 3.2s ease-in-out infinite;
+}
+@keyframes sc-pulse-rings { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.06); opacity: 1; } }
+.sc-bolts { filter: drop-shadow(0 0 3px #7dd3fc) drop-shadow(0 0 8px #3b82f6); }
+.sc-bolt { opacity: 0.35; animation: sc-flash 4s linear infinite; }
+.sc-bolt-glow { fill: none; stroke: #93c5fd; stroke-width: 4px; stroke-opacity: 0.45; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.sc-bolt-core { fill: none; stroke: #fff; stroke-width: 1.4px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+@keyframes sc-flash { 0%, 100% { opacity: 0.3; } 8% { opacity: 1; } 12% { opacity: 0.45; } 18% { opacity: 0.95; } 35% { opacity: 0.25; } 55% { opacity: 0.8; } 70% { opacity: 0.35; } }
+.sc-orb {
+  position: absolute; left: 50%; top: 58%; width: 56px; height: 56px; width: 20cqmin; height: 20cqmin; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 40% 35%, #fff, #bae6fd 30%, #3b82f6 65%, #1e3a8a);
+  box-shadow: 0 0 25px #60a5fa, 0 0 70px rgba(59, 130, 246, 0.7);
+  animation: sc-orb 1.6s ease-in-out infinite alternate;
+}
+@keyframes sc-orb { from { transform: translate(-50%, -50%) scale(0.95); filter: brightness(0.9); } to { transform: translate(-50%, -50%) scale(1.05); filter: brightness(1.25); } }
+
+/* --- Circuito -------------------------------------------------------------- */
+.sc-circuito { background: radial-gradient(ellipse at 50% 50%, #063a33, #021512 75%); }
+.sc-circuit-grid {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(94, 234, 212, 0.18) 1px, transparent 1.5px);
+  background-size: 18px 18px;
+}
+.sc-trace { fill: none; stroke: rgba(45, 212, 191, 0.28); stroke-width: 0.5; stroke-linejoin: round; }
+.sc-node { fill: #134e4a; stroke: rgba(94, 234, 212, 0.7); stroke-width: 0.35; }
+.sc-pulses { filter: drop-shadow(0 0 1.5px #5eead4); }
+.sc-pulse { fill: none; stroke: #ccfbf1; stroke-width: 0.7; stroke-linecap: round; stroke-dasharray: 7 120; stroke-dashoffset: 127; animation: sc-pulse linear infinite; }
+@keyframes sc-pulse { to { stroke-dashoffset: 0; } }
+.sc-chip {
+  position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; width: 16cqmin; height: 16cqmin; transform: translate(-50%, -50%);
+  border-radius: 12%; background: linear-gradient(135deg, #0f766e, #042f2e); border: 2px solid rgba(94, 234, 212, 0.6);
+  box-shadow: 0 0 18px rgba(45, 212, 191, 0.55); animation: sc-orb 2.4s ease-in-out infinite alternate;
+}
+
+/* --- Synthwave ------------------------------------------------------------- */
+.sc-synthwave { background: linear-gradient(180deg, #12002b 0%, #3b0764 30%, #9d174d 52%, #f97316 62%, #12002b 62.2%); }
+.sc-sun {
+  position: absolute; left: 50%; bottom: 38%; width: 90px; height: 90px; width: 44cqmin; height: 44cqmin; border-radius: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #fde047 10%, #fb923c 50%, #ec4899 90%);
+  box-shadow: 0 0 40px rgba(251, 146, 60, 0.6);
+  -webkit-mask-image: linear-gradient(180deg, #000 48%, transparent 48% 54%, #000 54% 62%, transparent 62% 68%, #000 68% 75%, transparent 75% 82%, #000 82% 88%, transparent 88% 95%, #000 95%);
+  mask-image: linear-gradient(180deg, #000 48%, transparent 48% 54%, #000 54% 62%, transparent 62% 68%, #000 68% 75%, transparent 75% 82%, #000 82% 88%, transparent 88% 95%, #000 95%);
+}
+.sc-synth-hills { position: absolute; left: 0; right: 0; bottom: 38%; width: 100%; height: 14%; }
+.sc-floor { position: absolute; left: 0; top: 62%; width: 100%; height: 38%; background: linear-gradient(180deg, #2a0650, #12002b 60%); }
+.sc-gridline { stroke: rgba(244, 63, 245, 0.85); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.sc-floorline { animation: sc-floorline 4s linear infinite; }
+/* Avanza más rápido cuanto más cerca (y = 100·t²): en el SVG, 1px de transform es 1 unidad del viewBox. */
+@keyframes sc-floorline {
+  0% { transform: translateY(0); opacity: 0.15; }
+  20% { transform: translateY(4px); }
+  40% { transform: translateY(16px); }
+  60% { transform: translateY(36px); }
+  80% { transform: translateY(64px); }
+  100% { transform: translateY(100px); opacity: 1; }
+}
+.sc-horizon { position: absolute; left: 0; right: 0; top: 61.6%; height: 2px; background: #f0abfc; box-shadow: 0 0 14px 3px rgba(240, 171, 252, 0.8); }
+
+/* --- Mar profundo ---------------------------------------------------------- */
+.sc-oceano { background: radial-gradient(ellipse at 70% -10%, rgba(254, 240, 138, 0.35), transparent 45%), linear-gradient(180deg, #0e7490 0%, #075985 45%, #082f49 100%); }
+.sc-rays {
+  position: absolute; inset: -20% -10%;
+  background: repeating-linear-gradient(105deg, rgba(255, 255, 255, 0.07) 0 18px, transparent 18px 60px);
+  animation: sc-rays 9s ease-in-out infinite alternate;
+}
+@keyframes sc-rays { from { transform: translateX(-4%); opacity: 0.6; } to { transform: translateX(4%); opacity: 1; } }
+.sc-wave { position: absolute; left: 0; bottom: 0; width: 200%; animation: sc-wave linear infinite; }
+.sc-wave svg { width: 100%; height: 100%; display: block; }
+@keyframes sc-wave { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.sc-bubble {
+  display: block; width: 8px; height: 8px; width: calc(3px + var(--size) * 3cqmin); height: calc(3px + var(--size) * 3cqmin); border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55); background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.7), transparent 50%);
+}
+
+/* --- Sakura ---------------------------------------------------------------- */
+.sc-sakura { background: linear-gradient(180deg, #fde2e4 0%, #fbcfe8 45%, #e9d5ff 100%); }
+.sc-sakura-sun { position: absolute; right: 14%; top: 14%; width: 80px; height: 80px; width: 30cqmin; height: 30cqmin; border-radius: 50%; background: radial-gradient(circle, #fff7ed, rgba(253, 186, 116, 0.5) 55%, transparent 70%); }
+.sc-branch { position: absolute; left: 0; top: 0; width: 46%; min-width: 180px; }
+.sc-petal {
+  display: block; width: 10px; height: 8px; width: calc(6px + var(--size) * 2.4cqmin); height: calc(5px + var(--size) * 1.8cqmin);
+  border-radius: 150% 0 150% 0; background: linear-gradient(135deg, #fff1f2, #f9a8d4); box-shadow: 0 1px 2px rgba(190, 24, 93, 0.25);
+}
+
+/* --- Academia Stella ------------------------------------------------------- */
+.sc-academia { background: radial-gradient(ellipse at 50% 0%, #5b1225, #1d0610 60%, #0a0306); }
+.sc-lattice {
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.09) 0 1px, transparent 1px 30px),
+    repeating-linear-gradient(-45deg, rgba(212, 175, 55, 0.09) 0 1px, transparent 1px 30px);
+}
+.sc-emblem { position: absolute; left: 50%; top: 50%; width: 80cqmin; height: 80cqmin; min-width: 120px; min-height: 120px; transform: translate(-50%, -50%); animation: sc-emblem 90s linear infinite; }
+@keyframes sc-emblem { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.sc-gold-rule { position: absolute; left: 4%; right: 4%; height: 4px; border-top: 1px solid rgba(234, 196, 99, 0.55); border-bottom: 1px solid rgba(234, 196, 99, 0.3); }
+.sc-gstar { display: block; width: 14px; height: 14px; width: calc(8px + var(--size) * 4cqmin); height: calc(8px + var(--size) * 4cqmin); fill: #eac463; filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.7)); }
+.sc-glint {
+  position: absolute; width: 14px; height: 14px; opacity: 0;
+  background: radial-gradient(circle, #fff 0 12%, transparent 13%), linear-gradient(transparent 46%, #fde68a 46% 54%, transparent 54%), linear-gradient(90deg, transparent 46%, #fde68a 46% 54%, transparent 54%);
+  animation: sc-glint 3s ease-in-out infinite;
+}
+@keyframes sc-glint { 0%, 100% { opacity: 0; transform: scale(0.3) rotate(0); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+
+/* --- Código ---------------------------------------------------------------- */
+.sc-codigo { background: radial-gradient(ellipse at 50% 120%, #1c1405, #050403 70%); font-size: 13px; font-size: clamp(10px, 4.2cqmin, 18px); }
+.sc-code-col { position: absolute; top: 0; height: 100%; animation: sc-code linear infinite; }
+@keyframes sc-code { from { transform: translateY(0); } to { transform: translateY(calc(100% + 17em)); } }
+.sc-code {
+  position: absolute; bottom: 100%; width: 1.3ch; word-break: break-all; text-align: center; line-height: 1.15;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-weight: 700; color: #fbbf24;
+  text-shadow: 0 0 6px rgba(251, 191, 36, 0.8);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 90%); mask-image: linear-gradient(180deg, transparent, #000 90%);
+}
+.sc-code-dim { color: #38bdf8; opacity: 0.55; text-shadow: 0 0 6px rgba(56, 189, 248, 0.6); }
+.sc-scanlines { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px); }
+
+/* --- Volcán ---------------------------------------------------------------- */
+.sc-lava { background: linear-gradient(180deg, #0c0202 0%, #3b0a0a 55%, #7c2d12 100%); }
+.sc-lava-glow { position: absolute; left: -10%; right: -10%; bottom: -30%; height: 70%; background: radial-gradient(ellipse at 50% 100%, rgba(249, 115, 22, 0.75), transparent 65%); animation: sc-pulse-rings 4s ease-in-out infinite; }
+.sc-blob {
+  display: block; width: 40px; height: 40px; width: calc(10cqmin + var(--size) * 16cqmin); height: calc(10cqmin + var(--size) * 16cqmin); border-radius: 50%;
+  background: radial-gradient(circle, #fde047, #f97316 40%, rgba(220, 38, 38, 0.6) 62%, transparent 72%);
+  filter: blur(5px); mix-blend-mode: screen;
+}
+.sc-ember { display: block; width: 3px; height: 3px; border-radius: 50%; background: #fdba74; box-shadow: 0 0 6px 2px rgba(251, 146, 60, 0.8); }
+
+/* --- Fuegos artificiales --------------------------------------------------- */
+.sc-fuegos { background: linear-gradient(180deg, #05030f 0%, #1a1038 60%, #3b1d4a 100%); }
+.sc-burst { position: absolute; width: 0; height: 0; }
+.sc-burst::before {
+  content: ''; position: absolute; left: -30px; top: -30px; width: 60px; height: 60px; border-radius: 50%;
+  background: radial-gradient(circle, var(--c), transparent 65%); opacity: 0;
+  animation-name: sc-burst-flash; animation-duration: inherit; animation-delay: inherit; animation-iteration-count: infinite;
+}
+@keyframes sc-burst-flash { 0% { opacity: 0.9; transform: scale(0.4); } 25% { opacity: 0.35; transform: scale(1.6); } 40%, 100% { opacity: 0; } }
+.sc-burst-spark {
+  position: absolute; left: -2px; top: -2px; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--c); box-shadow: 0 0 6px 2px var(--c);
+  animation-name: sc-spark; animation-timing-function: cubic-bezier(0.1, 0.7, 0.3, 1); animation-iteration-count: infinite;
+}
+@keyframes sc-spark {
+  0% { transform: rotate(var(--a)) translateY(0) scale(1); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: rotate(var(--a)) translateY(calc(-1 * var(--k, 1) * 60px)) scale(0.3); opacity: 0; }
+}
+@supports (width: 1cqmin) {
+  @keyframes sc-spark {
+    0% { transform: rotate(var(--a)) translateY(0) scale(1); opacity: 1; }
+    60% { opacity: 1; }
+    100% { transform: rotate(var(--a)) translateY(calc(-1 * var(--k, 1) * 22cqmin)) scale(0.3); opacity: 0; }
+  }
+}
+
+/* --- Nevada ---------------------------------------------------------------- */
+.sc-nieve { background: linear-gradient(180deg, #0f172a 0%, #1e3a5f 55%, #64748b 100%); }
+.sc-moon { position: absolute; right: 14%; top: 12%; width: 50px; height: 50px; width: 18cqmin; height: 18cqmin; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #fff, #e2e8f0 60%, #cbd5e1); box-shadow: 0 0 40px rgba(226, 232, 240, 0.55); }
+.sc-flake { display: block; width: 5px; height: 5px; width: calc(2px + var(--size) * 1.6cqmin); height: calc(2px + var(--size) * 1.6cqmin); border-radius: 50%; background: #fff; opacity: 0.9; box-shadow: 0 0 4px rgba(255, 255, 255, 0.8); }
+
+/* --- Cordillera (estática) ------------------------------------------------- */
+.sc-andes { background: linear-gradient(180deg, #1e3a8a 0%, #6d28d9 38%, #f472b6 62%, #fb923c 80%, #fde68a 100%); }
+.sc-andes-sun { position: absolute; left: 50%; top: 52%; width: 70px; height: 70px; width: 26cqmin; height: 26cqmin; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, #fffbeb, #fde68a 45%, rgba(251, 146, 60, 0) 70%); }
+.sc-condor { position: absolute; left: 24%; top: 26%; width: 28px; width: 9cqmin; }
+
+/* --- Cuaderno (estático) --------------------------------------------------- */
+.sc-cuaderno {
+  background:
+    linear-gradient(90deg, transparent 8%, rgba(239, 68, 68, 0.45) 8%, rgba(239, 68, 68, 0.45) calc(8% + 2px), transparent calc(8% + 2px)),
+    repeating-linear-gradient(180deg, #fbfaf5 0 23px, rgba(59, 130, 246, 0.25) 23px 24px);
+}
+
+/* Miniaturas: quietas hasta que se pasa el cursor o se eligen. */
+.art-tile:not(:hover):not(:focus-visible):not([aria-pressed='true']) .scene *,
+.art-still .scene * { animation-play-state: paused !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scene *, .scene *::before, .scene *::after { animation: none !important; }
+}

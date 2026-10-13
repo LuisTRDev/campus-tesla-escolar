@@ -1,0 +1,390 @@
+# Campus Virtual Tesla · Fase 1
+
+Campus virtual para la I.E.P. Nikola Tesla. Usa la **misma base de Supabase** que Tesla Control Escolar y el mismo stack (React 18 + Vite + TypeScript + Tailwind + supabase-js), pero es una **app aparte** que se publica en otro sitio de Netlify.
+
+## Qué incluye la Fase 1
+
+| Módulo | Qué hace |
+|---|---|
+| Cuentas y roles | Alumnos y familias entran con su DNI; docentes y personal con su correo. Cambio de contraseña obligatorio en el primer ingreso. Creación masiva por aula con fichas imprimibles. |
+| Aula virtual | Cada curso tiene novedades, materiales (archivos, enlaces y videos de YouTube) y tareas. |
+| Tareas y entregas | El docente publica tareas con fecha límite; el alumno entrega texto y hasta 5 archivos; el docente califica con nota (0 a 20) o nivel de logro (AD, A, B, C), comenta o devuelve para corregir. |
+| Panel de la familia | La semana del hijo en frases, asistencia del mes (datos de Tesla), tareas y notas, notificaciones del colegio, pensiones, avisos y el resumen semanal. |
+| Anuncios | Para todo el colegio (dirección), para un aula (tutor) o para un curso (docente). |
+| Resumen semanal | Se genera en la base de datos cada viernes (o con un botón) y la familia lo puede copiar para WhatsApp. |
+| Seguridad | Reemplaza las políticas abiertas de Tesla por RLS por rol: cada persona ve solo lo que le corresponde. |
+
+```
+campus-tesla/
+├── supabase/
+│   ├── campus_01_roles_y_vinculos.sql   Roles, vínculo alumno/apoderado ↔ cuenta, funciones de seguridad
+│   ├── campus_02_tablas_campus.sql      Cursos, anuncios, materiales, tareas, entregas, resúmenes
+│   ├── campus_03_rls.sql                Políticas RLS de TODA la base (Tesla + campus)
+│   ├── campus_04_storage.sql            Buckets privados de archivos
+│   ├── campus_05_funciones.sql          Vincular cuentas, resumen semanal, revisión de funciones
+│   ├── campus_06_piloto.sql             Áreas curriculares y cursos del aula piloto
+│   └── functions/campus-accounts/       Edge Function para crear cuentas y restablecer claves
+└── app/                                 La app del campus (Vite + React)
+```
+
+---
+
+## Instalación paso a paso
+
+### 1. Haz un respaldo
+
+El script 03 **reemplaza todas las políticas de seguridad** de las tablas de Tesla. Antes de empezar, en Supabase ve a **Database → Backups** y confirma que tienes un respaldo reciente (o exporta la base con `pg_dump`).
+
+### 2. Revisa los roles actuales
+
+En **SQL Editor** ejecuta:
+
+```sql
+select role, count(*) from public.profiles group by role;
+```
+
+Solo deben aparecer `ADMIN`, `MANAGEMENT` y `AUXILIARY` (en mayúsculas o minúsculas, da igual). Si aparece otro valor, corrígelo antes de seguir; el script 01 se detiene si encuentra un rol desconocido para no dejar a nadie sin acceso.
+
+### 3. Ejecuta los scripts SQL en orden
+
+En **SQL Editor**, copia y ejecuta uno por uno:
+
+1. `campus_01_roles_y_vinculos.sql`
+2. `campus_02_tablas_campus.sql`
+3. `campus_03_rls.sql` → al final muestra una lista de revisión; debe salir vacía.
+4. `campus_04_storage.sql`
+5. `campus_05_funciones.sql` → al final muestra las funciones de Tesla que debes proteger (paso 4).
+6. `campus_06_piloto.sql` → carga las áreas curriculares. El bloque de cursos del piloto está comentado; también puedes crear los cursos desde la app (recomendado).
+
+Todos los scripts se pueden volver a ejecutar sin problema.
+
+### 4. Protege las funciones SECURITY DEFINER de Tesla
+
+Tesla usa funciones como `get_student_case_file`, `get_school_report_summary` o `close_classroom_attendance`. Si son `SECURITY DEFINER`, **ignoran la seguridad por filas**: un alumno con sesión podría llamarlas y ver datos de todo el colegio.
+
+El script 05 lista cuáles no están protegidas. Para cada una, abre su definición (**Database → Functions**) y agrega esta línea al inicio del cuerpo:
+
+```sql
+if not public.is_staff() then
+  raise exception 'No autorizado';
+end if;
+```
+
+Si la función está escrita en `language sql` (no plpgsql), agrega `where public.is_staff()` a su consulta principal. Si prefieres, envíame las definiciones y te devuelvo la versión protegida.
+
+### 5. Parche para Tesla Control Escolar
+
+Alumnos y familias ya no pueden modificar datos (lo impide la base), pero conviene que Tesla ni siquiera les deje entrar. En `src/App.tsx` de Tesla, dentro de `loadAuthenticatedWorkspace`, justo después de obtener el perfil:
+
+```ts
+// Justo después de:  if (!result.error && result.data) { profile = { ... } ... }
+const CAMPUS_ONLY_ROLES = ['TEACHER', 'STUDENT', 'GUARDIAN']
+if (profile && CAMPUS_ONLY_ROLES.includes(profile.role.toUpperCase())) {
+  await supabase.auth.signOut()
+  setAppError('Esta cuenta es del Campus Virtual. Ingresa desde el campus.')
+  return
+}
+```
+
+Y **mueve** la llamada `getClassrooms()` para que ocurra después de esa comprobación.
+
+### 6. Configura Authentication en Supabase
+
+En **Authentication → Providers → Email**:
+
+- Desactiva **Allow new users to sign up**. Las cuentas solo las crea el colegio.
+- Deja **Confirm email** como quieras: las cuentas creadas por el campus ya vienen confirmadas.
+- Sube **Minimum password length** a 8.
+
+En **Authentication → URL Configuration** agrega la URL del campus en *Redirect URLs*.
+
+### 7. Despliega la Edge Function de cuentas
+
+Con la [CLI de Supabase](https://supabase.com/docs/guides/cli) instalada y el proyecto vinculado (`supabase link`):
+
+```bash
+cd campus-tesla
+supabase functions deploy campus-accounts
+supabase secrets set LOGIN_DOMAIN=campus.tesla.edu.pe
+supabase secrets set CAMPUS_ALLOWED_ORIGINS=https://TU-SITIO-DEL-CAMPUS.netlify.app,http://localhost:5173
+```
+
+`LOGIN_DOMAIN` es un dominio interno para las cuentas con DNI (por ejemplo `alumno.71234567@campus.tesla.edu.pe`). No se envían correos a ese dominio. Debe ser **igual** a `VITE_LOGIN_DOMAIN` de la app.
+
+### 8. Levanta la app
+
+```bash
+cd campus-tesla/app
+cp .env.example .env.local     # completa URL y anon key (las mismas de Tesla)
+npm install
+npm run dev                    # http://localhost:5173
+```
+
+Para publicarla, crea un **sitio nuevo en Netlify** apuntando a la carpeta `app/` con estas variables de entorno:
+
+| Variable | Valor |
+|---|---|
+| `VITE_SUPABASE_URL` | La misma de Tesla |
+| `VITE_SUPABASE_ANON_KEY` | La misma de Tesla (publishable/anon, nunca la service_role) |
+| `VITE_LOGIN_DOMAIN` | El mismo valor del secreto `LOGIN_DOMAIN` |
+
+`netlify.toml` ya trae el build, la redirección para las rutas y las cabeceras de seguridad.
+
+### 9. Arma el piloto
+
+1. Ingresa al campus con una cuenta **ADMIN** o **MANAGEMENT** de Tesla (tu mismo correo y clave).
+2. **Cuentas → Nueva cuenta de docente**: crea a los docentes del piloto. Anota o imprime sus claves temporales.
+3. **Cursos por aula**: elige el aula piloto, asigna el tutor y agrega los cursos con su docente.
+4. **Cuentas → Alumnos y familias por aula**: elige el aula piloto, marca *Incluir familias* y pulsa *Crear cuentas faltantes*. Imprime las fichas: cada una trae la dirección del campus, el DNI y la contraseña temporal.
+5. Los alumnos o familias sin DNI en Tesla aparecen como *Falta DNI*. Complétalo en Tesla y vuelve a pulsar el botón; solo se crean las que faltan.
+
+Si una familia olvida su clave, en la misma pantalla está **Nueva clave**.
+
+---
+
+## Cómo ingresa cada persona
+
+| Quién | Pestaña | Usuario | Primera vez |
+|---|---|---|---|
+| Alumno | Alumno | Su DNI | Clave temporal de la ficha → crea su propia clave |
+| Padre, madre o apoderado | Familia | Su DNI | Igual que el alumno |
+| Docente | Docente | Su correo | Igual |
+| Dirección / administración / auxiliar | Docente | Su correo de Tesla | Su clave de siempre |
+
+Una familia con varios hijos en el colegio ve un selector para cambiar de hijo.
+
+## Qué puede ver y hacer cada rol
+
+| Rol | Tesla (asistencia, notificaciones…) | Campus |
+|---|---|---|
+| ADMIN / MANAGEMENT | Todo, como antes | Todo: cursos, cuentas, anuncios del colegio, calificar cualquier curso |
+| AUXILIARY | Todo, como antes | Ve cursos y entregas; no edita |
+| TEACHER | Lee asistencia, notificaciones y alertas de sus aulas | Gestiona sus cursos; si es tutor, publica avisos del aula |
+| STUDENT | Lee solo su asistencia y notificaciones | Ve sus cursos, entrega tareas, ve sus notas |
+| GUARDIAN | Lee la asistencia, notificaciones y pensiones de sus hijos | Ve cursos, tareas y notas de sus hijos (solo lectura) |
+
+Reglas que la base hace cumplir aunque alguien manipule la app:
+
+- Un alumno solo entrega sus propias tareas, no puede ponerse nota y no puede cambiar una entrega ya calificada.
+- Un docente califica pero no puede alterar el trabajo del alumno, ni poner una nota mayor que la máxima.
+- Las entregas tardías se marcan solas; si la tarea no las acepta, la base las rechaza.
+- Nadie puede cambiarse el rol a sí mismo.
+- Las notificaciones anuladas en Tesla no se muestran a las familias; las alertas internas nunca.
+- Los archivos son privados y se abren con enlaces temporales de 10 minutos.
+
+## Resumen semanal automático
+
+Para generarlo cada viernes a las 5:00 p. m. (hora de Lima), activa la extensión **pg_cron** (Database → Extensions) y ejecuta:
+
+```sql
+select cron.schedule('campus-weekly-digest', '0 22 * * 5', $$select public.generate_weekly_digests()$$);
+```
+
+También se puede generar a mano desde **Cursos por aula → Generar resumen semanal**.
+
+## Lista de prueba del piloto
+
+- [ ] Un alumno entra con su DNI, cambia su clave y ve sus cursos.
+- [ ] El docente publica un anuncio, sube un PDF y crea una tarea.
+- [ ] El alumno entrega la tarea con una foto; el docente la ve en *Por revisar*.
+- [ ] El docente califica; el alumno y su familia ven la nota y el comentario.
+- [ ] La familia ve la asistencia del mes igual que en Tesla.
+- [ ] Un alumno intenta abrir `/tarea/ID` de otra aula y no ve nada.
+- [ ] Tesla sigue funcionando normal para auxiliares y dirección.
+
+---
+
+# Fase 2
+
+| Módulo | Qué hace | Script |
+|---|---|---|
+| Notas por competencias | Registro por bimestre de las competencias del CNEB (AD, A, B, C) con conclusión descriptiva. Las tareas vinculadas a una competencia sugieren el nivel. Consolidado del aula, libreta en PDF y exportación CSV para el SIAGIE. | `campus_07_notas.sql` |
+| Comunicados | Dirección (a todo el colegio, por nivel o por aula) o el tutor (a su aula) envían comunicados. Se ve quién leyó; opcionalmente piden “Autorizo / No autorizo” con firma dibujada. | `campus_08_comunicados.sql` |
+| Mensajería | Chat docente ↔ familia por alumno. Horario de atención: fuera de horario el mensaje llega sin notificar. Dirección revisa conversaciones dejando registro del motivo. | `campus_09_mensajeria.sql` |
+| Calendario y horario | Horario semanal por aula, calendario escolar (exámenes, feriados, actividades, reuniones) y agenda que junta tareas y eventos. Carga los feriados del Perú. | `campus_10_calendario.sql` |
+| Notificaciones push | Tarea nueva, nota publicada, tardanza de Tesla, comunicado, mensaje y resumen del viernes (con botón de WhatsApp). | `campus_11_push.sql` + `functions/campus-push` |
+
+## Instalación de la Fase 2
+
+1. En **SQL Editor** ejecuta en orden `campus_07` → `campus_11`. Se pueden volver a ejecutar.
+2. Notificaciones push:
+   ```bash
+   cd campus-tesla
+   supabase functions deploy campus-push --no-verify-jwt
+   supabase secrets set --env-file supabase/push-secrets.env
+   ```
+   Luego ejecuta en SQL Editor `supabase/push-config.local.sql` (URL de la función + secreto).
+   `push-secrets.env` y `push-config.local.sql` están en `.gitignore`: **no los subas**. Para producción genera claves nuevas (`npx web-push generate-vapid-keys`) y un secreto nuevo.
+3. Agrega en Netlify (y en `.env.local`) `VITE_VAPID_PUBLIC_KEY` con la clave pública VAPID.
+4. (Opcional) Reintento de avisos cada 5 minutos con pg_cron: bloque comentado al final de `campus_11_push.sql`.
+
+## Valores por defecto (se cambian sin tocar código)
+
+| Qué | Valor | Dónde se cambia |
+|---|---|---|
+| Bimestres | I: 9 mar–8 may · II: 18 may–17 jul · III: 3 ago–2 oct · IV: 12 oct–18 dic | App → **Bimestres** |
+| Escala tarea → nivel | 18–20 AD · 14–17 A · 11–13 B · 0–10 C | `levelFromScore` en `app/src/services/notas.ts` |
+| Competencias | CNEB oficial de Primaria y Secundaria (sin competencias transversales) | Tabla `competencies` |
+| Horario de atención | Lunes a viernes, 07:30–16:00 | Cada docente en **Mensajes → Horario de atención** |
+| Feriados | Nacionales del Perú + vacaciones de medio año | App → **Agenda** (dirección) |
+
+## Flujo de un bimestre
+
+1. Los docentes registran en **Notas** (o desde el curso → *Registro de notas*). Al crear tareas marcan qué competencias evalúan.
+2. El tutor revisa el **Consolidado**, escribe la apreciación de cada alumno e imprime las **Libretas del aula**.
+3. Dirección en **Bimestres**: *Cerrar notas* y luego *Publicar libreta*. Las familias reciben la libreta en el campus.
+4. **Exportar SIAGIE** descarga el CSV por área. Compáralo con la plantilla de importación del SIAGIE antes de cargarlo.
+
+## Lista de prueba de la Fase 2
+
+- [ ] El docente registra niveles, usa “Completar con sugeridos” y escribe conclusiones para B y C.
+- [ ] Con el bimestre cerrado el docente no puede editar; dirección sí.
+- [ ] La familia no ve notas hasta que se publica el bimestre; luego imprime su libreta.
+- [ ] El tutor envía un comunicado con autorización; la familia firma desde el celular; el tutor ve la firma.
+- [ ] La familia escribe a un docente fuera de su horario: el mensaje llega, sin notificación.
+- [ ] Dirección revisa una conversación y queda en `conversation_access_log`.
+- [ ] Una tardanza registrada en Tesla llega como notificación al celular de la familia.
+- [ ] En iPhone: instalar el campus en inicio y activar notificaciones.
+
+
+
+## Panel de dirección
+
+Es el inicio de ADMIN, MANAGEMENT y AUXILIARY. Ejecuta antes `campus_12_panel_direccion.sql`. “Cursos por aula” pasa a `/admin/cursos`.
+
+| Bloque | Qué mide |
+|---|---|
+| Indicadores | Asistencia registrada, puntualidad, tareas entregadas, logro A o AD, comunicados leídos y entregas sin calificar hace más de 7 días |
+| Por aula | Los mismos indicadores por aula, ordenables; cada aula abre su consolidado |
+| Rendimiento por área | Distribución AD/A/B/C del bimestre por área (todas las aulas o una) |
+| Docentes | Entregas sin calificar y su antigüedad, demora promedio en calificar y avance del registro del bimestre |
+| Familias | Alumnos cuyas familias no leen los comunicados o no responden autorizaciones; avisa si la familia no tiene cuenta y permite escribirle |
+
+Filtros: bimestre o últimos 30 días, y nivel (Primaria/Secundaria). Las alertas usan umbrales del colegio en `THRESHOLDS` de `app/src/services/panel.ts` (por ejemplo, asistencia: atención bajo 85 %, crítico bajo 75 %). Los días de clase descuentan fines de semana y feriados del calendario. “Asistencia registrada” cuenta ingresos registrados en Tesla: un día sin registro no siempre es una falta.
+
+## Administración sin entrar a la base
+
+Ejecuta `campus_13_crear_usuarios.sql` y `campus_14_admin_cuentas.sql`. Desde entonces la Edge Function `campus-accounts` es opcional: todo se hace desde la plataforma con una cuenta ADMIN o MANAGEMENT.
+
+| Pantalla | Qué hace |
+|---|---|
+| Cuentas → Alumnos y familias | Por aula: crea las cuentas que faltan e imprime las fichas. Los alumnos sin DNI reciben un código provisional (`A0000024`); cuando Tesla tenga su DNI, el mismo botón pasa su usuario al DNI sin cambiar la contraseña. Nueva clave y desactivar. |
+| Cuentas → Docentes | Crear, editar nombre o correo, nueva clave, desactivar y saltar a sus cursos. |
+| Cuentas → Personal | Cuentas de administración, dirección o auxiliar (solo consulta). |
+| Cursos por aula → Por aula | Tutor, cursos y docente de cada aula; **Copiar a otras aulas** (por ejemplo 1.° A → 1.° B), con o sin docentes. |
+| Cursos por aula → Por docente | Elige un docente y toca las áreas de cada aula para asignarlas, quitarlas o reasignarlas; también lo haces tutor. |
+
+Una cuenta desactivada no puede iniciar sesión (ni en el campus ni en Tesla) y pierde sus permisos; reactivarla los devuelve.
+
+## Experiencia de uso
+
+- **Sincronización sola:** cada pantalla se actualiza en segundo plano cada 2 minutos, al volver a la pestaña y al recuperar internet. Solo se repinta lo que cambió. Si se publica una versión nueva del campus, se aplica en el siguiente cambio de pantalla (o con el aviso “Actualizar”).
+- **Modo oscuro:** sigue al celular o computadora; se cambia con el botón de tema.
+- **Búsqueda rápida (Ctrl + K):** docentes y dirección saltan a cualquier alumno (nombre o DNI), curso o tarea.
+- **Archivos:** arrastrar y soltar, foto con la cámara del celular, miniaturas y vista previa de PDF e imágenes dentro del campus.
+- **Celular primero:** las ventanas son paneles que suben desde abajo y se cierran deslizando; la agenda y el horario cambian de mes o día deslizando.
+- **Recorrido de bienvenida** de 3 pasos en el primer ingreso (según el rol).
+
+## Perfil Tesla (puntos, logros, personalización y canjes)
+
+Ejecuta `campus_15_perfil_tesla.sql` (requiere del 01 al 14; se puede volver a ejecutar). No cambia ninguna tabla existente: solo agrega el tipo de aviso push `TESLA` y un trigger en `submissions` que **nunca bloquea** una entrega ni una calificación.
+
+| Moneda | Para qué |
+|---|---|
+| **XP** | No se gasta. Define el nivel: nivel N empieza en `100 × N × (N−1) / 2` XP (nivel 2 = 100, 5 = 1000, 10 = 4500). |
+| **Monedas** | Se ganan con las mismas acciones y se gastan en la tienda o en cosméticos. Al pedir un canje quedan reservadas. |
+
+| Pantalla | Quién | Qué hace |
+|---|---|---|
+| `/perfil-tesla` | Alumno y familia | Portada (avatar con marco, tema, título, nivel, XP, monedas, racha, 3 insignias, bio), logros con progreso, historial de puntos, metas y ranking del aula, y **Personalizar** (solo el alumno). |
+| `/perfil-tesla/ID` | Compañeros, docentes y personal | El mismo perfil. Los compañeros no ven monedas ni historial. Docentes y dirección pueden reconocer, otorgar logros y borrar una bio inapropiada (tutor o dirección). |
+| `/tienda` | Alumno (canjea) y familia (consulta) | Catálogo, saldo, solicitudes y su estado; cancelar una pendiente. |
+| `/tesla/aula` | Docentes y personal | Alumnos del aula con botón **Reconocer**, bandeja de canjes y metas cooperativas. |
+| `/admin/recompensas` | ADMIN y MANAGEMENT | Canjes de todo el colegio; recompensas (precio, stock, imagen, límite, vigencia, nivel); logros; reglas, topes y cierre del mes; cosméticos. |
+
+**Puntos automáticos** (se editan en Recompensas → Reglas y topes): tarea a tiempo (10 XP, 2 monedas), tarea con A/AD o desde 14/20 (15, 3), racha de 5 tareas seguidas a tiempo (30, 10), asistencia completa del mes (40, 15) y mes sin tardanzas con al menos 90 % de asistencia (40, 15). La asistencia sale de Tesla al **cerrar el mes**: con el botón de la pantalla de reglas o con pg_cron (bloque al final del script). Cerrar dos veces el mismo mes no duplica puntos.
+
+**Reconocimientos**: categoría + motivo. Topes por defecto: 15 por docente al día, 3 por alumno al día y 1 del mismo docente al mismo alumno por día.
+
+**Logros**: 16 iniciales (bronce, plata, oro y platino; 2 secretos, 1 de temporada por bimestre). Los automáticos se otorgan solos; los docentes solo otorgan los manuales (por ejemplo, *Corazón Tesla*) y dirección cualquiera.
+
+**Canjes**: el alumno pide → monedas reservadas → el **tutor del aula** o dirección aprueba o rechaza (con motivo) → se marca **entregado**. Si se rechaza, se cancela o vence (7 días por defecto), se devuelven monedas y stock. Hay aviso push en cada cambio de estado; al tutor le llega cada solicitud nueva.
+
+**Ranking**: solo de **constancia** (entregas a tiempo, rachas, asistencia y puntualidad del bimestre) o **mejora** frente al bimestre anterior. Nunca de notas. Se puede apagar para todo el colegio, y cada alumno puede ocultarse. Las familias solo ven la posición de su hijo.
+
+Seguridad: los saldos y el historial solo se escriben con funciones de la base (nadie puede sumarse puntos editando tablas); las imágenes de la tienda van en el bucket privado `campus-rewards`.
+
+### Fondos, banners animados y Estrellas Tesla
+
+Ejecuta `campus_16_fondos_e_insignias.sql` después del 15 (se puede volver a ejecutar; si repites el 15, repite también el 16).
+
+- **Fondo del perfil** (nuevo cosmético): ocupa toda la página del perfil, como en Steam. Hay 13 iniciales: 3 gratis (sin fondo, *Cuaderno*, *Cordillera*), 3 por nivel, 1 por logro y 6 en venta (*Sakura*, *Código*, *Aurora*, *Circuito*, *Synthwave* y *Bobina de Tesla*, la más cara).
+- **Banners animados**: los banners pueden ser un degradado (como antes) o una escena. Se agregan 8 (1 gratis, 2 por nivel, 1 por logro y 4 en venta).
+- **Escenas**: las dibuja la app con CSS y SVG (`src/components/scenes.tsx`), así que no dependen de imágenes con derechos de autor ni de la CSP. Las miniaturas solo se mueven al pasar el cursor, y todo queda quieto si el dispositivo pide reducir el movimiento.
+- **Imágenes o videos propios**: en Recompensas → Cosméticos, dirección puede subir una imagen (JPG, PNG, WebP o GIF de hasta 4 MB) o un video en bucle (WebM o MP4 de hasta 12 MB) para un banner o un fondo. Se guardan en `campus-rewards/cosmetics/`.
+- **Estrellas Tesla** (inspiradas en las *Stella* de SPY×FAMILY): reemplazan la idea de rango por metal. Bronce (nivel 2), Plata (5), Oro (8) y **Gran Estrella Tesla** (12); dentro de cada una se suman de 1 a 3 estrellitas. Los niveles se cambian en Reglas y topes. Cada Estrella es también un **pin físico**: al ganarla llega un aviso push, y el tutor o dirección registra la entrega en la pestaña **Estrellas** de `/tesla/aula` o de `/admin/recompensas`. El alumno ve en su perfil qué pines ya recibió.
+
+### Perfil Tesla+ (efectos, retos, cofres y trayectoria)
+
+Ejecuta `campus_17_perfil_tesla_plus.sql` después del 16 (se puede volver a ejecutar).
+
+| Novedad | Qué hace |
+|---|---|
+| **Ceremonia** | Al entrar al campus después de subir de nivel, el alumno ve una animación a pantalla completa (confeti y el pin que cae si ganó una Estrella). Se recuerda en el dispositivo para no repetirla. |
+| **Efectos del nombre y auras** | Dos cosméticos nuevos: el nombre puede ser dorado, hielo, neón, eléctrico, arcoíris, fuego o glitch, y el avatar puede llevar chispas, halo, órbita, plasma, pétalos, estelar o la Corona Tesla. Se ven en el perfil y en las tarjetas del aula. |
+| **Perfil vivo** | El fondo se mueve un poco con el mouse o al inclinar el celular, los paneles se ven en vidrio sobre el fondo y la barra de XP toma los colores del fondo elegido. |
+| **Vitrina** | El alumno elige hasta 4 bloques bajo su portada: racha, estadísticas, Estrellas, chispas y últimos logros. Solo se publica lo que elige. |
+| **Chispas** | Un alumno le da una chispa a un compañero de su aula con un motivo positivo (me ayudó, trabajo en equipo…). Tiene 3 al día, una por compañero. Quien la recibe gana 5 XP y 1 moneda (máximo 3 al día) y le llega un aviso. Hay logros nuevos por recibir chispas. |
+| **Misiones semanales** | 5 iniciales que se renuevan cada lunes. El alumno reclama el premio al cumplirlas. Se editan en Recompensas → Retos. |
+| **Pase de temporada** | Cada bimestre, la XP ganada desbloquea 11 premios: monedas y cosméticos exclusivos (tipo «Pase de temporada»). Se pueden definir premios propios para un bimestre. |
+| **Cofres sorpresa** | Se abren solo con monedas ganadas (nunca con dinero) y muestran sus probabilidades. Dan cosméticos de tipo «Cofres sorpresa»; si ya tiene todos, se devuelve la mitad del precio. |
+| **Trayectoria** | Pestaña con los hitos del alumno: niveles, Estrellas, pines entregados, logros, chispas, premios de temporada y reconocimientos (estos últimos solo para quien puede ver los datos privados). |
+| **Compartir** | El alumno o su familia descargan (o comparten desde el celular) una imagen del perfil lista para WhatsApp. Se genera en el navegador. |
+
+## Campus completo (scripts 18, 19 y 20)
+
+Ejecuta en orden `campus_18_aprendizaje.sql`, `campus_19_gestion.sql` y `campus_20_comunicacion.sql` (se pueden volver a ejecutar) **antes** de publicar la app: la app ya usa sus columnas y funciones.
+
+### Aprendizaje (script 18)
+| Novedad | Dónde |
+|---|---|
+| **Evaluaciones en línea**: opción múltiple, varias correctas, verdadero o falso, relacionar, respuesta corta y desarrollo. Corrección automática, tiempo límite, intentos, orden al azar, guardado automático y modo concentración. La nota pasa sola al registro (y al Perfil Tesla). | Curso → Nueva tarea o evaluación |
+| **Banco de preguntas** compartido entre docentes («Al banco» / «Desde el banco»). | Evaluación · Recursos |
+| **Rúbricas** con descriptores AD/A/B/C por criterio; al marcarlas, la nota sale sola. El alumno ve la rúbrica antes y después. | Tarea → Usar rúbrica · Recursos |
+| **Unidades** con materiales y tareas en secuencia, avance por unidad para el alumno y orden con arrastrar y soltar. | Curso → Unidades |
+| **Foro del curso** con mejor respuesta, temas fijados o cerrados y moderación. | Curso → Foro |
+| **Tareas en grupo** (una entrega y una nota para todo el grupo, grupos al azar). | Tarea → Hacer en grupos |
+| **Reentrega con historial de versiones**. | Tarea → Versiones anteriores |
+| **Retroalimentación**: nota de voz, correcciones dibujadas sobre las fotos entregadas y comentarios guardados. | Calificar entrega |
+| **Calificación rápida**: J / K (o deslizar) para pasar entre entregas. | Tarea (docente) |
+| **Publicación programada** de tareas, materiales y anuncios. | Formularios de creación |
+| **Videos con preguntas** intercaladas (YouTube). | Material de video |
+| **Duplicar** una tarea a otras secciones y **traer contenido** de otro curso. | Tarea / Curso |
+| **Portada animada** del curso (escenas del Perfil Tesla) y **búsqueda dentro del curso** (atajo «/»). | Curso |
+
+### Gestión (script 19)
+- **Alertas tempranas** (`/alertas`): tareas vencidas, faltas, tardanzas y notas B/C con puntaje de riesgo; botón para escribir a la familia y **observaciones privadas** (también en la libreta).
+- **Panel de alertas del colegio** en el panel de dirección.
+- **Citas** (`/citas`): el docente publica horarios y la familia reserva; se exportan al calendario.
+- **Justificaciones** (`/justificaciones`): la familia envía el motivo y la constancia; el tutor o secretaría aprueba.
+- **Encuestas** (`/encuestas`) con resultados en gráficos.
+- **Sistema** (`/admin/sistema`, solo dirección): bitácora de auditoría (notas cambiadas, borrados, claves restablecidas, permisos), estadísticas de uso, errores de la app, **permisos** de coordinación, psicología y secretaría (sin tocar los roles de Tesla), **carga masiva por Excel** (docentes, cursos por aula y horario), **inicio de año escolar** y **respaldo** del año en un archivo.
+- **Planificador** (`/planificador`) y **Recursos** (`/recursos`) para docentes; **exportar el registro a Excel** (niveles, conclusiones y competencias).
+- **Comparación con el bimestre anterior** en la libreta (siempre contra uno mismo).
+
+### Comunicación (script 20)
+- **Avisos**: horario de silencio, fines de semana y elegir qué avisos recibir (`/ajustes`). Los avisos retenidos salen al terminar el silencio (para que salgan puntuales, activa el pg_cron del final del script).
+- **Mensajes** con fotos, notas de voz, «escribiendo…» y «visto».
+- **Grupos del aula** (`/grupos`) para alumnos o familias, solo docentes o conversación abierta.
+- **Anuncios** con reacciones y confirmación de lectura.
+- **Tutor IA** por curso (pestaña del curso): ayuda sin dar respuestas, con indicaciones y límite diario del docente. Requiere desplegar la Edge Function `campus-tutor` y el secreto `ANTHROPIC_API_KEY` (instrucciones en `supabase/functions/campus-tutor/index.ts`).
+
+### Experiencia de uso
+App instalable con invitación propia, aviso sin conexión y lectura sin conexión de los materiales ya abiertos; borradores automáticos (entregas, tareas y comunicados); «Deshacer» al borrar materiales; atajos de teclado (`?`); ajustes de texto grande, alto contraste y menos movimiento; saludo según la hora con decoración por fecha (inicio de clases, Fiestas Patrias, Canción Criolla, Navidad); transiciones entre pantallas; gráficos animados; pantalla de error amable que se reporta sola.
+
+### Pruebas
+`supabase/tests/campus_pruebas.sql`: pruebas de niveles, Estrellas, corrección de evaluaciones, libro de puntos, permisos de funciones, RLS y horario de silencio. Se ejecutan en el SQL Editor dentro de una transacción que se deshace (no cambia datos).
+
+## Qué sigue
+
+Competencias transversales y comportamiento en la libreta, la plantilla oficial del SIAGIE (cuando el colegio comparta el formato exacto) y el campus en quechua.
