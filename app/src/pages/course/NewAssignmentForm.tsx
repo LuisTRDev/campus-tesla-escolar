@@ -5,7 +5,8 @@ import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
 import { isoToLocalInput, localInputToIso } from '@/lib/format'
 import { createAssignment } from '@/services/campus'
-import { FileDropzone } from '@/components/files'
+import { AttachmentInput } from '@/components/files'
+import { FILE_UPLOADS } from '@/lib/links'
 import { listCompetencies, setAssignmentCompetencies } from '@/services/notas'
 import { useAsync } from '@/lib/useAsync'
 import { listUnits } from '@/services/aprendizaje'
@@ -37,6 +38,7 @@ export function NewAssignmentForm({ offeringId, subjectId, onDone, defaultKind =
   const [maxScore, setMaxScore] = useState('20')
   const [allowLate, setAllowLate] = useState(true)
   const [file, setFile] = useState<File | null>(null)
+  const [link, setLink] = useState('')
   const [competencyIds, setCompetencyIds] = useState<number[]>([])
   const competencies = useAsync(() => listCompetencies([subjectId]), [subjectId])
   const [busy, setBusy] = useState<'PUBLISHED' | 'DRAFT' | null>(null)
@@ -51,7 +53,7 @@ export function NewAssignmentForm({ offeringId, subjectId, onDone, defaultKind =
       // Las evaluaciones se crean como borrador: primero se agregan las preguntas.
       const finalStatus = scheduled || kind === 'QUIZ' ? 'DRAFT' : status
       const id = await createAssignment({
-        offeringId, title, instructions, file,
+        offeringId, title, instructions, file, link,
         dueAt: localInputToIso(due),
         gradingType,
         maxScore: Number(maxScore),
@@ -124,8 +126,8 @@ export function NewAssignmentForm({ offeringId, subjectId, onDone, defaultKind =
         )}
       </div>
       <div>
-        <p className="mb-1.5 text-sm font-bold">Archivo de apoyo <span className="font-normal text-texto-suave">(opcional)</span></p>
-        <FileDropzone files={file ? [file] : []} onChange={(l) => setFile(l[0] ?? null)} maxBytes={25 * 1024 * 1024} hint="Ficha, guía o lectura. Máximo 25 MB." />
+        <p className="mb-1.5 text-sm font-bold">{FILE_UPLOADS ? 'Archivo de apoyo' : 'Enlace de apoyo'} <span className="font-normal text-texto-suave">(opcional)</span></p>
+        <AttachmentInput file={file} onFile={setFile} link={link} onLink={setLink} maxBytes={25 * 1024 * 1024} hint="Ficha, guía o lectura. Máximo 25 MB." linkHint="Ficha, guía o lectura en Google Drive." />
       </div>
       {!!competencies.data?.length && (
         <fieldset>

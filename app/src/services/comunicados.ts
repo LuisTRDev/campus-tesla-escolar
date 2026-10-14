@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { cleanSingleLine, cleanText, positiveInteger, safeFileName } from '@/lib/security'
 import { UserError } from '@/lib/errors'
+import { assertUploads, cleanLink, isExternal, linkName } from '@/lib/links'
 import type { Circular, CircularRecipient, CircularScope, ConsentResponse } from '@/types'
 
 export const BUCKET_CIRCULARS = 'campus-circulars'
@@ -72,6 +73,8 @@ export async function createCircular(input: {
   signature: boolean
   deadline: string | null
   file?: File | null
+  /** Modo enlaces: enlace del adjunto (se guarda en attachment_path). */
+  link?: string | null
   authorId: string
 }): Promise<number> {
   const title = cleanSingleLine(input.title, 160)
@@ -81,7 +84,11 @@ export async function createCircular(input: {
 
   let attachmentPath: string | null = null
   let attachmentName: string | null = null
-  if (input.file) {
+  if (input.link?.trim()) {
+    attachmentPath = cleanLink(input.link)
+    attachmentName = linkName(attachmentPath)
+  } else if (input.file) {
+    assertUploads()
     if (input.file.size > 15 * 1024 * 1024) throw new UserError('El adjunto supera los 15 MB.')
     attachmentPath = `${crypto.randomUUID()}/${safeFileName(input.file.name)}`
     attachmentName = cleanSingleLine(input.file.name, 160)
@@ -103,7 +110,7 @@ export async function createCircular(input: {
     attachment_name: attachmentName,
   }).select('id').single()
   if (error) {
-    if (attachmentPath) await supabase.storage.from(BUCKET_CIRCULARS).remove([attachmentPath])
+    if (attachmentPath && !isExternal(attachmentPath)) await supabase.storage.from(BUCKET_CIRCULARS).remove([attachmentPath])
     throw error
   }
   return (data as { id: number }).id
@@ -111,7 +118,7 @@ export async function createCircular(input: {
 
 export async function deleteCircular(circular: Circular): Promise<void> {
   must(await supabase.from('circulars').delete().eq('id', positiveInteger(circular.id)))
-  if (circular.attachment_path) await supabase.storage.from(BUCKET_CIRCULARS).remove([circular.attachment_path])
+  if (circular.attachment_path && !isExternal(circular.attachment_path)) await supabase.storage.from(BUCKET_CIRCULARS).remove([circular.attachment_path])
 }
 
 export async function markCircularRead(id: number): Promise<void> {

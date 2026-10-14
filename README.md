@@ -385,6 +385,28 @@ App instalable con invitación propia, aviso sin conexión y lectura sin conexi�
 ### Pruebas
 `supabase/tests/campus_pruebas.sql`: pruebas de niveles, Estrellas, corrección de evaluaciones, libro de puntos, permisos de funciones, RLS y horario de silencio. Se ejecutan en el SQL Editor dentro de una transacción que se deshace (no cambia datos).
 
+## Modo enlaces (sin subir archivos) · script 21
+
+Con el plan gratuito de Supabase (1 GB de Storage y 500 MB de base de datos) el campus funciona en **modo enlaces**: ningún archivo se sube a Supabase. Los archivos se guardan en Google Drive (o en OneDrive, YouTube, Canva…) y en el campus solo se pega el enlace.
+
+| Dónde | Modo enlaces | Modo archivos |
+|---|---|---|
+| Materiales del curso | «Documento o enlace» y «Video» | además, «Archivo» |
+| Archivo de apoyo de una tarea | Enlace | Archivo de hasta 25 MB |
+| Entrega del alumno | Hasta 5 enlaces | Hasta 5 archivos |
+| Comunicados y justificaciones | Enlace del adjunto o de la constancia | Archivo |
+| Mensajes y grupos | Solo texto (los enlaces se pueden tocar) | Fotos, PDF y notas de voz |
+| Corrección del docente | Comentario escrito | Además, nota de voz y anotaciones sobre la imagen |
+| Premios, banners y fondos | Ilustraciones y escenas del campus | Además, imágenes y videos propios |
+
+Los enlaces de **Drive, Docs, Hojas de cálculo, Presentaciones, Formularios y YouTube** se ven dentro del campus. Los demás se abren en una pestaña nueva. Para que otros puedan abrirlos, el archivo de Drive debe estar compartido como **«Cualquier persona con el enlace»**; el campus lo recuerda junto a cada campo.
+
+**Instalación:** ejecuta `campus_21_modo_enlaces.sql` en SQL Editor. Deja el campus en modo enlaces, bloquea las subidas a los buckets del campus (incluso por API) sin borrar nada y al final muestra el modo actual y el espacio usado. Si lo vuelves a ejecutar, conserva el modo elegido.
+
+**Cambiar de modo** (por ejemplo, al pasar a un plan de pago): en el campus, con una cuenta ADMIN o MANAGEMENT, ve a **Sistema → Archivos** y elige *Modo enlaces* o *Modo archivos*. No hace falta tocar el SQL ni volver a publicar. La pantalla muestra cuánto espacio se usa frente al límite del plan gratuito, y cada cambio queda en la auditoría. La base hace cumplir el modo elegido, y quien ya tenga el campus abierto lo verá al cambiar de pantalla o al volver a abrirlo. Lo que se creó en un modo se sigue viendo en el otro, porque los dos conviven sin migrar datos.
+
+`VITE_FILE_UPLOADS` solo se usa como respaldo mientras no se haya ejecutado el script 21.
+
 ## Qué sigue
 
 Competencias transversales y comportamiento en la libreta, la plantilla oficial del SIAGIE (cuando el colegio comparta el formato exacto) y el campus en quechua.

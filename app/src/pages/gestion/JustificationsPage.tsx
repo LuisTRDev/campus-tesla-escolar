@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Check, FileCheck, Paperclip, Send, Trash2, X } from 'lucide-react'
 import { useAuth, useFocusStudent } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, PageHeader, Panel, Segmented, Textarea } from '@/components/ui'
-import { FileDropzone, usePreview } from '@/components/files'
+import { AttachmentInput, usePreview } from '@/components/files'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
@@ -37,6 +37,7 @@ function FamilyView() {
   const { data, loading, error, reload } = useAsync(() => (child ? listJustifications({ studentId: child.id }) : Promise.resolve([])), [child?.id])
   const [form, setForm] = useState({ kind: 'FALTA' as 'FALTA' | 'TARDANZA', from: limaToday(), to: limaToday(), reason: '' })
   const [file, setFile] = useState<File | null>(null)
+  const [link, setLink] = useState('')
   const [busy, setBusy] = useState(false)
 
   async function submit(e: FormEvent) {
@@ -44,10 +45,11 @@ function FamilyView() {
     if (!child) return
     setBusy(true)
     try {
-      await createJustification({ studentId: child.id, ...form, file })
+      await createJustification({ studentId: child.id, ...form, file, link })
       toast('Justificación enviada al tutor.')
       setForm({ ...form, reason: '' })
       setFile(null)
+      setLink('')
       void reload(true)
     } catch (err) {
       toast(toMessage(err), 'error')
@@ -69,7 +71,7 @@ function FamilyView() {
           <Field label="Motivo"><Textarea value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} maxLength={1000} required className="min-h-24" placeholder="Tuvo fiebre y lo llevamos al médico." /></Field>
           <div>
             <p className="mb-1.5 text-sm font-bold">Constancia <span className="font-normal text-texto-suave">(opcional: receta, certificado o foto)</span></p>
-            <FileDropzone files={file ? [file] : []} onChange={(l) => setFile(l[0] ?? null)} maxBytes={5 * 1024 * 1024} accept="image/jpeg,image/png,image/webp,application/pdf" hint="Foto o PDF de hasta 5 MB." />
+            <AttachmentInput file={file} onFile={setFile} link={link} onLink={setLink} maxBytes={5 * 1024 * 1024} accept="image/jpeg,image/png,image/webp,application/pdf" hint="Foto o PDF de hasta 5 MB." linkHint="Sube la foto o el PDF a Google Drive y pega el enlace." />
           </div>
           <Button type="submit" loading={busy}><Send className="h-4 w-4" />Enviar justificación</Button>
         </form>

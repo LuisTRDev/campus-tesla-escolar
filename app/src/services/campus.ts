@@ -1,6 +1,7 @@
 import { BUCKET_MATERIALS, BUCKET_SUBMISSIONS, supabase } from '@/lib/supabase'
 import { cleanSingleLine, cleanText, positiveInteger, safeFileName } from '@/lib/security'
 import { UserError } from '@/lib/errors'
+import { assertUploads, cleanLink, FILE_UPLOADS, isExternal, linkName } from '@/lib/links'
 import type {
   Announcement, Assignment, AssignmentStatus, AssignmentWithCourse, AttendanceRow, Classroom, GradingType, Level,
   Material, NotificationRow, Offering, PensionRow, QuizSettings, StudentLite, StudentTaskState, Subject, Submission, SubmissionFile,
@@ -216,6 +217,7 @@ export async function createMaterial(input: {
   if (input.publishAt && Date.parse(input.publishAt) > Date.now()) Object.assign(row, { published: false, publish_at: input.publishAt })
 
   if (input.kind === 'FILE') {
+    assertUploads()
     const file = input.file
     if (!file) throw new UserError('Elige un archivo.')
     if (file.size > MAX_MATERIAL_BYTES) throw new UserError('El archivo supera los 25 MB.')
@@ -231,15 +233,13 @@ export async function createMaterial(input: {
     return
   }
 
-  const url = cleanSingleLine(input.url, 600)
-  if (!/^https:\/\//i.test(url)) throw new UserError('El enlace debe empezar con https://')
-  row.url = url
+  row.url = cleanLink(input.url)
   must(await supabase.from('materials').insert(row))
 }
 
 /** Borra el archivo solo si ningún otro material o tarea (por ejemplo, una copia) lo usa. */
 async function removeIfUnused(path: string | null) {
-  if (!path) return
+  if (!path || isExternal(path)) return
   const [m, a] = await Promise.all([
     supabase.from('materials').select('id', { count: 'exact', head: true }).eq('storage_path', path),
     supabase.from('assignments').select('id', { count: 'exact', head: true }).eq('attachment_path', path),
@@ -302,6 +302,8 @@ export type AssignmentInput = {
   allowLate: boolean
   status: AssignmentStatus
   file?: File | null
+  /** Modo enlaces: enlace del archivo de apoyo (se guarda en attachment_path). */
+  link?: string | null
   kind?: 'TASK' | 'QUIZ'
   unitId?: number | null
   rubricId?: number | null
@@ -321,7 +323,11 @@ export async function createAssignment(input: AssignmentInput): Promise<number> 
 
   let attachmentPath: string | null = null
   let attachmentName: string | null = null
-  if (input.file) {
+  if (input.link?.trim()) {
+    attachmentPath = cleanLink(input.link)
+    attachmentName = linkName(attachmentPath)
+  } else if (input.file) {
+    assertUploads()
     if (input.file.size > MAX_MATERIAL_BYTES) throw new UserError('El archivo supera los 25 MB.')
     attachmentPath = uniquePath(String(offeringId), input.file.name)
     attachmentName = cleanSingleLine(input.file.name, 160)
@@ -347,7 +353,7 @@ export async function createAssignment(input: AssignmentInput): Promise<number> 
     quiz_settings: input.quizSettings ?? {},
   }).select('id').single()
   if (error) {
-    if (attachmentPath) await supabase.storage.from(BUCKET_MATERIALS).remove([attachmentPath])
+    if (attachmentPath && !isExternal(attachmentPath)) await supabase.storage.from(BUCKET_MATERIALS).remove([attachmentPath])
     throw error
   }
   return (data as { id: number }).id
@@ -396,14 +402,20 @@ export async function submitWork(input: {
   content: string
   keepFiles: SubmissionFile[]
   newFiles: File[]
+  /** Modo enlaces: enlaces nuevos (Drive, Docs…) que se guardan como archivos de tipo 'link'. */
+  newLinks?: string[]
   existing: Submission | null
 }): Promise<void> {
   const assignmentId = positiveInteger(input.assignmentId)
   const studentId = positiveInteger(input.studentId)
   const content = cleanText(input.content, 8000)
-  const total = input.keepFiles.length + input.newFiles.length
-  if (!content && total === 0) throw new UserError('Escribe una respuesta o adjunta al menos un archivo.')
-  if (total > 5) throw new UserError('Puedes adjuntar hasta 5 archivos.')
+  const links: SubmissionFile[] = [...new Set((input.newLinks ?? []).map(cleanLink))]
+    .filter((url) => !input.keepFiles.some((k) => k.path === url))
+    .map((url) => ({ path: url, name: linkName(url), size: 0, type: 'link' }))
+  const total = input.keepFiles.length + input.newFiles.length + links.length
+  if (!content && total === 0) throw new UserError(FILE_UPLOADS ? 'Escribe una respuesta o adjunta al menos un archivo.' : 'Escribe una respuesta o pega al menos un enlace.')
+  if (total > 5) throw new UserError(FILE_UPLOADS ? 'Puedes adjuntar hasta 5 archivos.' : 'Puedes adjuntar hasta 5 enlaces.')
+  if (input.newFiles.length) assertUploads()
   for (const file of input.newFiles) {
     if (file.size > MAX_SUBMISSION_BYTES) throw new UserError(`"${file.name}" supera los 15 MB.`)
   }
@@ -419,7 +431,7 @@ export async function submitWork(input: {
     uploaded.push({ path, name: cleanSingleLine(file.name, 160), size: file.size, type: file.type })
   }
 
-  const files = [...input.keepFiles, ...uploaded]
+  const files = [...input.keepFiles, ...uploaded, ...links]
   const result = input.existing
     ? await supabase.from('submissions').update({ content: content || null, files }).eq('id', input.existing.id)
     : await supabase.from('submissions').insert({ assignment_id: assignmentId, student_id: studentId, content: content || null, files })
@@ -430,7 +442,7 @@ export async function submitWork(input: {
   }
 
   // Archivos que el alumno quitó de su entrega.
-  const removed = (input.existing?.files ?? []).filter((f) => !input.keepFiles.some((k) => k.path === f.path))
+  const removed = (input.existing?.files ?? []).filter((f) => !isExternal(f.path) && !input.keepFiles.some((k) => k.path === f.path))
   if (removed.length) await supabase.storage.from(BUCKET_SUBMISSIONS).remove(removed.map((f) => f.path))
 }
 

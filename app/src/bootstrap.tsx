@@ -10,8 +10,17 @@ import { AuthProvider } from '@/auth/AuthProvider'
 import { ToastProvider } from '@/lib/toast'
 import { PreviewProvider } from '@/components/files'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { hasCachedFileMode, loadFileMode } from '@/lib/links'
+import { onRefresh } from '@/lib/sync'
 
-export function mount(root: HTMLElement) {
+export async function mount(root: HTMLElement) {
+  // Modo enlaces o archivos (lo elige la dirección en Sistema → Archivos).
+  // La primera vez en el dispositivo se espera a la base (máx. 3 s); después
+  // se usa el último valor y se actualiza en segundo plano.
+  const mode = loadFileMode().catch(() => false)
+  if (!hasCachedFileMode()) await Promise.race([mode, new Promise((r) => setTimeout(r, 3000))])
+  onRefresh(() => void loadFileMode().catch(() => undefined))
+
   ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <BrowserRouter>

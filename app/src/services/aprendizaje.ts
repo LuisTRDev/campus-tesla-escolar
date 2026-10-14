@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { cleanSingleLine, cleanText, positiveInteger, safeFileName } from '@/lib/security'
 import { UserError } from '@/lib/errors'
+import { assertUploads } from '@/lib/links'
 import type { Level } from '@/types'
 
 // ---------------------------------------------------------------------------
@@ -294,6 +295,7 @@ export async function listVersions(submissionId: number): Promise<SubmissionVers
 }
 
 export async function uploadFeedbackFile(submissionId: number, blob: Blob, name: string): Promise<string> {
+  assertUploads()
   const path = `${positiveInteger(submissionId)}/${crypto.randomUUID().slice(0, 8)}-${safeFileName(name)}`
   const up = await supabase.storage.from(BUCKET_FEEDBACK).upload(path, blob, { contentType: blob.type || undefined, upsert: false })
   if (up.error) throw up.error

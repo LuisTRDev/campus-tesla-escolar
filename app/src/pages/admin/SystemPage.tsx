@@ -2,24 +2,25 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import readXlsxFile from 'read-excel-file/browser'
 import writeXlsxFile from 'write-excel-file/browser'
-import { AlertCircle, CalendarPlus, Database, Download, FileSpreadsheet, Monitor, Search, ShieldCheck, Smartphone, Tablet, Trash2, Upload } from 'lucide-react'
+import { AlertCircle, CalendarPlus, Check, Database, Download, FileSpreadsheet, HardDrive, Link2, Monitor, Search, ShieldCheck, Smartphone, Tablet, Trash2, Upload } from 'lucide-react'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, PageHeader, Panel, Segmented, Select } from '@/components/ui'
 import { StatTile } from '@/components/charts'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
-import { formatShort, formatTime } from '@/lib/format'
+import { formatBytes, formatShort, formatTime } from '@/lib/format'
+import { setFileMode, useFileUploads } from '@/lib/links'
 import { downloadText } from '@/lib/ux'
 import { classroomLabel, listClassroomOfferings, listClassrooms, listSubjects, upsertOfferings } from '@/services/campus'
 import { createBlock } from '@/services/calendario'
 import { createStaff, listStaffAccounts, type Credential } from '@/services/cuentas'
 import {
-  AUDIT_ACTION_LABEL, PERMISSION_LABEL, clearClientErrors, exportYear, listAudit, listClientErrors, listPermissions, listYears, setPermission,
-  startYear, usageSummary, type CampusPermission,
+  AUDIT_ACTION_LABEL, DATABASE_LIMIT_BYTES, PERMISSION_LABEL, STORAGE_LIMIT_BYTES, clearClientErrors, exportYear, listAudit, listClientErrors,
+  listPermissions, listYears, setPermission, startYear, storageUsage, usageSummary, type CampusPermission,
 } from '@/services/gestion'
 import { ROLE_LABELS, type Classroom } from '@/types'
 
-type Tab = 'auditoria' | 'uso' | 'errores' | 'permisos' | 'carga' | 'anio' | 'respaldo'
+type Tab = 'auditoria' | 'uso' | 'errores' | 'permisos' | 'archivos' | 'carga' | 'anio' | 'respaldo'
 
 // ---------------------------------------------------------------------------
 // Auditoría
@@ -190,6 +191,90 @@ function PermissionsTab() {
         </table>
       </div>
     </Panel>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Modo de archivos: enlaces (sin subir nada a Supabase) o archivos
+// ---------------------------------------------------------------------------
+function FilesModeTab() {
+  const toast = useToast()
+  const uploads = useFileUploads()
+  const [busy, setBusy] = useState(false)
+  const { data, loading, error, reload } = useAsync(storageUsage, [])
+
+  async function change(enabled: boolean) {
+    if (enabled === uploads) return
+    const question = enabled
+      ? '¿Activar el modo archivos? Docentes, alumnos y familias podrán subir archivos a Supabase. Hazlo solo si el plan tiene espacio suficiente.'
+      : '¿Activar el modo enlaces? Desde ahora nadie podrá subir archivos: se pegarán enlaces de Google Drive, YouTube, etc. Lo que ya se subió se sigue viendo.'
+    if (!confirm(question)) return
+    setBusy(true)
+    try {
+      await setFileMode(enabled)
+      toast(enabled ? 'Modo archivos activado.' : 'Modo enlaces activado.', 'ok')
+    } catch (err) {
+      toast(toMessage(err), 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const campusBuckets = data?.buckets.filter((b) => b.bucket.startsWith('campus-')) ?? []
+  const storageBytes = data?.buckets.reduce((sum, b) => sum + b.bytes, 0) ?? 0
+  const storageShare = storageBytes / STORAGE_LIMIT_BYTES
+  const dbShare = (data?.database_bytes ?? 0) / DATABASE_LIMIT_BYTES
+  const tone = (share: number) => (share >= 0.9 ? 'critical' : share >= 0.75 ? 'warning' : null)
+
+  const modes = [
+    { value: false, icon: Link2, title: 'Modo enlaces', text: 'Nada se sube a Supabase. Materiales, entregas y adjuntos son enlaces de Google Drive, Docs, YouTube… Sin notas de voz, fotos en el chat ni imágenes propias en los premios. Recomendado con el plan gratuito.' },
+    { value: true, icon: HardDrive, title: 'Modo archivos', text: 'Se suben archivos a los buckets privados del campus (hasta 25 MB cada uno), además de los enlaces. Vuelven las notas de voz, las fotos del chat y las anotaciones sobre imágenes. Necesita un plan con espacio.' },
+  ]
+
+  return (
+    <div className="space-y-5">
+      <Panel title="Modo de archivos">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {modes.map((m) => {
+            const active = m.value === uploads
+            return (
+              <button key={m.title} type="button" disabled={busy} onClick={() => void change(m.value)} aria-pressed={active}
+                className={`flex flex-col gap-2 rounded-xl border p-4 text-left transition ${active ? 'border-tinta bg-papel ring-2 ring-tinta/30' : 'border-linea bg-superficie hover:border-tinta/50'} disabled:opacity-60`}>
+                <span className="flex items-center gap-2 font-bold">
+                  <m.icon className="h-5 w-5" />{m.title}
+                  {active && <Badge tone="ok" className="ml-auto"><Check className="h-3.5 w-3.5" />Activo</Badge>}
+                </span>
+                <span className="text-sm text-texto-suave">{m.text}</span>
+              </button>
+            )
+          })}
+        </div>
+        <p className="mt-4 text-xs text-texto-suave">El cambio vale para todo el campus y queda en la auditoría. La base lo hace cumplir aunque alguien use la API. Quien ya tenga el campus abierto lo verá al cambiar de pantalla o al volver a abrirlo. Los archivos y enlaces que ya existen se siguen viendo en ambos modos.</p>
+      </Panel>
+
+      <Panel title="Espacio usado en Supabase" action={<Button variant="secondary" onClick={() => void reload()}>Actualizar</Button>}>
+        {error ? <ErrorBox message={error} onRetry={() => void reload()} /> : loading || !data ? <Loading /> : (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <StatTile label="Archivos (Storage)" value={formatBytes(storageBytes)} meter={storageShare} tone={tone(storageShare)}
+                detail={`de 1 GB del plan gratuito · ${Math.round(storageShare * 100)} %`} />
+              <StatTile label="Base de datos" value={formatBytes(data.database_bytes)} meter={dbShare} tone={tone(dbShare)}
+                detail={`de 500 MB del plan gratuito · ${Math.round(dbShare * 100)} %`} />
+            </div>
+            {campusBuckets.length > 0 && (
+              <table className="mt-4 w-full text-sm">
+                <thead><tr className="text-left text-xs text-texto-suave"><th className="py-2">Carpeta</th><th className="text-right">Archivos</th><th className="text-right">Espacio</th></tr></thead>
+                <tbody className="divide-y divide-linea">
+                  {campusBuckets.map((b) => (
+                    <tr key={b.bucket}><td className="py-2">{b.bucket}</td><td className="text-right">{b.files}</td><td className="text-right">{formatBytes(b.bytes)}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
+      </Panel>
+    </div>
   )
 }
 
@@ -412,10 +497,11 @@ export default function SystemPage() {
   const tab = (params.get('vista') as Tab) || 'auditoria'
   return (
     <>
-      <PageHeader title="Sistema" subtitle="Auditoría, uso del campus, errores, permisos, carga masiva y respaldo." />
+      <PageHeader title="Sistema" subtitle="Auditoría, uso del campus, errores, permisos, archivos, carga masiva y respaldo." />
       <div className="mb-5 overflow-x-auto">
         <Segmented value={tab} onChange={(v) => setParams({ vista: v }, { replace: true })} options={[
           { value: 'auditoria', label: 'Auditoría' }, { value: 'uso', label: 'Uso' }, { value: 'errores', label: 'Errores' }, { value: 'permisos', label: 'Permisos' },
+          { value: 'archivos', label: 'Archivos' },
           { value: 'carga', label: 'Carga masiva' }, { value: 'anio', label: 'Año escolar' }, { value: 'respaldo', label: 'Respaldo' },
         ]} />
       </div>
@@ -423,6 +509,7 @@ export default function SystemPage() {
       {tab === 'uso' && <UsageTab />}
       {tab === 'errores' && <ErrorsTab />}
       {tab === 'permisos' && <PermissionsTab />}
+      {tab === 'archivos' && <FilesModeTab />}
       {tab === 'carga' && <BulkImportTab />}
       {tab === 'anio' && <YearTab />}
       {tab === 'respaldo' && <BackupTab />}

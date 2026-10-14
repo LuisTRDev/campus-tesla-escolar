@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { cleanText, positiveInteger, safeFileName } from '@/lib/security'
 import { UserError } from '@/lib/errors'
+import { assertUploads } from '@/lib/links'
 
 function must<T>(result: { data: T | null; error: unknown }): T {
   if (result.error) throw result.error
@@ -44,6 +45,7 @@ export async function savePrefs(p: NotificationPrefs) {
 export type AttachmentKind = 'IMAGE' | 'AUDIO' | 'FILE'
 
 export async function uploadMessageFile(scope: 'c' | 'g', id: number, blob: Blob, name: string): Promise<{ path: string; kind: AttachmentKind; name: string }> {
+  assertUploads()
   if (blob.size > 10 * 1024 * 1024) throw new UserError('El archivo supera los 10 MB.')
   const kind: AttachmentKind = blob.type.startsWith('image/') ? 'IMAGE' : blob.type.startsWith('audio/') ? 'AUDIO' : 'FILE'
   const path = `${scope}/${positiveInteger(id)}/${crypto.randomUUID().slice(0, 8)}-${safeFileName(name)}`

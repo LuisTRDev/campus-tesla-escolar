@@ -112,6 +112,7 @@ export type QuizSettings = {
 
 export type AssignmentWithCourse = Assignment & { offering: Offering }
 
+/** `path` es la ruta en Storage o, en modo enlaces, el enlace (https://…) con `type: 'link'`. */
 export type SubmissionFile = { path: string; name: string; size: number; type: string }
 export type SubmissionStatus = 'SUBMITTED' | 'RETURNED' | 'GRADED'
 export type Level = 'AD' | 'A' | 'B' | 'C'

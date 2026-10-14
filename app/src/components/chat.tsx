@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
 import { cn } from '@/lib/utils'
+import { FILE_UPLOADS } from '@/lib/links'
 import { BUCKET_MESSAGES, type AttachmentKind } from '@/services/comunicacion'
 
 // ---------------------------------------------------------------------------
@@ -118,11 +119,16 @@ export function ChatComposer({ onSend, onFile, onTyping, disabled, placeholder =
   if (disabled) return null
   return (
     <form onSubmit={submit} className="flex items-end gap-2 border-t border-linea bg-superficie p-3">
-      <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => void sendFile(e.target.files?.[0])} />
-      <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-        className={cn('flex min-h-11 min-w-11 items-center justify-center rounded-lg text-texto-suave hover:bg-papel hover:text-texto', uploading && 'animate-pulse')} aria-label="Enviar foto o archivo">
-        <Camera className="h-5 w-5" />
-      </button>
+      {/* En modo enlaces no hay fotos ni notas de voz: los enlaces se pegan en el texto. */}
+      {FILE_UPLOADS && (
+        <>
+          <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => void sendFile(e.target.files?.[0])} />
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+            className={cn('flex min-h-11 min-w-11 items-center justify-center rounded-lg text-texto-suave hover:bg-papel hover:text-texto', uploading && 'animate-pulse')} aria-label="Enviar foto o archivo">
+            <Camera className="h-5 w-5" />
+          </button>
+        </>
+      )}
       <Textarea
         value={text}
         onChange={(e) => { setText(e.target.value); onTyping?.() }}
@@ -132,8 +138,8 @@ export function ChatComposer({ onSend, onFile, onTyping, disabled, placeholder =
         className="min-h-11 flex-1 py-2.5"
         rows={1}
       />
-      {text.trim() ? (
-        <Button type="submit" aria-label="Enviar" className="min-h-11 min-w-11"><Send className="h-4 w-4" /></Button>
+      {text.trim() || !FILE_UPLOADS ? (
+        <Button type="submit" aria-label="Enviar" disabled={!text.trim()} className="min-h-11 min-w-11"><Send className="h-4 w-4" /></Button>
       ) : (
         <AudioRecorder maxSeconds={120} onDone={(blob) => onFile(blob, `voz.${blob.type.includes('mp4') ? 'm4a' : 'webm'}`)} />
       )}

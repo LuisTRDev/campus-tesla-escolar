@@ -10,6 +10,7 @@ import { toMessage } from '@/lib/errors'
 import { BUCKET_SUBMISSIONS } from '@/lib/supabase'
 import { formatShort, formatTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { FILE_UPLOADS } from '@/lib/links'
 import {
   BUCKET_FEEDBACK, deleteSnippet, duplicateAssignment, listGroups, listRubrics, listSnippets, listVersions, rubricLevel, rubricScore, saveGroups,
   saveSnippet, setAssignmentRubric, setFeedbackAnnotations, setFeedbackAudio, uploadFeedbackFile,
@@ -185,6 +186,8 @@ export function StoredAudio({ bucket, path, className }: { bucket: string; path:
 export function FeedbackAudio({ submission, canEdit, onChanged }: { submission: Submission; canEdit: boolean; onChanged: (path: string | null) => void }) {
   const toast = useToast()
   const path = submission.feedback_audio_path
+  // Modo enlaces: no se graban notas de voz nuevas (solo se escuchan las que ya existían).
+  if (!path && !FILE_UPLOADS) return null
   return (
     <div className="space-y-2">
       {path && (
@@ -196,7 +199,7 @@ export function FeedbackAudio({ submission, canEdit, onChanged }: { submission: 
           )}
         </div>
       )}
-      {canEdit && (
+      {canEdit && FILE_UPLOADS && (
         <AudioRecorder onDone={async (blob) => {
           const p = await uploadFeedbackFile(submission.id, blob, `voz.${blob.type.includes('mp4') ? 'm4a' : 'webm'}`)
           await setFeedbackAudio(submission.id, p)
@@ -302,7 +305,7 @@ export function AnnotationTools({ submission, canEdit, onChanged }: { submission
   const toast = useToast()
   const [editing, setEditing] = useState<number | null>(null)
   const list = submission.feedback_annotations ?? []
-  const images = submission.files.map((f, i) => ({ f, i })).filter(({ f }) => f.type?.startsWith('image/'))
+  const images = FILE_UPLOADS ? submission.files.map((f, i) => ({ f, i })).filter(({ f }) => f.type?.startsWith('image/')) : []
   if (!list.length && (!canEdit || !images.length)) return null
   return (
     <div className="space-y-2">

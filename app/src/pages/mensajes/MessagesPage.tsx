@@ -8,6 +8,7 @@ import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import { ChatAttachment, ChatComposer, TypingIndicator, useTyping } from '@/components/chat'
+import { LinkifiedText } from '@/components/LinkifiedText'
 import { conversationSeen, uploadMessageFile } from '@/services/comunicacion'
 import { CheckCheck } from 'lucide-react'
 import { haptic } from '@/lib/ux'
@@ -200,7 +201,7 @@ function Bubble({ m, mine, onRetry, seen }: { m: UiMessage; mine: boolean; onRet
         {!mine && <p className="mb-0.5 text-xs font-bold text-tinta-500">{m.sender_name ?? 'Familia'}</p>}
         {m.attachment_path && m.attachment_kind
           ? <ChatAttachment path={m.attachment_path} kind={m.attachment_kind} name={m.attachment_name} />
-          : <p className="whitespace-pre-line break-words text-[15px] leading-relaxed">{m.body}</p>}
+          : <p className="whitespace-pre-line break-words text-[15px] leading-relaxed"><LinkifiedText text={m.body} /></p>}
         <p className={cn('mt-1 text-right text-[11px]', mine ? 'text-white/60' : 'text-texto-suave')}>
           {m.pending === 'sending' ? 'Enviando…'
             : m.pending === 'failed' ? <button onClick={onRetry} className="font-bold text-white underline">No se envió · Reintentar</button>

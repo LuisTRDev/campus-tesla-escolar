@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { formatShort, localInputToIso, relativeDue } from '@/lib/format'
 import { classroomLabel, listClassrooms } from '@/services/campus'
 import { createCircular, listCirculars, listRecipients, listRecipientStats } from '@/services/comunicados'
-import { FileDropzone } from '@/components/files'
+import { AttachmentInput } from '@/components/files'
 import type { Circular, CircularScope, Classroom } from '@/types'
 
 function scopeLabel(c: Circular, classrooms: Classroom[]): string {
@@ -33,6 +33,7 @@ function NewCircularForm({ classrooms, isAdmin, onDone }: { classrooms: Classroo
   const [signature, setSignature] = useState(true)
   const [deadline, setDeadline] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [link, setLink] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -49,7 +50,7 @@ function NewCircularForm({ classrooms, isAdmin, onDone }: { classrooms: Classroo
         classroomId: scope === 'CLASSROOM' ? Number(target) : undefined,
         title, body, consent, signature,
         deadline: consent && deadline ? localInputToIso(deadline) : null,
-        file,
+        file, link,
         authorId: profile.id,
       })
       clearTitle()
@@ -77,7 +78,7 @@ function NewCircularForm({ classrooms, isAdmin, onDone }: { classrooms: Classroo
       <Field label="Contenido"><Textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={8000} className="min-h-40" required /></Field>
       <div>
         <p className="mb-1.5 text-sm font-bold">Adjunto <span className="font-normal text-texto-suave">(opcional)</span></p>
-        <FileDropzone files={file ? [file] : []} onChange={(l) => setFile(l[0] ?? null)} maxBytes={15 * 1024 * 1024} accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" hint="PDF, imagen o Word, máximo 15 MB." />
+        <AttachmentInput file={file} onFile={setFile} link={link} onLink={setLink} maxBytes={15 * 1024 * 1024} accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" hint="PDF, imagen o Word, máximo 15 MB." linkHint="PDF, imagen o documento en Google Drive." />
       </div>
 
       <div className="rounded-lg border border-linea p-4">

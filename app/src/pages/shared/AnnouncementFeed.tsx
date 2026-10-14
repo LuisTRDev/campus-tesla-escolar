@@ -3,6 +3,7 @@ import { CheckCheck, Eye, Megaphone, Pin, Trash2 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Button, Empty, ErrorBox, Loading, Modal } from '@/components/ui'
 import { CourseTag } from '@/components/course'
+import { LinkifiedText } from '@/components/LinkifiedText'
 import { useAsync } from '@/lib/useAsync'
 import { formatShort, formatTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -28,7 +29,7 @@ export function AnnouncementItem({ item, author, offering, compact, onDelete }: 
         {item.pinned && <span className="inline-flex items-center gap-1 text-xs font-bold text-tinta"><Pin className="h-3 w-3" />Fijado</span>}
       </div>
       <h3 className="mt-1 font-bold text-texto">{item.title}</h3>
-      <p className={cn('mt-1 whitespace-pre-line text-[15px] leading-relaxed text-texto', compact && 'line-clamp-3 text-sm text-texto-suave')}>{item.body}</p>
+      <p className={cn('mt-1 whitespace-pre-line text-[15px] leading-relaxed text-texto', compact && 'line-clamp-3 text-sm text-texto-suave')}><LinkifiedText text={item.body} /></p>
       <div className="mt-2 flex items-center gap-3 text-xs text-texto-suave">
         <span>{author ?? 'Colegio'}, {formatShort(item.published_at)} a las {formatTime(item.published_at)}</span>
         {onDelete && (

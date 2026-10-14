@@ -3,7 +3,8 @@ import { Button, Field, Input, Segmented, Select, Textarea } from '@/components/
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
 import { createMaterial } from '@/services/campus'
-import { FileDropzone } from '@/components/files'
+import { FileDropzone, LinkField } from '@/components/files'
+import { FILE_UPLOADS } from '@/lib/links'
 import { useAsync } from '@/lib/useAsync'
 import { localInputToIso } from '@/lib/format'
 import { listUnits } from '@/services/aprendizaje'
@@ -12,7 +13,7 @@ type Kind = 'FILE' | 'LINK' | 'VIDEO'
 
 export function NewMaterialForm({ offeringId, onDone, defaultUnitId = null }: { offeringId: number; onDone: () => void; defaultUnitId?: number | null }) {
   const toast = useToast()
-  const [kind, setKind] = useState<Kind>('FILE')
+  const [kind, setKind] = useState<Kind>(FILE_UPLOADS ? 'FILE' : 'LINK')
   const [title, setTitle] = useState('')
   const [unit, setUnit] = useState('')
   const [description, setDescription] = useState('')
@@ -48,7 +49,11 @@ export function NewMaterialForm({ offeringId, onDone, defaultUnitId = null }: { 
       <Segmented<Kind>
         value={kind}
         onChange={setKind}
-        options={[{ value: 'FILE', label: 'Archivo' }, { value: 'LINK', label: 'Enlace' }, { value: 'VIDEO', label: 'Video' }]}
+        options={[
+          ...(FILE_UPLOADS ? [{ value: 'FILE' as Kind, label: 'Archivo' }] : []),
+          { value: 'LINK', label: FILE_UPLOADS ? 'Enlace' : 'Documento o enlace' },
+          { value: 'VIDEO', label: 'Video' },
+        ]}
       />
       {kind === 'FILE' ? (
         <div>
@@ -64,10 +69,20 @@ export function NewMaterialForm({ offeringId, onDone, defaultUnitId = null }: { 
             hint="PDF, Word, Excel, PowerPoint, imágenes o audio. Máximo 25 MB."
           />
         </div>
-      ) : (
-        <Field label={kind === 'VIDEO' ? 'Enlace del video' : 'Enlace'} hint={kind === 'VIDEO' ? 'Los videos de YouTube se ven dentro del campus.' : 'Debe empezar con https://'}>
-          <Input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" required />
+      ) : kind === 'VIDEO' ? (
+        <Field label="Enlace del video" hint="Los videos de YouTube se ven dentro del campus.">
+          <Input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=…" required />
         </Field>
+      ) : (
+        <div>
+          <p className="mb-1.5 text-sm font-bold">Enlace</p>
+          <LinkField
+            value={url}
+            onChange={setUrl}
+            required
+            hint={FILE_UPLOADS ? undefined : 'PDF, Word, Excel o PowerPoint: súbelo a Google Drive y pega el enlace. Los de Drive, Docs, Hojas y Presentaciones se ven dentro del campus.'}
+          />
+        </div>
       )}
       <Field label="Título"><Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} required /></Field>
       {units.data?.length ? (

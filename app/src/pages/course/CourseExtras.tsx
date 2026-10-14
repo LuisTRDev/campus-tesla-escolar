@@ -13,6 +13,7 @@ import { useAsync } from '@/lib/useAsync'
 import { useToast, useUndoableDelete } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
 import { BUCKET_MATERIALS } from '@/lib/supabase'
+import { linkInfo } from '@/lib/links'
 import { formatBytes, formatShort, formatTime, relativeDue } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { haptic, useKey } from '@/lib/ux'
@@ -192,6 +193,7 @@ export function MaterialItem({ material, canManage, viewed, units, onDelete, onC
       if (profile?.role === 'STUDENT') void markMaterialViewed(material.id)
       if (material.kind === 'FILE' && material.storage_path) preview({ bucket: BUCKET_MATERIALS, path: material.storage_path, name: material.file_name ?? material.title, type: material.mime_type, size: material.file_size })
       else if (ytId) setShowVideo((v) => !v)
+      else if (material.url && linkInfo(material.url).embed) preview({ bucket: '', path: material.url, name: material.title })
       else if (material.url) window.open(material.url, '_blank', 'noopener,noreferrer')
     } catch (err) {
       toast(toMessage(err), 'error')
@@ -217,7 +219,7 @@ export function MaterialItem({ material, canManage, viewed, units, onDelete, onC
           {!material.published && <Badge tone="info" className="ml-2">{material.publish_at ? `Se publica el ${formatShort(material.publish_at)} ${formatTime(material.publish_at)}` : 'Oculto'}</Badge>}
           {material.description && <p className="mt-0.5 whitespace-pre-line text-sm text-texto-suave">{material.description}</p>}
           <p className="mt-1 text-xs text-texto-suave">
-            {material.kind === 'FILE' ? `${material.file_name ?? 'Archivo'} ${formatBytes(material.file_size)}` : material.kind === 'VIDEO' ? 'Video' : 'Enlace'}
+            {material.kind === 'FILE' ? `${material.file_name ?? 'Archivo'} ${formatBytes(material.file_size)}` : material.kind === 'VIDEO' ? 'Video' : material.url ? linkInfo(material.url).label : 'Enlace'}
             {', '}publicado el {formatShort(material.created_at)}
           </p>
           {showVideo && ytId && <InteractiveVideo material={material} canManage={canManage} />}

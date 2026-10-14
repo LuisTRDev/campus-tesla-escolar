@@ -4,7 +4,8 @@ import { ArrowLeft, Lock, Paperclip, Send, Trash2, Undo2, Unlock } from 'lucide-
 import { useAuth, useFocusStudent } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, PageHeader, Panel, Segmented, Select, Textarea } from '@/components/ui'
 import { TaskStateBadge, gradeText } from '@/components/course'
-import { FileDropzone, StoredFileCard, usePreview } from '@/components/files'
+import { FileDropzone, LinkListField, StoredFileCard, usePreview } from '@/components/files'
+import { FILE_UPLOADS, linkName } from '@/lib/links'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
@@ -102,6 +103,7 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
   const [content, setContent, clearDraft, hadDraft] = useDraft<string>(`entrega:${assignment.id}:${studentId}`, '')
   const [keep, setKeep] = useState<SubmissionFile[]>([])
   const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newLinks, setNewLinks] = useState<string[]>([])
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [stampedAt, setStampedAt] = useState<number | null>(null)
@@ -113,6 +115,7 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
     if (!hadDraft || data?.status === 'GRADED') setContent(data?.content ?? '')
     setKeep(data?.files ?? [])
     setNewFiles([])
+    setNewLinks([])
     setEditing(!data || data.status === 'RETURNED')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version])
@@ -128,13 +131,17 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
   async function onSubmit() {
     setBusy(true)
     try {
-      await submitWork({ assignmentId: assignment.id, studentId, content, keepFiles: keep, newFiles, existing: data })
+      await submitWork({ assignmentId: assignment.id, studentId, content, keepFiles: keep, newFiles, newLinks, existing: data })
       const now = new Date().toISOString()
       // Cambio inmediato en pantalla; la sincronización trae los datos definitivos.
       mutate((cur) => ({
         ...(cur ?? { id: -1, assignment_id: assignment.id, student_id: studentId, score: null, level: null, feedback: null, graded_at: null }),
         content: content || null,
-        files: [...keep, ...newFiles.map((f) => ({ path: `pending/${f.name}`, name: f.name, size: f.size, type: f.type }))],
+        files: [
+          ...keep,
+          ...newFiles.map((f) => ({ path: `pending/${f.name}`, name: f.name, size: f.size, type: f.type })),
+          ...newLinks.map((url) => ({ path: url, name: linkName(url), size: 0, type: 'link' })),
+        ],
         status: 'SUBMITTED',
         submitted_at: now,
         is_late: pastDue,
@@ -181,23 +188,32 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
 
         {editing && canSubmit && (
           <div className="space-y-4">
-            <Field label="Tu respuesta" hint={hadDraft ? 'Recuperamos lo que estabas escribiendo.' : 'Puedes escribir aquí, adjuntar archivos o ambas cosas. Se guarda solo mientras escribes.'}>
+            <Field label="Tu respuesta" hint={hadDraft ? 'Recuperamos lo que estabas escribiendo.' : `Puedes escribir aquí, ${FILE_UPLOADS ? 'adjuntar archivos' : 'pegar enlaces'} o ambas cosas. Se guarda solo mientras escribes.`}>
               <Textarea value={content} onChange={(e) => setContent(e.target.value)} maxLength={8000} className="min-h-40" />
             </Field>
             <div>
-              <p className="mb-2 text-sm font-bold">Archivos ({keep.length + newFiles.length} de 5)</p>
+              <p className="mb-2 text-sm font-bold">{FILE_UPLOADS ? 'Archivos' : 'Enlaces'} ({keep.length + newFiles.length + newLinks.length} de 5)</p>
               {keep.length > 0 && (
                 <ul className="mb-2 grid gap-2 sm:grid-cols-2">
                   {keep.map((f) => <FileChip key={f.path} file={f} onRemove={() => setKeep((k) => k.filter((x) => x.path !== f.path))} />)}
                 </ul>
               )}
-              <FileDropzone
-                files={newFiles}
-                onChange={setNewFiles}
-                max={5 - keep.length}
-                maxBytes={15 * 1024 * 1024}
-                hint="Fotos, PDF, Word, Excel, PowerPoint o audio. Máximo 15 MB por archivo."
-              />
+              {FILE_UPLOADS ? (
+                <FileDropzone
+                  files={newFiles}
+                  onChange={setNewFiles}
+                  max={5 - keep.length}
+                  maxBytes={15 * 1024 * 1024}
+                  hint="Fotos, PDF, Word, Excel, PowerPoint o audio. Máximo 15 MB por archivo."
+                />
+              ) : (
+                <LinkListField
+                  links={newLinks}
+                  onChange={setNewLinks}
+                  max={5 - keep.length}
+                  hint="Sube tu trabajo (fotos, documento, presentación…) a Google Drive y pega aquí el enlace."
+                />
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => void onSubmit()} loading={busy} className={cn('min-h-12 px-6 text-base', busy && 'progress-fill')}><Send className="h-4 w-4" />{data ? 'Actualizar entrega' : 'Entregar tarea'}</Button>

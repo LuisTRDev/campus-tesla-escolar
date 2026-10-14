@@ -4,6 +4,7 @@ import { ArrowLeft, EyeOff, Megaphone, MessagesSquare, Plus, Users } from 'lucid
 import { useAuth } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeader, Panel, Segmented, Select } from '@/components/ui'
 import { ChatAttachment, ChatComposer, TypingIndicator, useTyping } from '@/components/chat'
+import { LinkifiedText } from '@/components/LinkifiedText'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
@@ -80,7 +81,7 @@ function ChannelThread({ channel }: { channel: Channel }) {
                   {!mine && <p className="mb-0.5 flex items-center gap-1 text-xs font-bold text-tinta-500">{m.sender_name ?? 'Alguien'}{teacher && <Badge tone="info">Docente</Badge>}</p>}
                   {m.attachment_path && m.attachment_kind
                     ? <ChatAttachment path={m.attachment_path} kind={m.attachment_kind} name={m.attachment_name} />
-                    : <p className="whitespace-pre-line break-words text-[15px] leading-relaxed">{m.body}</p>}
+                    : <p className="whitespace-pre-line break-words text-[15px] leading-relaxed"><LinkifiedText text={m.body} /></p>}
                   <p className={cn('mt-1 flex items-center justify-end gap-2 text-[11px]', mine ? 'text-white/60' : 'text-texto-suave')}>
                     {staff && !mine && (
                       <button className="opacity-0 group-hover:opacity-100 focus:opacity-100" aria-label={m.hidden ? 'Mostrar' : 'Ocultar mensaje'}

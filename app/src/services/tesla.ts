@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { cleanSingleLine, cleanText, positiveInteger, safeFileName } from '@/lib/security'
 import { UserError } from '@/lib/errors'
+import { assertUploads } from '@/lib/links'
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -517,6 +518,7 @@ export async function saveReward(input: RewardInput, image?: File | null, remove
 
   const old = input.image_path ?? null
   if (image) {
+    assertUploads()
     if (!/^image\/(jpeg|png|webp)$/.test(image.type)) throw new UserError('La imagen debe ser JPG, PNG o WebP.')
     if (image.size > 3 * 1024 * 1024) throw new UserError('La imagen supera los 3 MB.')
     const path = `${id}/${crypto.randomUUID().slice(0, 8)}-${safeFileName(image.name)}`
@@ -614,6 +616,7 @@ export async function saveCosmetic(c: Omit<Cosmetic, 'id'> & { id?: number }) {
 
 /** Sube la imagen o el video de un banner o fondo y devuelve su valor ("img:…" o "vid:…"). */
 export async function uploadCosmeticMedia(file: File): Promise<string> {
+  assertUploads()
   const isImage = /^image\/(jpeg|png|webp|gif)$/.test(file.type)
   const isVideo = /^video\/(webm|mp4)$/.test(file.type)
   if (!isImage && !isVideo) throw new UserError('Usa una imagen (JPG, PNG, WebP o GIF) o un video (WebM o MP4).')

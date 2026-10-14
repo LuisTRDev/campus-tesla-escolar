@@ -8,6 +8,7 @@ import {
 import { RetosAdminTab } from '@/pages/admin/AdminRetos'
 import { SCENES } from '@/components/scenes'
 import { FileDropzone } from '@/components/files'
+import { FILE_UPLOADS } from '@/lib/links'
 import { PinQueue, RequestQueue } from '@/pages/tesla/TeslaAulaPage'
 import { RewardImage } from '@/pages/tesla/TiendaPage'
 import { useAsync } from '@/lib/useAsync'
@@ -92,7 +93,9 @@ function RewardForm({ reward, onClose, onSaved }: { reward: Reward | 'new' | nul
               <Button type="button" size="sm" variant="secondary" onClick={() => setRemoveImage(true)}>Quitar o cambiar</Button>
             </div>
           ) : (
-            <FileDropzone files={image} onChange={setImage} accept="image/jpeg,image/png,image/webp" maxBytes={3 * 1024 * 1024} hint="JPG, PNG o WebP de hasta 3 MB." />
+            FILE_UPLOADS
+              ? <FileDropzone files={image} onChange={setImage} accept="image/jpeg,image/png,image/webp" maxBytes={3 * 1024 * 1024} hint="JPG, PNG o WebP de hasta 3 MB." />
+              : <p className="rounded-lg bg-papel p-3 text-sm text-texto-suave">Por ahora el campus no guarda imágenes: el premio se muestra con su ilustración.</p>
           )}
         </div>
         <label className="flex items-center gap-2 sm:col-span-2">
@@ -552,7 +555,7 @@ function CosmeticForm({ cosmetic, achievements, onClose, onSaved }: { cosmetic: 
             <Segmented value={artMode} onChange={setMode} options={[
               { value: 'scene', label: 'Escena' },
               ...(f.kind === 'BANNER' ? [{ value: 'colors', label: 'Colores' }] : [{ value: 'none', label: 'Sin fondo' }]),
-              { value: 'media', label: 'Imagen o video' },
+              ...(FILE_UPLOADS || artMode === 'media' ? [{ value: 'media' as const, label: 'Imagen o video' }] : []),
             ]} />
           </Field>
         )}
@@ -579,7 +582,7 @@ function CosmeticForm({ cosmetic, achievements, onClose, onSaved }: { cosmetic: 
             <span className="h-11 flex-1 rounded-lg" style={{ background: `linear-gradient(120deg, ${b1}, ${b2})` }} />
           </div>
         )}
-        {isArt && artMode === 'media' && (
+        {isArt && artMode === 'media' && FILE_UPLOADS && (
           <Field label="Archivo" hint="Imagen JPG, PNG, WebP o GIF de hasta 4 MB, o video WebM/MP4 en bucle de hasta 12 MB (sin audio). Mejor en horizontal, 1920 × 1080.">
             <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/webm,video/mp4" onChange={(e) => void upload(e.target.files?.[0])} disabled={uploading} />
           </Field>

@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { cleanSingleLine, cleanText, positiveInteger, safeFileName } from '@/lib/security'
 import { UserError } from '@/lib/errors'
+import { assertUploads, cleanLink, linkName } from '@/lib/links'
 
 function must<T>(result: { data: T | null; error: unknown }): T {
   if (result.error) throw result.error
@@ -123,12 +124,18 @@ export async function listJustifications(filter: { studentId?: number; pendingOn
   return must(await q) as unknown as Justification[]
 }
 
-export async function createJustification(input: { studentId: number; kind: 'FALTA' | 'TARDANZA'; from: string; to: string; reason: string; file?: File | null }) {
+export async function createJustification(input: { studentId: number; kind: 'FALTA' | 'TARDANZA'; from: string; to: string; reason: string; file?: File | null; link?: string | null }) {
   const reason = cleanText(input.reason, 1000)
   if (reason.length < 5) throw new UserError('Explica el motivo (al menos 5 letras).')
   if (input.to < input.from) throw new UserError('La fecha final es anterior a la inicial.')
   let path: string | null = null
-  if (input.file) {
+  let name: string | null = null
+  if (input.link?.trim()) {
+    path = cleanLink(input.link)
+    name = linkName(path)
+  } else if (input.file) {
+    assertUploads()
+    name = cleanSingleLine(input.file.name, 160)
     if (input.file.size > 5 * 1024 * 1024) throw new UserError('El archivo supera los 5 MB.')
     path = `${positiveInteger(input.studentId)}/${crypto.randomUUID().slice(0, 8)}-${safeFileName(input.file.name)}`
     const up = await supabase.storage.from(BUCKET_JUSTIFICATIONS).upload(path, input.file, { contentType: input.file.type || undefined })
@@ -136,7 +143,7 @@ export async function createJustification(input: { studentId: number; kind: 'FAL
   }
   must(await supabase.from('absence_justifications').insert({
     student_id: positiveInteger(input.studentId), kind: input.kind, date_from: input.from, date_to: input.to, reason,
-    attachment_path: path, attachment_name: input.file ? cleanSingleLine(input.file.name, 160) : null,
+    attachment_path: path, attachment_name: name,
   }))
 }
 
@@ -150,6 +157,17 @@ export const deleteJustification = async (id: number) => must(await supabase.fro
 export type AuditRow = { id: number; at: string; actor: string | null; actor_name: string | null; action: string; entity: string; entity_id: string | null; summary: string }
 export const AUDIT_ACTION_LABEL: Record<string, string> = {
   GRADE: 'Nota', DELETE: 'Eliminación', RESET_PASSWORD: 'Contraseña', ACCOUNT_ACTIVE: 'Cuenta', GRANT: 'Permiso', REVOKE: 'Permiso', START_YEAR: 'Año escolar',
+  SETTING: 'Configuración',
+}
+
+// Espacio usado en Supabase (para elegir modo enlaces o archivos)
+export type StorageUsage = { database_bytes: number; buckets: { bucket: string; files: number; bytes: number }[] }
+export const STORAGE_LIMIT_BYTES = 1024 ** 3 // plan gratuito: 1 GB de Storage
+export const DATABASE_LIMIT_BYTES = 500 * 1024 ** 2 // plan gratuito: 500 MB de base de datos
+export async function storageUsage(): Promise<StorageUsage> {
+  const { data, error } = await supabase.rpc('campus_storage_usage')
+  if (error) throw error
+  return data as StorageUsage
 }
 export async function listAudit(filter: { action?: string; search?: string; limit?: number } = {}): Promise<AuditRow[]> {
   let q = supabase.from('audit_log').select('id, at, actor, actor_name, action, entity, entity_id, summary').order('at', { ascending: false }).limit(filter.limit ?? 200)
