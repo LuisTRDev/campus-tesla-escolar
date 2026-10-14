@@ -10,6 +10,8 @@ export default defineConfig({
     },
   },
   build: {
+    // El manifiesto lo usa scripts/size-budget.mjs (y luego lo borra).
+    manifest: true,
     rollupOptions: {
       output: {
         manualChunks: {

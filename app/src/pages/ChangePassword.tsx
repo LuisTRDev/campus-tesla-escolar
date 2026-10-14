@@ -30,7 +30,7 @@ export default function ChangePassword({ forced }: { forced?: boolean }) {
   }
 
   return (
-    <div className={forced ? 'flex min-h-screen items-center justify-center px-6 py-10' : ''}>
+    <div className={forced ? 'flex min-h-dvh items-center justify-center px-6 py-10' : ''}>
       <form onSubmit={onSubmit} className="w-full max-w-sm">
         <h1 className="font-display text-3xl font-bold text-texto">{forced ? `Hola, ${profile?.full_name?.split(' ')[0] ?? ''}` : 'Cambiar contraseña'}</h1>
         <p className="mt-2 text-texto-suave">

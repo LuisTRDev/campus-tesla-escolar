@@ -5,6 +5,9 @@ const ASSETS = 'campus-assets-v1'
 const MATERIALS = 'campus-materials-v1'
 const KEEP = [SHELL, ASSETS, MATERIALS]
 const MAX_MATERIALS = 60
+// Archivos de la app: cada publicación trae nombres nuevos, así que se guardan
+// los últimos (los de versiones viejas se van solos) para no llenar el celular.
+const MAX_ASSETS = 150
 
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (event) => event.waitUntil((async () => {
@@ -46,7 +49,7 @@ self.addEventListener('fetch', (event) => {
       const hit = await caches.match(req)
       if (hit) return hit
       const res = await fetch(req)
-      if (res.ok) putLimited(ASSETS, req, res.clone())
+      if (res.ok) putLimited(ASSETS, req, res.clone(), MAX_ASSETS)
       return res
     })())
     return

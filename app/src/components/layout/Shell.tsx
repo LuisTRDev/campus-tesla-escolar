@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle, BarChart3, Bell, BookOpen, CalendarClock, ClipboardCheck, FileCheck, Gift, Library, ListTodo, MessagesSquare, Settings, ShieldCheck, Trophy,
@@ -8,19 +8,21 @@ import {
 import type { ComponentType } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Loading, useSwipeDown } from '@/components/ui'
-import { CommandPalette } from '@/components/CommandPalette'
-import { Onboarding } from '@/components/Onboarding'
 import { useTheme } from '@/lib/theme'
 import { isUpdateAvailable, startBackgroundSync, useUpdateAvailable } from '@/lib/sync'
 import { cn } from '@/lib/utils'
 import { studentName } from '@/services/campus'
 import { ROLE_LABELS, type Role } from '@/types'
-import { TeslaCelebration } from '@/components/TeslaCelebration'
 import { InstallBanner, OfflineBanner, ShortcutsHelp } from '@/components/ux'
 import { installErrorReporting, trackPage } from '@/lib/ux'
 import { useAsync } from '@/lib/useAsync'
 import { publishDueContent } from '@/services/aprendizaje'
 import { myPermissions, type CampusPermission } from '@/services/gestion'
+
+// Se descargan solo cuando hacen falta (no en el primer arranque).
+const CommandPalette = lazy(() => import('@/components/CommandPalette').then((m) => ({ default: m.CommandPalette })))
+const Onboarding = lazy(() => import('@/components/Onboarding').then((m) => ({ default: m.Onboarding })))
+const TeslaCelebration = lazy(() => import('@/components/TeslaCelebration').then((m) => ({ default: m.TeslaCelebration })))
 
 type NavItem = { to: string; label: string; icon: ComponentType<{ className?: string }> }
 
@@ -135,6 +137,8 @@ export function Shell() {
   const location = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const searchUsed = useRef(false)
+  if (searchOpen) searchUsed.current = true
   const updateAvailable = useUpdateAvailable()
   const moreSwipe = useSwipeDown(() => setMoreOpen(false))
   const canSearch = !!profile && profile.role !== 'STUDENT' && profile.role !== 'GUARDIAN'
@@ -185,9 +189,9 @@ export function Shell() {
   const moreActive = more.some((i) => i.to !== '/' && location.pathname.startsWith(i.to))
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[16rem_1fr] print:block">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_1fr] print:block">
       {/* Barra lateral (escritorio) */}
-      <aside className="shell-chrome sticky top-0 hidden h-screen flex-col overflow-y-auto bg-tinta px-4 py-6 text-white lg:flex print:hidden">
+      <aside className="shell-chrome sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-tinta px-4 py-6 text-white lg:flex print:hidden">
         <div className="flex items-center gap-3 px-2">
           <img src="/images/logo-nikola-tesla.png" alt="" className="h-10 w-10 rounded-lg bg-white object-contain p-1" />
           <div className="leading-tight">
@@ -244,7 +248,7 @@ export function Shell() {
       </aside>
 
       {/* Barra superior (móvil) */}
-      <header className="shell-chrome sticky top-0 z-30 border-b border-linea bg-superficie/95 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur lg:hidden print:hidden">
+      <header className="shell-chrome sticky top-0 z-30 border-b border-linea bg-superficie px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden print:hidden">
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">
             <img src="/images/logo-nikola-tesla.png" alt="" className="logo-chip h-8 w-8 rounded-md object-contain" />
@@ -274,10 +278,10 @@ export function Shell() {
         </div>
       </main>
 
-      {profile.role === 'STUDENT' && selfStudent && <TeslaCelebration studentId={selfStudent.id} />}
+      {profile.role === 'STUDENT' && selfStudent && <Suspense fallback={null}><TeslaCelebration studentId={selfStudent.id} /></Suspense>}
 
       {/* Navegación inferior (móvil) */}
-      <nav className="shell-chrome fixed inset-x-0 bottom-0 z-30 flex border-t border-linea bg-superficie/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden print:hidden" aria-label="Principal">
+      <nav className="shell-chrome fixed inset-x-0 bottom-0 z-30 flex border-t border-linea bg-superficie pb-[env(safe-area-inset-bottom)] lg:hidden print:hidden" aria-label="Principal">
         {primary.map((item) => (
           <NavLink
             key={item.to + item.label}
@@ -340,8 +344,8 @@ export function Shell() {
         </div>
       )}
 
-      {canSearch && <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} commands={items} />}
-      <Onboarding />
+      {canSearch && searchUsed.current && <Suspense fallback={null}><CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} commands={items} /></Suspense>}
+      <Suspense fallback={null}><Onboarding /></Suspense>
       <OfflineBanner />
       <ShortcutsHelp />
     </div>

@@ -17,3 +17,13 @@
     if (r.highContrast) c.add('contrast-high')
   } catch (e) { /* sin almacenamiento */ }
 })();
+
+/* Modo ahorro (src/lib/perf.ts): ahorro de datos, red lenta o poca memoria. */
+(function () {
+  try {
+    var pref = localStorage.getItem('campus-lite')
+    var c = navigator.connection || {}
+    var slow = c.saveData || ['slow-2g', '2g', '3g'].indexOf(c.effectiveType) >= 0 || (navigator.deviceMemory && navigator.deviceMemory <= 2)
+    if (pref === 'on' || (pref !== 'off' && slow)) document.documentElement.classList.add('lite')
+  } catch (e) { /* sin almacenamiento */ }
+})();

@@ -6,6 +6,8 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#0B1D33" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Abre la conexión con Supabase mientras se descarga la app (ahorra tiempo en el celular). -->
+    <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
     <title>Campus Virtual Tesla</title>
     <script src="/theme-init.js"></script>
   </head>

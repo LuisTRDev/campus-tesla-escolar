@@ -1,46 +1,48 @@
-import { lazy, Suspense, type ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { Shell } from '@/components/layout/Shell'
 import { Empty, Loading } from '@/components/ui'
+import { lazyPage, usePrefetch } from '@/lib/perf'
 import Login from '@/pages/Login'
 import ChangePassword from '@/pages/ChangePassword'
-import StudentHome from '@/pages/student/StudentHome'
-import GuardianHome from '@/pages/guardian/GuardianHome'
-import TeacherHome from '@/pages/teacher/TeacherHome'
-const AdminCourses = lazy(() => import('@/pages/admin/AdminCourses'))
-const AdminAccounts = lazy(() => import('@/pages/admin/AdminAccounts'))
-const CoursePage = lazy(() => import('@/pages/course/CoursePage'))
-const AssignmentPage = lazy(() => import('@/pages/course/AssignmentPage'))
-import CoursesPage from '@/pages/shared/CoursesPage'
-import TasksPage from '@/pages/shared/TasksPage'
-import AnnouncementsPage from '@/pages/shared/AnnouncementsPage'
-const GradebookPage = lazy(() => import('@/pages/notas/GradebookPage'))
-const ConsolidatedPage = lazy(() => import('@/pages/notas/ConsolidatedPage'))
-const ReportCardPage = lazy(() => import('@/pages/notas/ReportCardPage'))
-const AdminPeriods = lazy(() => import('@/pages/admin/AdminPeriods'))
-import DirectorDashboard from '@/pages/admin/DirectorDashboard'
-const CircularsPage = lazy(() => import('@/pages/comunicados/CircularsPage'))
-const CircularDetailPage = lazy(() => import('@/pages/comunicados/CircularDetailPage'))
-const MessagesPage = lazy(() => import('@/pages/mensajes/MessagesPage'))
-const AgendaPage = lazy(() => import('@/pages/calendario/AgendaPage'))
-const SchedulePage = lazy(() => import('@/pages/calendario/SchedulePage'))
-import NotificationsPage from '@/pages/NotificationsPage'
-const PerfilTeslaPage = lazy(() => import('@/pages/tesla/PerfilTeslaPage'))
-const TiendaPage = lazy(() => import('@/pages/tesla/TiendaPage'))
-const TeslaAulaPage = lazy(() => import('@/pages/tesla/TeslaAulaPage'))
-const AdminRecompensas = lazy(() => import('@/pages/admin/AdminRecompensas'))
+// Todas las pantallas (incluido el inicio de cada rol) se cargan solo cuando se abren:
+// así el primer arranque en el celular descarga lo mínimo.
+const StudentHome = lazyPage(() => import('@/pages/student/StudentHome'))
+const GuardianHome = lazyPage(() => import('@/pages/guardian/GuardianHome'))
+const TeacherHome = lazyPage(() => import('@/pages/teacher/TeacherHome'))
+const AdminCourses = lazyPage(() => import('@/pages/admin/AdminCourses'))
+const AdminAccounts = lazyPage(() => import('@/pages/admin/AdminAccounts'))
+const CoursePage = lazyPage(() => import('@/pages/course/CoursePage'))
+const AssignmentPage = lazyPage(() => import('@/pages/course/AssignmentPage'))
+const CoursesPage = lazyPage(() => import('@/pages/shared/CoursesPage'))
+const TasksPage = lazyPage(() => import('@/pages/shared/TasksPage'))
+const AnnouncementsPage = lazyPage(() => import('@/pages/shared/AnnouncementsPage'))
+const GradebookPage = lazyPage(() => import('@/pages/notas/GradebookPage'))
+const ConsolidatedPage = lazyPage(() => import('@/pages/notas/ConsolidatedPage'))
+const ReportCardPage = lazyPage(() => import('@/pages/notas/ReportCardPage'))
+const AdminPeriods = lazyPage(() => import('@/pages/admin/AdminPeriods'))
+const DirectorDashboard = lazyPage(() => import('@/pages/admin/DirectorDashboard'))
+const CircularsPage = lazyPage(() => import('@/pages/comunicados/CircularsPage'))
+const CircularDetailPage = lazyPage(() => import('@/pages/comunicados/CircularDetailPage'))
+const MessagesPage = lazyPage(() => import('@/pages/mensajes/MessagesPage'))
+const AgendaPage = lazyPage(() => import('@/pages/calendario/AgendaPage'))
+const SchedulePage = lazyPage(() => import('@/pages/calendario/SchedulePage'))
+const NotificationsPage = lazyPage(() => import('@/pages/NotificationsPage'))
+const PerfilTeslaPage = lazyPage(() => import('@/pages/tesla/PerfilTeslaPage'))
+const TiendaPage = lazyPage(() => import('@/pages/tesla/TiendaPage'))
+const TeslaAulaPage = lazyPage(() => import('@/pages/tesla/TeslaAulaPage'))
+const AdminRecompensas = lazyPage(() => import('@/pages/admin/AdminRecompensas'))
 
-// Pantallas nuevas: se cargan solo cuando se abren.
-const PlannerPage = lazy(() => import('@/pages/teacher/PlannerPage'))
-const ResourcesPage = lazy(() => import('@/pages/teacher/ResourcesPage'))
-const AlertsPage = lazy(() => import('@/pages/gestion/AlertsPage'))
-const AppointmentsPage = lazy(() => import('@/pages/gestion/AppointmentsPage'))
-const JustificationsPage = lazy(() => import('@/pages/gestion/JustificationsPage'))
-const SurveysPage = lazy(() => import('@/pages/gestion/SurveysPage'))
-const ChannelsPage = lazy(() => import('@/pages/comunicacion/ChannelsPage'))
-const SystemPage = lazy(() => import('@/pages/admin/SystemPage'))
-const AjustesPage = lazy(() => import('@/pages/AjustesPage'))
+const PlannerPage = lazyPage(() => import('@/pages/teacher/PlannerPage'))
+const ResourcesPage = lazyPage(() => import('@/pages/teacher/ResourcesPage'))
+const AlertsPage = lazyPage(() => import('@/pages/gestion/AlertsPage'))
+const AppointmentsPage = lazyPage(() => import('@/pages/gestion/AppointmentsPage'))
+const JustificationsPage = lazyPage(() => import('@/pages/gestion/JustificationsPage'))
+const SurveysPage = lazyPage(() => import('@/pages/gestion/SurveysPage'))
+const ChannelsPage = lazyPage(() => import('@/pages/comunicacion/ChannelsPage'))
+const SystemPage = lazyPage(() => import('@/pages/admin/SystemPage'))
+const AjustesPage = lazyPage(() => import('@/pages/AjustesPage'))
 
 const L = ({ children }: { children: ReactNode }) => <Suspense fallback={<Loading shape="page" />}>{children}</Suspense>
 
@@ -61,15 +63,25 @@ function NotFound() {
 export default function App() {
   const { loading, session, profile, error, mustChangePassword, isAdmin, signOut, tutorClassrooms } = useAuth()
 
+  // Con buena conexión, las pantallas más usadas del rol se descargan en un momento libre.
+  const role = profile?.role
+  usePrefetch(
+    role === 'STUDENT' ? [CoursesPage, TasksPage, CoursePage, AssignmentPage, PerfilTeslaPage]
+      : role === 'GUARDIAN' ? [TasksPage, ReportCardPage, MessagesPage, CoursePage]
+      : role === 'TEACHER' ? [CoursesPage, CoursePage, AssignmentPage, GradebookPage]
+      : [AdminCourses, AnnouncementsPage, CircularsPage, GradebookPage],
+    !!profile && !mustChangePassword,
+  )
+
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center"><Loading label="Abriendo el campus…" /></div>
+    return <div className="flex min-h-dvh items-center justify-center"><Loading label="Abriendo el campus…" /></div>
   }
 
   if (!session) return <Login />
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="max-w-md text-texto">{error || 'Tu cuenta no tiene acceso al campus.'}</p>
         <button onClick={() => void signOut()} className="font-bold text-tinta underline">Salir</button>
       </div>

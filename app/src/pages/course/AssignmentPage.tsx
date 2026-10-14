@@ -13,9 +13,13 @@ import { BUCKET_MATERIALS, BUCKET_SUBMISSIONS } from '@/lib/supabase'
 import { formatDue, formatShort, formatTime, relativeDue } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { haptic, useDraft, useKey } from '@/lib/ux'
+import { useWritingMetrics } from '@/lib/writingMetrics'
 import { useHorizontalSwipe } from '@/lib/useSwipe'
 import { getRubric, rubricLevel, rubricScore, type Rubric } from '@/services/aprendizaje'
-import { QuizEditor, QuizResults, QuizTake } from '@/pages/course/Quiz'
+import { QuizEditor, QuizResults, QuizTake } from '@/pages/course/quiz'
+import { IntegrityBanner, IntegrityPanel, useSubmissionIntegrity, type SubmissionIntegrity } from '@/pages/course/SubmissionIntegrity'
+import { RiskBadge } from '@/components/integrity'
+import { logWriting } from '@/services/integridad'
 import {
   AnnotationTools, DuplicateButton, FeedbackAudio, GroupBadge, GroupsButton, RubricGrid, RubricPicker, SnippetsMenu, VersionsButton,
 } from '@/pages/course/GradingTools'
@@ -107,6 +111,7 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [stampedAt, setStampedAt] = useState<number | null>(null)
+  const writing = useWritingMetrics(`${assignment.id}:${studentId}`)
 
   // Solo se reinicia el formulario cuando cambia la entrega (no en cada sincronización).
   const version = data ? `${data.id}-${data.status}-${data.submitted_at}` : 'none'
@@ -132,6 +137,8 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
     setBusy(true)
     try {
       await submitWork({ assignmentId: assignment.id, studentId, content, keepFiles: keep, newFiles, newLinks, existing: data })
+      const metrics = writing.take()
+      if (metrics) void logWriting(assignment.id, metrics)
       const now = new Date().toISOString()
       // Cambio inmediato en pantalla; la sincronización trae los datos definitivos.
       mutate((cur) => ({
@@ -189,7 +196,7 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
         {editing && canSubmit && (
           <div className="space-y-4">
             <Field label="Tu respuesta" hint={hadDraft ? 'Recuperamos lo que estabas escribiendo.' : `Puedes escribir aquí, ${FILE_UPLOADS ? 'adjuntar archivos' : 'pegar enlaces'} o ambas cosas. Se guarda solo mientras escribes.`}>
-              <Textarea value={content} onChange={(e) => setContent(e.target.value)} maxLength={8000} className="min-h-40" />
+              <Textarea value={content} onChange={(e) => { writing.track(content, e.target.value); setContent(e.target.value) }} onPaste={writing.onPaste} maxLength={8000} className="min-h-40" />
             </Field>
             <div>
               <p className="mb-2 text-sm font-bold">{FILE_UPLOADS ? 'Archivos' : 'Enlaces'} ({keep.length + newFiles.length + newLinks.length} de 5)</p>
@@ -215,6 +222,7 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
                 />
               )}
             </div>
+            <p className="text-xs text-texto-suave">Para cuidar la originalidad, tu docente puede ver si el texto se escribió o se pegó y si se parece a otras entregas.</p>
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => void onSubmit()} loading={busy} className={cn('min-h-12 px-6 text-base', busy && 'progress-fill')}><Send className="h-4 w-4" />{data ? 'Actualizar entrega' : 'Entregar tarea'}</Button>
               {data && data.status !== 'RETURNED' && <Button variant="ghost" onClick={() => setEditing(false)}>Cancelar</Button>}
@@ -262,13 +270,15 @@ function GuardianView({ assignment, studentId, name, rubric }: { assignment: Ass
 // ---------------------------------------------------------------------------
 // Vista del docente: lista del aula + calificación
 // ---------------------------------------------------------------------------
-function GradePanel({ assignment, submission, name, onSaved, readOnly, rubric }: {
+function GradePanel({ assignment, submission, name, onSaved, readOnly, rubric, integrity, onIntegrityChanged }: {
   assignment: AssignmentWithCourse
   submission: Submission
   name: string
   onSaved: (patch: Partial<Submission>) => void
   readOnly: boolean
   rubric: Rubric | null
+  integrity?: SubmissionIntegrity
+  onIntegrityChanged: () => void
 }) {
   const toast = useToast()
   const [score, setScore] = useState(submission.score == null ? '' : String(submission.score))
@@ -324,6 +334,8 @@ function GradePanel({ assignment, submission, name, onSaved, readOnly, rubric }:
         <div className="mt-2"><VersionsButton submissionId={submission.id} /></div>
       </div>
 
+      {integrity && <IntegrityPanel item={integrity} studentName={name} onChanged={onIntegrityChanged} />}
+
       {readOnly ? (
         submission.status !== 'SUBMITTED' && <GradeResult assignment={assignment} submission={submission} rubric={rubric} />
       ) : (
@@ -376,6 +388,7 @@ function TeacherReview({ assignment, readOnly, rubric, onChanged }: { assignment
     ])
     return { students, submissions }
   }, [assignment.id, assignment.offering.classroom_id])
+  const integrity = useSubmissionIntegrity(assignment.id, data?.submissions)
 
   const rows = useMemo(() => {
     if (!data) return []
@@ -424,6 +437,7 @@ function TeacherReview({ assignment, readOnly, rubric, onChanged }: { assignment
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,22rem)_1fr]">
+      {integrity.byId.size > 0 && <div className="xl:col-span-2"><IntegrityBanner items={[...integrity.byId.values()]} /></div>}
       <Panel className="h-fit" title="Alumnos" action={<span className="text-sm text-texto-suave">{delivered}/{rows.length} entregas, {graded} calificadas</span>} bodyClassName="p-2">
         {rows.length === 0 ? <p className="p-3 text-sm text-texto-suave">El aula no tiene alumnos registrados.</p> : (
           <ul>
@@ -435,6 +449,9 @@ function TeacherReview({ assignment, readOnly, rubric, onChanged }: { assignment
                   className={cn('flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-papel', r.student.id === selected && 'bg-chispa-100 hover:bg-chispa-100')}
                 >
                   <span className="min-w-0 flex-1 truncate text-sm font-bold">{r.student.last_name}, {r.student.first_name}</span>
+                  {r.submission && integrity.byId.has(r.submission.id) && (
+                    <RiskBadge risk={integrity.byId.get(r.submission.id)!.risk} review={integrity.byId.get(r.submission.id)!.sig.review} />
+                  )}
                   {r.submission?.status === 'GRADED'
                     ? <span className="font-display font-bold">{gradeText(assignment, r.submission)}</span>
                     : <TaskStateBadge state={r.state} />}
@@ -469,6 +486,8 @@ function TeacherReview({ assignment, readOnly, rubric, onChanged }: { assignment
             onSaved={afterSave}
             readOnly={readOnly}
             rubric={rubric}
+            integrity={integrity.byId.get(current.submission.id)}
+            onIntegrityChanged={() => void integrity.reload(true)}
           />
         )}
         </div>

@@ -435,6 +435,47 @@ Nada de esto sube archivos: temas, marcos, avatares animados, insignias y partí
 
 Todo se queda quieto con **Ajustes → Menos movimiento** o si el dispositivo pide reducir el movimiento. Dirección agrega más temas, marcos y avatares animados en **Recompensas → Cosméticos**.
 
+## Integridad académica · script 23
+
+Ejecuta `campus_23_integridad.sql` después del 22 (se puede volver a ejecutar). Si vuelves a ejecutar el 18, ejecuta otra vez el 23: el 18 reemplaza las funciones del examen. Todo es SQL (gratis, sin servicios externos) y funciona igual en modo enlaces y en modo archivos. La app nueva también funciona sin el script: usa el examen anterior y oculta los reportes.
+
+Son **señales para que el docente revise**, nunca una sanción automática: cada alerta explica sus motivos y el docente la marca como *Revisado*, *Falsa alarma* o *Confirmado*, con una nota privada.
+
+**Evaluaciones en línea** (Preguntas → Configuración → Integridad, con niveles Libre, Estándar y Estricto):
+
+| Función | Qué evita |
+|---|---|
+| **Respuestas correctas** | Por defecto se muestran después de la fecha límite, y nunca mientras al alumno le queden intentos. Tampoco ve qué preguntas acertó hasta entonces. |
+| **Preguntas por alumno** | Cada alumno recibe N preguntas al azar de las que tenga la evaluación (usa el banco de preguntas). |
+| **Una pregunta a la vez** | El servidor entrega la siguiente pregunta solo al responder la actual; no se puede volver ni ver las siguientes antes de tiempo. |
+| **Código de acceso** | El docente lo dicta en clase; los alumnos no lo pueden leer en la app. Los intentos fallidos se frenan. |
+| **Hora límite para empezar** | Nadie empieza después de esa hora (útil para tomarla en clase). |
+| **Un solo dispositivo** | Si el intento se abre en otro equipo, queda bloqueado hasta que el docente lo libera desde Resultados. |
+| **Al salir de la app** | Registrar, avisar al alumno o enviar la evaluación sola al llegar a N salidas (lo elige el docente). |
+| **Modo examen** | Marca de agua con el nombre y la hora, pegar bloqueado (opcional), sin copiar las preguntas, pantalla completa en Android y computadoras, y un aviso previo al alumno con todo lo que se registra. |
+
+**Monitoreo:** salidas de la app y cuánto tiempo, textos pegados, intentos de copiar, salidas de la pantalla completa, pantalla dividida, la evaluación abierta en otra pestaña, cortes de conexión, volver a abrir el intento y el tiempo en cada pregunta. Se envía en lotes y se guarda en el celular si no hay internet. En **Resultados** cada intento lleva un semáforo y, al abrirlo, la pestaña **Integridad** muestra los motivos y la línea de tiempo.
+
+**Análisis después del examen:** parejas de alumnos con las **mismas respuestas incorrectas** o desarrollos casi iguales, preguntas acertadas en menos de 3 segundos, exámenes terminados demasiado rápido y notas muy por encima del promedio del alumno en el curso.
+
+**Entregas de texto** (sección **Originalidad** al calificar):
+
+- **Copia entre alumnos**: huella de cada texto (tramos de 5 palabras, como MOSS) comparada con todas las entregas del colegio, también de otras secciones y años anteriores. Lo que viene de las indicaciones no cuenta. **Comparar** muestra las dos entregas lado a lado con lo común resaltado; si la otra entrega es de un alumno que no tienes a cargo, solo ves la coincidencia.
+- **Mismo archivo**: dos alumnos que entregan el mismo enlace de Drive o Docs.
+- **Cómo se escribió**: la app registra cuánto se tecleó y cuánto se pegó, el tiempo escribiendo y las sesiones (funciona con los teclados del celular).
+- **Indicios de IA**: frases típicas de un chat, caracteres invisibles, formato de chatbot, rayas largas, oraciones de largo muy parejo, exceso de conectores formales y, sobre todo, un **estilo muy distinto al de sus entregas anteriores**.
+- Las entregas en grupo no se marcan entre los miembros del mismo grupo.
+
+Ningún detector de IA es seguro: úsalo para conversar con el alumno (por ejemplo, pidiéndole que explique su trabajo en clase).
+
+## Rendimiento en el celular
+
+- **Arranque más liviano**: el inicio de cada rol, el Perfil Tesla, la búsqueda rápida y la bienvenida se descargan solo cuando hacen falta. `npm run build` falla si el primer arranque supera el presupuesto de `app/scripts/size-budget.mjs`.
+- **Precarga inteligente**: con buena conexión, las pantallas que más usa cada rol se descargan en un momento libre.
+- **Modo ahorro** (Ajustes → Ahorro de datos y batería): sin desenfoques ni animaciones infinitas y con datos actualizados cada 5 minutos. Se activa solo con el ahorro de datos del celular, en redes 2G o 3G o en equipos con poca memoria.
+- **Sincronización que no gasta de más**: se pausa tras 5 minutos sin usar la app y durante los exámenes, y se pone al día con el siguiente toque.
+- **Exámenes sin conexión**: las respuestas se guardan en el celular y se envían al volver internet, incluido el envío final.
+
 ## Qué sigue
 
 Competencias transversales y comportamiento en la libreta, la plantilla oficial del SIAGIE (cuando el colegio comparta el formato exacto) y el campus en quechua.

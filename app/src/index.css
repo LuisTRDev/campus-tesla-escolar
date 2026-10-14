@@ -290,3 +290,20 @@ html.focus-mode main { padding-top: 1.25rem; }
   .report-card:last-child { break-after: auto; }
 }
 .bar-grow-left { transform-origin: right; animation: bar-grow-x 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+
+/* ---------------------------------------------------------------------------
+   Modo ahorro (src/lib/perf.ts): en celulares modestos o con datos limitados
+   se quitan los efectos que más cuestan a la GPU y a la batería.
+   --------------------------------------------------------------------------- */
+html.lite *, html.lite *::before, html.lite *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+}
+html.lite *:not(.animate-spin), html.lite *::before, html.lite *::after { animation-iteration-count: 1 !important; }
+html.lite [class*="blur"], html.lite [style*="blur("], html.lite .sc-nebula, html.lite .sc-aurora-band { filter: none !important; }
+html.lite .sc-nebula, html.lite .sc-aurora-band, html.lite .tp-particle, html.lite .season-snow, html.lite .season-confetti { display: none !important; }
+html.lite .shadow-2xl, html.lite .shadow-xl { box-shadow: 0 1px 3px rgb(0 0 0 / 0.12) !important; }
+
+/* Modo examen: sin rebote al deslizar ni selección accidental del texto de las preguntas. */
+.exam-mode { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }

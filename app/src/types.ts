@@ -108,6 +108,21 @@ export type QuizSettings = {
   shuffle_questions?: boolean
   shuffle_options?: boolean
   show_answers?: 'NEVER' | 'AFTER_SUBMIT' | 'AFTER_DUE'
+  // Integridad (script 23)
+  integrity_level?: 'FREE' | 'STANDARD' | 'STRICT' | 'CUSTOM'
+  /** Qué pasa al salir de la app: registrar, avisar o enviar sola al llegar a max_leaves. */
+  leave_action?: 'LOG' | 'WARN' | 'CLOSE'
+  max_leaves?: number
+  /** Cada alumno recibe N preguntas al azar. */
+  pick_count?: number | null
+  /** Una pregunta a la vez, sin volver atrás. */
+  sequential?: boolean
+  lock_device?: boolean
+  block_paste?: boolean
+  watermark?: boolean
+  fullscreen?: boolean
+  /** Hora límite para empezar (ISO). */
+  start_until?: string | null
 }
 
 export type AssignmentWithCourse = Assignment & { offering: Offering }

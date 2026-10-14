@@ -1,12 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Bell, Download, Eye, Keyboard, Moon, Save, Type, Zap } from 'lucide-react'
-import { Button, Field, Input, Loading, PageHeader, Panel } from '@/components/ui'
+import { Button, Field, Input, Loading, PageHeader, Panel, Segmented } from '@/components/ui'
 import { Kbd } from '@/components/ux'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
 import { isStandaloneApp, useInstallPrompt, useReadingPrefs } from '@/lib/ux'
+import { constrainedDevice, useLitePref, type LitePref } from '@/lib/perf'
 import { useAuth } from '@/auth/AuthProvider'
 import { PUSH_KIND_LABEL, getPrefs, savePrefs, type NotificationPrefs, type PushKind } from '@/services/comunicacion'
 
@@ -76,6 +77,24 @@ function NotificationPrefsPanel() {
   )
 }
 
+/** Modo ahorro: menos efectos y menos datos (src/lib/perf.ts). */
+function SaverPanel() {
+  const [pref, setPref, active] = useLitePref()
+  const auto = constrainedDevice()
+  return (
+    <Panel title="Ahorro de datos y batería">
+      <Segmented<LitePref> value={pref} onChange={setPref} options={[
+        { value: 'auto', label: 'Automático' }, { value: 'on', label: 'Siempre' }, { value: 'off', label: 'Nunca' },
+      ]} />
+      <p className="mt-3 text-sm text-texto-suave">
+        Quita desenfoques y animaciones, actualiza los datos cada 5 minutos y no descarga pantallas por adelantado.
+        {pref === 'auto' && (auto ? ' Tu celular o tu conexión lo piden: está activado.' : ' Se activa solo con el ahorro de datos del celular, en redes 3G o en equipos con poca memoria.')}
+      </p>
+      {active && <p className="mt-2 text-sm font-bold text-estado-ok">Modo ahorro activo.</p>}
+    </Panel>
+  )
+}
+
 export default function AjustesPage() {
   const [reading, setReading] = useReadingPrefs()
   const { canInstall, ios, install } = useInstallPrompt()
@@ -95,6 +114,7 @@ export default function AjustesPage() {
             <Toggle checked={reading.reduceMotion} onChange={(v) => setReading({ reduceMotion: v })} icon={<Zap className="h-4 w-4" />}
               label="Menos movimiento" hint="Quita animaciones, fondos animados y transiciones." />
           </Panel>
+          <SaverPanel />
           <Panel title="App en tu celular">
             {installed ? (
               <p className="text-sm text-texto-suave">Ya estás usando el campus como app. 🎉</p>

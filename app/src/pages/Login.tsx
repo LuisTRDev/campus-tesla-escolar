@@ -37,7 +37,7 @@ export default function Login({ notice }: { notice?: string }) {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+    <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       <section className="relative flex flex-col justify-between overflow-hidden bg-tinta px-6 py-8 text-white sm:px-10 lg:px-14 lg:py-12">
         <div className="flex items-center gap-3">
           <img src="/images/logo-nikola-tesla.png" alt="" className="h-11 w-11 rounded-lg bg-white object-contain p-1" />

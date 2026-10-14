@@ -180,6 +180,11 @@ export type AttemptView = {
   finished_at: string | null
   answers: Record<string, QuizAnswer>
   questions: AttemptQuestion[]
+  // Script 23: modo una a la vez
+  sequential?: boolean
+  current_idx?: number
+  total?: number
+  leaves?: number
 }
 export type AttemptReview = AttemptView & {
   results: Record<string, number | null>
@@ -188,6 +193,8 @@ export type AttemptReview = AttemptView & {
   max_points: number | null
   needs_review: boolean
   show_answers: boolean
+  /** Script 23: la corrección se verá más adelante. */
+  answers_later?: boolean
   keys: Record<string, { answer: QuizAnswer; explanation: string | null }> | null
 }
 export type QuizAttempt = {
