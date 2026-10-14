@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui'
-import { PIN_TEXT, RankPin } from '@/components/tesla'
+import { LevelBadge, PIN_TEXT, RankPin, badgeStyleOf } from '@/components/tesla'
+import { playSound } from '@/lib/teslaSound'
 import { useAsync } from '@/lib/useAsync'
 import { cn } from '@/lib/utils'
 import { getProfile, rankOf } from '@/services/tesla'
@@ -42,7 +43,7 @@ export function TeslaCelebration({ studentId }: { studentId: number }) {
     const seen = readCelebrated(studentId)
     // Primera vez en este dispositivo: se guarda sin celebrar (para no festejar niveles viejos).
     if (seen == null) writeCelebrated(studentId, data.level)
-    else if (data.level > seen) setShow({ from: seen, to: data.level })
+    else if (data.level > seen) { setShow({ from: seen, to: data.level }); playSound('levelup') }
   }, [data, studentId])
 
   const confetti = useMemo(() => Array.from({ length: 70 }, (_, i) => ({
@@ -54,6 +55,8 @@ export function TeslaCelebration({ studentId }: { studentId: number }) {
   const before = rankOf(show.from, data.pin_levels)
   const now = rankOf(show.to, data.pin_levels)
   const newStar = now.tier > before.tier
+  // Cada 10 niveles cambia la forma de la insignia de nivel.
+  const newBadge = !newStar && Math.floor(show.to / 10) > Math.floor(show.from / 10)
 
   function close(goToProfile: boolean) {
     writeCelebrated(studentId, show!.to)
@@ -72,11 +75,13 @@ export function TeslaCelebration({ studentId }: { studentId: number }) {
         <div className="relative">
           <span className="celebrate-shock" aria-hidden />
           <div className="celebrate-pin">
-            <RankPin tier={now.tier} stars={now.stars} size={newStar ? 168 : 128} />
+            {newStar ? <RankPin tier={now.tier} stars={now.stars} size={168} /> : <LevelBadge level={show.to} size={newBadge ? 150 : 128} />}
           </div>
         </div>
         <div className="celebrate-text mt-6">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-chispa">{newStar ? '¡Nueva Estrella Tesla!' : '¡Subiste de nivel!'}</p>
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-chispa">
+            {newStar ? '¡Nueva Estrella Tesla!' : newBadge ? `¡Nueva insignia: ${badgeStyleOf(show.to).name}!` : '¡Subiste de nivel!'}
+          </p>
           <h2 id="celebrate-title" className="mt-1 font-display text-4xl font-bold leading-tight">
             {newStar ? now.name : `Nivel ${show.to}`}
           </h2>

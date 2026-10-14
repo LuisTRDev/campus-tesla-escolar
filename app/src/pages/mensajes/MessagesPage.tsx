@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Clock, Eye, MessageCircle, Plus, ShieldAlert } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeader, Segmented, Select, Textarea } from '@/components/ui'
+import { CampusName } from '@/components/tesla'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
@@ -198,7 +199,7 @@ function Bubble({ m, mine, onRetry, seen }: { m: UiMessage; mine: boolean; onRet
         m.pending === 'sending' && 'opacity-70',
         m.pending === 'failed' && 'ring-2 ring-estado-alerta',
       )}>
-        {!mine && <p className="mb-0.5 text-xs font-bold text-tinta-500">{m.sender_name ?? 'Familia'}</p>}
+        {!mine && <p className="mb-0.5 text-xs font-bold text-tinta-500"><CampusName profileId={m.sender_id} name={m.sender_name ?? 'Familia'} /></p>}
         {m.attachment_path && m.attachment_kind
           ? <ChatAttachment path={m.attachment_path} kind={m.attachment_kind} name={m.attachment_name} />
           : <p className="whitespace-pre-line break-words text-[15px] leading-relaxed"><LinkifiedText text={m.body} /></p>}
@@ -397,7 +398,7 @@ function Supervision({ conversations, directory }: { conversations: Conversation
             {messages.length === 0 && <p className="text-sm text-texto-suave">La conversación no tiene mensajes.</p>}
             {messages.map((m) => (
               <div key={m.id} className="rounded-lg border border-linea p-3">
-                <p className="text-xs text-texto-suave"><b className="text-texto">{m.sender_name}</b> · {formatShort(m.created_at)}, {formatTime(m.created_at)}</p>
+                <p className="text-xs text-texto-suave"><b className="text-texto"><CampusName profileId={m.sender_id} name={m.sender_name ?? ''} /></b> · {formatShort(m.created_at)}, {formatTime(m.created_at)}</p>
                 <p className="mt-1 whitespace-pre-line text-sm">{m.body}</p>
               </div>
             ))}

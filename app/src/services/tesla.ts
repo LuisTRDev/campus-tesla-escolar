@@ -1,17 +1,17 @@
 import { supabase } from '@/lib/supabase'
 import { cleanSingleLine, cleanText, positiveInteger, safeFileName } from '@/lib/security'
 import { UserError } from '@/lib/errors'
-import { assertUploads } from '@/lib/links'
+import { assertUploads, cleanLink } from '@/lib/links'
 
 // ---------------------------------------------------------------------------
 // Tipos
 // ---------------------------------------------------------------------------
 export type Rarity = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM'
-export type CosmeticKind = 'AVATAR' | 'FRAME' | 'BANNER' | 'TITLE' | 'BACKGROUND' | 'NAME_FX' | 'AURA'
+export type CosmeticKind = 'AVATAR' | 'FRAME' | 'BANNER' | 'TITLE' | 'BACKGROUND' | 'NAME_FX' | 'AURA' | 'THEME' | 'MINI_BG'
 export type UnlockType = 'DEFAULT' | 'LEVEL' | 'ACHIEVEMENT' | 'PURCHASE' | 'SEASON' | 'CHEST'
 export type ConditionType =
   | 'MANUAL' | 'TASKS_ON_TIME' | 'TASKS_HIGH' | 'STREAK' | 'RECOGNITIONS'
-  | 'MONTH_ATTENDANCE' | 'MONTH_PUNCTUALITY' | 'LEVEL' | 'EARLY_TASKS' | 'SPARKS'
+  | 'MONTH_ATTENDANCE' | 'MONTH_PUNCTUALITY' | 'LEVEL' | 'EARLY_TASKS' | 'SPARKS' | 'WALL' | 'COLLECTION'
 
 type CosmeticRef = { id: number; name: string; value: string }
 
@@ -40,12 +40,24 @@ export type TeslaProfile = {
   pins: { tier: number; delivered_at: string }[]
   name_fx: CosmeticRef | null
   aura: CosmeticRef | null
+  /** Tema de los paneles (script 22; falta si no se ejecutó). */
+  theme?: CosmeticRef | null
+  /** Fondo de la tarjeta del mini-perfil (script 22). */
+  mini_bg?: CosmeticRef | null
+  /** ¿Acepta mensajes en su muro de felicitaciones? */
+  wall_enabled?: boolean
+  wall_count?: number
+  /** Cosméticos que ya tiene (sin contar los gratuitos). */
+  cosmetics_owned?: number
   /** Chispas recibidas de compañeros. */
   sparks: number
   /** ¿Quien mira es un alumno del mismo aula? (puede darle una chispa). */
   is_classmate: boolean
   showcase: ShowcaseBlock[]
   showcase_data?: ShowcaseData
+  /** Solo para el propio alumno (lo usa el editor). */
+  showcase_config?: ShowcaseConfig
+  loadouts?: Loadout[]
   featured: { id: number; name: string; icon: string; rarity: Rarity }[]
   counts: Record<Rarity | 'total', number>
   /** Solo para el alumno, su familia, sus docentes y el personal. */
@@ -55,7 +67,10 @@ export type TeslaProfile = {
   current_streak?: number
 }
 
-export type Stats = { on_time: number; early: number; high: number; recognitions: number; att_months: number; punct_months: number; sparks?: number; streak?: number; level?: number }
+export type Stats = {
+  on_time: number; early: number; high: number; recognitions: number; att_months: number; punct_months: number
+  sparks?: number; streak?: number; level?: number; wall?: number; collection?: number
+}
 
 export type TeslaProgress = {
   all: Stats
@@ -232,6 +247,8 @@ export const CONDITION_LABEL: Record<ConditionType, string> = {
   LEVEL: 'Nivel alcanzado',
   EARLY_TASKS: 'Tareas entregadas con 1 día de anticipación',
   SPARKS: 'Chispas recibidas de compañeros',
+  WALL: 'Felicitaciones recibidas en el muro',
+  COLLECTION: 'Porcentaje de la colección de cosméticos',
 }
 
 /** Valor del progreso según la condición del logro. */
@@ -247,12 +264,15 @@ export function statFor(stats: Stats | null | undefined, condition: ConditionTyp
     case 'STREAK': return stats.streak ?? 0
     case 'LEVEL': return stats.level ?? 0
     case 'SPARKS': return stats.sparks ?? 0
+    case 'WALL': return stats.wall ?? 0
+    case 'COLLECTION': return stats.collection ?? 0
     default: return 0
   }
 }
 
 export const KIND_LABEL: Record<CosmeticKind, string> = {
   AVATAR: 'Avatar', FRAME: 'Marco', BANNER: 'Banner', TITLE: 'Título', BACKGROUND: 'Fondo del perfil', NAME_FX: 'Efecto del nombre', AURA: 'Aura del avatar',
+  THEME: 'Tema del perfil', MINI_BG: 'Fondo del mini-perfil',
 }
 
 export const GOAL_METRIC_LABEL: Record<GoalMetric, { name: string; unit: string }> = {
@@ -634,13 +654,34 @@ export const closeMonth = (month: string) =>
 // ---------------------------------------------------------------------------
 // Vitrina del perfil
 // ---------------------------------------------------------------------------
-export type ShowcaseBlock = 'STREAK' | 'STATS' | 'PINS' | 'SPARKS' | 'RECENT'
+export type ShowcaseBlock =
+  | 'STREAK' | 'STATS' | 'PINS' | 'SPARKS' | 'RECENT'
+  | 'TEXT' | 'ACHIEVEMENTS' | 'RAREST' | 'COLLECTION' | 'PROJECT' | 'COURSE'
+
+export const SHOWCASE_MAX = 6
+
+export type ShowcaseAchievement = { id: number; name: string; icon: string; rarity: Rarity; earned_at: string; pct?: number | null }
 
 export type ShowcaseData = {
   STREAK?: { current: number; best: number }
   STATS?: { on_time: number; high: number; early: number; recognitions: number }
   SPARKS?: { total: number; kinds: Partial<Record<SparkKind, number>> }
-  RECENT?: { id: number; name: string; icon: string; rarity: Rarity; earned_at: string }[]
+  RECENT?: ShowcaseAchievement[]
+  TEXT?: { title?: string; body: string }
+  PROJECT?: { title: string; url: string; note?: string }
+  ACHIEVEMENTS?: ShowcaseAchievement[]
+  RAREST?: (ShowcaseAchievement & { description: string })[]
+  COLLECTION?: { items: SeasonCosmetic[]; owned: number; total: number }
+  COURSE?: { offering_id: number; name: string; teacher: string | null; note?: string }
+}
+
+/** Lo que el alumno configura en cada bloque de la vitrina. */
+export type ShowcaseConfig = {
+  TEXT?: { title?: string; body: string }
+  PROJECT?: { title: string; url: string; note?: string }
+  ACHIEVEMENTS?: { ids: number[] }
+  COLLECTION?: { ids: number[] }
+  COURSE?: { offering_id: number; note?: string }
 }
 
 export const SHOWCASE_LABEL: Record<ShowcaseBlock, { name: string; hint: string }> = {
@@ -649,18 +690,111 @@ export const SHOWCASE_LABEL: Record<ShowcaseBlock, { name: string; hint: string 
   PINS: { name: 'Estrellas Tesla', hint: 'Tus Estrellas y los pines que ya recibiste.' },
   SPARKS: { name: 'Chispas', hint: 'Las chispas que te dieron tus compañeros.' },
   RECENT: { name: 'Últimos logros', hint: 'Tus 4 logros más recientes.' },
+  TEXT: { name: 'Caja de texto', hint: 'Un título y un texto tuyo (hasta 400 caracteres).' },
+  ACHIEVEMENTS: { name: 'Vitrina de logros', hint: 'Elige hasta 6 logros para lucirlos en grande.' },
+  RAREST: { name: 'Logros más raros', hint: 'Tus 3 logros que menos alumnos del colegio tienen.' },
+  COLLECTION: { name: 'Colección', hint: 'Hasta 8 cosméticos de tu inventario.' },
+  PROJECT: { name: 'Proyecto destacado', hint: 'Un enlace a un trabajo tuyo (Drive, Canva, YouTube…).' },
+  COURSE: { name: 'Curso favorito', hint: 'El curso que más te gusta y por qué.' },
 }
 
-/** Guarda todo el perfil: un cosmético por tipo, insignias, bio, privacidad y vitrina. */
-export function saveMyProfile(input: { cosmeticIds: (number | null)[]; featured: number[]; bio: string; hideFromRankings: boolean; showcase: ShowcaseBlock[] }) {
+export type Loadout = { slot: number; name: string; ids: number[] }
+
+/** Guarda todo el perfil: un cosmético por tipo, insignias, bio, privacidad, vitrina y muro. */
+export function saveMyProfile(input: {
+  cosmeticIds: (number | null)[]; featured: number[]; bio: string; hideFromRankings: boolean; showcase: ShowcaseBlock[]
+  config?: ShowcaseConfig; wallEnabled?: boolean
+}) {
   const bio = cleanSingleLine(input.bio, 200)
   if (bio.length > 140) throw new UserError('La presentación puede tener hasta 140 caracteres.')
-  if (input.showcase.length > 4) throw new UserError('La vitrina admite hasta 4 bloques.')
+  if (input.showcase.length > SHOWCASE_MAX) throw new UserError(`La vitrina admite hasta ${SHOWCASE_MAX} bloques.`)
+  const c = input.config
+  const url = c?.PROJECT?.url?.trim() ? cleanLink(c.PROJECT.url) : ''
+  if (url.length > 300) throw new UserError('El enlace del proyecto es demasiado largo.')
   return rpc<void>('save_my_tesla_profile', {
     p_cosmetic_ids: input.cosmeticIds.filter((x): x is number => x != null),
     p_featured: input.featured.slice(0, 3), p_bio: bio || null, p_hide_from_rankings: input.hideFromRankings, p_showcase: input.showcase,
+    ...(c ? {
+      p_config: {
+        ...(c.TEXT?.body?.trim() ? { TEXT: { title: cleanSingleLine(c.TEXT.title ?? '', 40), body: cleanText(c.TEXT.body, 400) } } : {}),
+        ...(url ? { PROJECT: { title: cleanSingleLine(c.PROJECT?.title ?? '', 60), url, note: cleanSingleLine(c.PROJECT?.note ?? '', 140) } } : {}),
+        ...(c.ACHIEVEMENTS ? { ACHIEVEMENTS: { ids: c.ACHIEVEMENTS.ids.slice(0, 6) } } : {}),
+        ...(c.COLLECTION ? { COLLECTION: { ids: c.COLLECTION.ids.slice(0, 8) } } : {}),
+        ...(c.COURSE?.offering_id ? { COURSE: { offering_id: c.COURSE.offering_id, note: cleanSingleLine(c.COURSE.note ?? '', 140) } } : {}),
+      },
+    } : {}),
+    ...(input.wallEnabled !== undefined ? { p_wall_enabled: input.wallEnabled } : {}),
   })
 }
+
+/** Guarda (o borra, con ids en null) uno de los 3 conjuntos de cosméticos. */
+export const saveLoadout = (slot: number, name: string, ids: number[] | null) =>
+  rpc<Loadout[]>('save_tesla_loadout', { p_slot: Math.round(slot), p_name: cleanSingleLine(name, 24), p_cosmetic_ids: ids })
+
+/** Tutor o dirección: quita la presentación, la caja de texto o el proyecto de un alumno. */
+export const moderateProfile = (studentId: number, part: 'BIO' | 'TEXT' | 'PROJECT') =>
+  rpc<void>('moderate_tesla_profile', { p_student_id: positiveInteger(studentId), p_part: part })
+
+// ---------------------------------------------------------------------------
+// Rareza de los logros (porcentaje del colegio que tiene cada uno)
+// ---------------------------------------------------------------------------
+export type RarityInfo = { holders: number; pct: number }
+
+export async function getAchievementRarity(): Promise<Map<number, RarityInfo>> {
+  try {
+    const rows = await rpc<{ achievement_id: number; holders: number; pct: number }[]>('tesla_achievement_rarity')
+    return new Map(rows.map((r) => [Number(r.achievement_id), { holders: Number(r.holders), pct: Number(r.pct) }]))
+  } catch {
+    // Sin el script 22 simplemente no se muestra la rareza.
+    return new Map()
+  }
+}
+
+export function rarityLabel(pct: number | null | undefined): string {
+  if (pct == null) return ''
+  return `${pct < 1 ? pct.toFixed(1) : Math.round(pct)} % del colegio`
+}
+
+// ---------------------------------------------------------------------------
+// Muro de felicitaciones (solo stickers y frases predefinidas)
+// ---------------------------------------------------------------------------
+export type WallSticker = 'rayo' | 'estrella' | 'trofeo' | 'cohete' | 'corazon' | 'fuego' | 'aplauso' | 'cerebro' | 'corona' | 'arcoiris' | 'libro' | 'medalla'
+export const WALL_STICKERS: { value: WallSticker; emoji: string; label: string }[] = [
+  { value: 'rayo', emoji: '⚡', label: 'Rayo' }, { value: 'estrella', emoji: '🌟', label: 'Estrella' },
+  { value: 'trofeo', emoji: '🏆', label: 'Trofeo' }, { value: 'cohete', emoji: '🚀', label: 'Cohete' },
+  { value: 'corazon', emoji: '💙', label: 'Corazón' }, { value: 'fuego', emoji: '🔥', label: 'Fuego' },
+  { value: 'aplauso', emoji: '👏', label: 'Aplausos' }, { value: 'cerebro', emoji: '🧠', label: 'Cerebrito' },
+  { value: 'corona', emoji: '👑', label: 'Corona' }, { value: 'arcoiris', emoji: '🌈', label: 'Arcoíris' },
+  { value: 'libro', emoji: '📚', label: 'Libros' }, { value: 'medalla', emoji: '🥇', label: 'Medalla' },
+]
+export const WALL_PHRASES: { value: string; label: string }[] = [
+  { value: 'FELICIDADES', label: '¡Felicitaciones!' }, { value: 'SIGUE_ASI', label: '¡Sigue así!' },
+  { value: 'GRAN_TRABAJO', label: '¡Gran trabajo!' }, { value: 'GRACIAS', label: 'Gracias por tu ayuda' },
+  { value: 'CRACK', label: '¡Eres un crack!' }, { value: 'INSPIRAS', label: 'Nos inspiras' },
+  { value: 'EQUIPO', label: 'Gran compañero de equipo' }, { value: 'ORGULLO', label: 'Estamos orgullosos de ti' },
+  { value: 'NIVEL', label: '¡Felicidades por tu nuevo nivel!' }, { value: 'ANIMO', label: '¡Tú puedes!' },
+]
+
+export type WallPost = {
+  id: number
+  sticker: WallSticker
+  phrase: string
+  text: string
+  created_at: string
+  can_remove: boolean
+  author:
+    | { kind: 'STUDENT'; student_id: number; name: string | null; avatar: string; frame: string }
+    | { kind: 'FAMILY'; name: string }
+    | { kind: 'STAFF'; name: string; role: string }
+}
+
+export async function getWall(studentId: number): Promise<WallPost[]> {
+  const rows = await rpc<WallPost[]>('tesla_wall', { p_student_id: positiveInteger(studentId) })
+  return rows.map((r) => ({ ...r, id: Number(r.id) }))
+}
+export const postWall = (studentId: number, sticker: WallSticker, phrase: string) =>
+  rpc<number>('post_wall_message', { p_to_student: positiveInteger(studentId), p_sticker: sticker, p_phrase: phrase })
+export const removeWallPost = (id: number) => rpc<void>('remove_wall_post', { p_id: positiveInteger(id) })
 
 // ---------------------------------------------------------------------------
 // Chispas entre compañeros
@@ -797,3 +931,52 @@ export type TimelineEvent = {
   tier?: number
 }
 export const getTimeline = (studentId: number) => rpc<TimelineEvent[]>('tesla_timeline', { p_student_id: positiveInteger(studentId) })
+
+// ---------------------------------------------------------------------------
+// Identidad Tesla en todo el campus: nombre con efecto y avatar de los alumnos
+// que escriben en mensajes, grupos, foro y anuncios. Las consultas se agrupan
+// (una sola llamada por pantalla) y se guardan unos minutos.
+// ---------------------------------------------------------------------------
+export type TeslaIdentity = { profile_id: string; student_id: number; name_fx: string; avatar: string; frame: string; aura: string; level: number }
+
+const identityCache = new Map<string, { at: number; value: TeslaIdentity | null }>()
+const identityWaiters = new Map<string, ((v: TeslaIdentity | null) => void)[]>()
+let identityTimer: ReturnType<typeof setTimeout> | null = null
+let identitiesMissing = false
+
+async function flushIdentities() {
+  identityTimer = null
+  const ids = [...identityWaiters.keys()].slice(0, 200)
+  const waiting = ids.map((id) => [id, identityWaiters.get(id)!] as const)
+  ids.forEach((id) => identityWaiters.delete(id))
+  let rows: TeslaIdentity[] = []
+  try {
+    rows = await rpc<TeslaIdentity[]>('tesla_identities', { p_profile_ids: ids })
+  } catch {
+    // Sin el script 22 los nombres se muestran normales.
+    identitiesMissing = true
+  }
+  const byId = new Map(rows.map((r) => [r.profile_id, { ...r, student_id: Number(r.student_id) }]))
+  for (const [id, fns] of waiting) {
+    const value = byId.get(id) ?? null
+    identityCache.set(id, { at: Date.now(), value })
+    fns.forEach((fn) => fn(value))
+  }
+  if (identityWaiters.size) identityTimer = setTimeout(() => void flushIdentities(), 30)
+}
+
+/** Identidad de un perfil (null si no es un alumno o no se puede ver su perfil). */
+export function getIdentity(profileId: string): Promise<TeslaIdentity | null> {
+  const hit = identityCache.get(profileId)
+  if (hit && Date.now() - hit.at < 5 * 60_000) return Promise.resolve(hit.value)
+  if (identitiesMissing) return Promise.resolve(null)
+  return new Promise((resolve) => {
+    identityWaiters.set(profileId, [...(identityWaiters.get(profileId) ?? []), resolve])
+    identityTimer ??= setTimeout(() => void flushIdentities(), 30)
+  })
+}
+
+/** Respuesta inmediata si ya está en memoria (evita parpadeos al repintar). */
+export function cachedIdentity(profileId: string): TeslaIdentity | null | undefined {
+  return identityCache.get(profileId)?.value
+}

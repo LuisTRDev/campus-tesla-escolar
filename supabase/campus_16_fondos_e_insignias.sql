@@ -66,7 +66,8 @@ create table if not exists public.tesla_pin_deliveries (
 -- ----------------------------------------------------------------------------
 alter table public.cosmetics drop constraint if exists cosmetics_kind_check;
 alter table public.cosmetics add constraint cosmetics_kind_check
-  check (kind in ('AVATAR', 'FRAME', 'BANNER', 'TITLE', 'BACKGROUND'));
+  -- Lista completa: los scripts 17 y 22 agregan tipos y este script se puede volver a ejecutar después.
+  check (kind in ('AVATAR', 'FRAME', 'BANNER', 'TITLE', 'BACKGROUND', 'NAME_FX', 'AURA', 'THEME', 'MINI_BG'));
 
 alter table public.cosmetics drop constraint if exists cosmetics_banner_check;
 alter table public.cosmetics add constraint cosmetics_banner_check check (

@@ -7,7 +7,7 @@ import {
 import { useAuth, useFocusStudent } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, Panel, Select, Textarea } from '@/components/ui'
 import { StoredThumb, usePreview } from '@/components/files'
-import { ArtLayer } from '@/components/tesla'
+import { ArtLayer, CampusName } from '@/components/tesla'
 import { SCENES } from '@/components/scenes'
 import { useAsync } from '@/lib/useAsync'
 import { useToast, useUndoableDelete } from '@/lib/toast'
@@ -506,7 +506,7 @@ export function ForumTab({ offering, canManage }: { offering: Offering; canManag
                       {t.has_best && <Badge tone="ok"><Star className="h-3 w-3" />Resuelta</Badge>}
                     </span>
                     <span className="block truncate text-sm text-texto-suave">{t.body}</span>
-                    <span className="mt-0.5 block text-xs text-texto-suave">{t.author_name ?? 'Alumno'} · {t.posts_count} respuesta{t.posts_count === 1 ? '' : 's'} · {formatShort(t.last_post_at)}</span>
+                    <span className="mt-0.5 block text-xs text-texto-suave"><CampusName profileId={t.author_id} name={t.author_name ?? 'Alumno'} className="font-bold" /> · {t.posts_count} respuesta{t.posts_count === 1 ? '' : 's'} · {formatShort(t.last_post_at)}</span>
                   </span>
                 </button>
               </li>
@@ -553,7 +553,7 @@ function ThreadView({ thread, canManage, canPost, onBack }: { thread: ForumThrea
         )}
       >
         <p className="whitespace-pre-line">{t.body}</p>
-        <p className="mt-2 flex items-center gap-2 text-xs text-texto-suave">{t.author_name ?? 'Alumno'} {roleTag(t.author_role)} · {formatShort(t.created_at)} {formatTime(t.created_at)}</p>
+        <p className="mt-2 flex items-center gap-2 text-xs text-texto-suave"><CampusName profileId={t.author_id} name={t.author_name ?? 'Alumno'} avatar className="font-bold" /> {roleTag(t.author_role)} · {formatShort(t.created_at)} {formatTime(t.created_at)}</p>
       </Panel>
       {loading ? <Loading /> : (
         <ul className="space-y-3">
@@ -562,7 +562,7 @@ function ThreadView({ thread, canManage, canPost, onBack }: { thread: ForumThrea
               {p.is_best && <p className="mb-1 flex items-center gap-1 text-xs font-bold text-estado-ok"><Star className="h-3.5 w-3.5" />Mejor respuesta</p>}
               <p className="whitespace-pre-line">{p.body ?? <i className="text-texto-suave">Respuesta ocultada por el docente.</i>}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-texto-suave">
-                <span>{p.author_name ?? 'Alumno'}</span>{roleTag(p.author_role)}<span>· {formatShort(p.created_at)} {formatTime(p.created_at)}</span>
+                <CampusName profileId={p.author_id} name={p.author_name ?? 'Alumno'} avatar className="font-bold" />{roleTag(p.author_role)}<span>· {formatShort(p.created_at)} {formatTime(p.created_at)}</span>
                 <span className="ml-auto flex gap-2">
                   {(canManage || isAuthor) && !p.hidden && (
                     <button className="font-bold hover:text-estado-ok" onClick={() => act(() => moderateForum('BEST', p.id, !p.is_best), p.is_best ? 'Desmarcada.' : '¡Marcada como mejor respuesta!')}>

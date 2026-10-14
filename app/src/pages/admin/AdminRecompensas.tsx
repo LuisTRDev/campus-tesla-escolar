@@ -3,10 +3,12 @@ import { useSearchParams } from 'react-router-dom'
 import { CalendarCheck, Eye, EyeOff, Pencil, Plus, Save } from 'lucide-react'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeader, Panel, Segmented, Select, Textarea } from '@/components/ui'
 import {
-  AURA_KEYS, ArtLayer, CoinAmount, ICON_NAMES, Medal, NAME_FX_KEYS, NameFx, RankPin, RarityBadge, TeslaAvatar, TeslaIcon, isAnimatedArt,
+  AURA_KEYS, ArtLayer, CoinAmount, FRAME_KEYS, ICON_NAMES, Medal, NAME_FX_KEYS, NameFx, RankPin, RarityBadge, THEMES, TeslaAvatar, TeslaIcon, ThemeSwatch,
+  isAnimatedArt,
 } from '@/components/tesla'
 import { RetosAdminTab } from '@/pages/admin/AdminRetos'
 import { SCENES } from '@/components/scenes'
+import { ANIM_AVATARS } from '@/components/avatars'
 import { FileDropzone } from '@/components/files'
 import { FILE_UPLOADS } from '@/lib/links'
 import { PinQueue, RequestQueue } from '@/pages/tesla/TeslaAulaPage'
@@ -474,8 +476,8 @@ function RulesTab() {
 // ---------------------------------------------------------------------------
 // Cosméticos
 // ---------------------------------------------------------------------------
-const KINDS: CosmeticKind[] = ['BACKGROUND', 'BANNER', 'AVATAR', 'AURA', 'FRAME', 'NAME_FX', 'TITLE']
-const FRAMES = ['none', 'bronze', 'silver', 'gold', 'platinum', 'spark', 'coil']
+const KINDS: CosmeticKind[] = ['BACKGROUND', 'BANNER', 'MINI_BG', 'THEME', 'AVATAR', 'AURA', 'FRAME', 'NAME_FX', 'TITLE']
+const FRAMES = FRAME_KEYS
 const UNLOCK_LABEL: Record<UnlockType, string> = {
   DEFAULT: 'Disponible para todos', LEVEL: 'Por nivel', ACHIEVEMENT: 'Por logro', PURCHASE: 'Compra con monedas', SEASON: 'Pase de temporada', CHEST: 'Cofres sorpresa',
 }
@@ -484,15 +486,15 @@ function CosmeticForm({ cosmetic, achievements, onClose, onSaved }: { cosmetic: 
   const toast = useToast()
   const [f, setF] = useState<Omit<Cosmetic, 'id'> & { id?: number }>(() => (cosmetic && typeof cosmetic === 'object' ? cosmetic : {
     kind: (cosmetic as CosmeticKind) ?? 'AVATAR', name: '',
-    value: cosmetic === 'FRAME' ? 'gold' : cosmetic === 'BANNER' ? '#0B1D33,#F0B429' : cosmetic === 'BACKGROUND' ? 'scene:galaxia'
-      : cosmetic === 'NAME_FX' ? 'oro' : cosmetic === 'AURA' ? 'chispas' : '',
+    value: cosmetic === 'FRAME' ? 'gold' : cosmetic === 'BANNER' ? '#0B1D33,#F0B429' : cosmetic === 'BACKGROUND' || cosmetic === 'MINI_BG' ? 'scene:galaxia'
+      : cosmetic === 'NAME_FX' ? 'oro' : cosmetic === 'AURA' ? 'chispas' : cosmetic === 'THEME' ? 'medianoche' : '',
     rarity: 'BRONZE', unlock_type: 'PURCHASE', unlock_level: 3, unlock_achievement_id: achievements[0]?.id ?? null, price_coins: 50, is_active: true, sort: 50,
   }))
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(false)
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }))
   const [b1, b2] = bannerColors(f.value)
-  const isArt = f.kind === 'BANNER' || f.kind === 'BACKGROUND'
+  const isArt = f.kind === 'BANNER' || f.kind === 'BACKGROUND' || f.kind === 'MINI_BG'
   const artMode = f.value.startsWith('scene:') ? 'scene' : /^(img|vid):/.test(f.value) ? 'media' : f.value === 'none' ? 'none' : 'colors'
 
   function setMode(mode: string) {
@@ -533,7 +535,45 @@ function CosmeticForm({ cosmetic, achievements, onClose, onSaved }: { cosmetic: 
     <Modal open={!!cosmetic} onClose={onClose} title={f.id ? `Editar ${KIND_LABEL[f.kind].toLowerCase()}` : `Nuevo ${KIND_LABEL[f.kind].toLowerCase()}`}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Nombre"><Input value={f.name} onChange={(e) => set('name', e.target.value)} required maxLength={40} /></Field>
-        {f.kind === 'AVATAR' && <Field label="Emoji" hint="Pega un emoji (🦙, 🚀, 🐉…)."><Input value={f.value} onChange={(e) => set('value', e.target.value)} required maxLength={16} className="text-2xl" /></Field>}
+        {f.kind === 'AVATAR' && (
+          <>
+            <Field label="Tipo">
+              <Segmented value={f.value.startsWith('anim:') ? 'anim' : 'emoji'} onChange={(m) => set('value', m === 'anim' ? `anim:${ANIM_AVATARS[0].key}` : '')}
+                options={[{ value: 'emoji', label: 'Emoji' }, { value: 'anim', label: 'Animado' }]} />
+            </Field>
+            {f.value.startsWith('anim:') ? (
+              <ul className="grid grid-cols-4 gap-2">
+                {ANIM_AVATARS.map((a) => {
+                  const v = `anim:${a.key}`
+                  return (
+                    <li key={a.key}>
+                      <button type="button" aria-pressed={f.value === v} onClick={() => set('value', v)}
+                        className={cn('flex w-full flex-col items-center gap-1 rounded-xl border p-2 text-xs font-bold', f.value === v ? 'border-tinta bg-chispa-100 text-tinta' : 'border-linea hover:border-tinta-500')}>
+                        <TeslaAvatar emoji={v} size={48} />{a.name}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <Field label="Emoji" hint="Pega un emoji (🦙, 🚀, 🐉…)."><Input value={f.value} onChange={(e) => set('value', e.target.value)} required maxLength={16} className="text-2xl" /></Field>
+            )}
+          </>
+        )}
+        {f.kind === 'THEME' && (
+          <Field label="Tema" hint="Cambia el color de todos los paneles del perfil.">
+            <ul className="grid grid-cols-3 gap-2">
+              {THEMES.map((t) => (
+                <li key={t.key}>
+                  <button type="button" aria-pressed={f.value === t.key} onClick={() => set('value', t.key)}
+                    className={cn('flex w-full flex-col items-center gap-1 rounded-xl border p-2 text-xs font-bold', f.value === t.key ? 'border-tinta bg-chispa-100 text-tinta' : 'border-linea hover:border-tinta-500')}>
+                    <ThemeSwatch value={t.key} size={34} />{t.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Field>
+        )}
         {f.kind === 'TITLE' && <Field label="Texto del título"><Input value={f.value} onChange={(e) => set('value', e.target.value)} required maxLength={40} /></Field>}
         {(f.kind === 'NAME_FX' || f.kind === 'AURA') && (
           <div className="flex items-end gap-4">
@@ -554,8 +594,9 @@ function CosmeticForm({ cosmetic, achievements, onClose, onSaved }: { cosmetic: 
           <Field label="Tipo">
             <Segmented value={artMode} onChange={setMode} options={[
               { value: 'scene', label: 'Escena' },
-              ...(f.kind === 'BANNER' ? [{ value: 'colors', label: 'Colores' }] : [{ value: 'none', label: 'Sin fondo' }]),
-              ...(FILE_UPLOADS || artMode === 'media' ? [{ value: 'media' as const, label: 'Imagen o video' }] : []),
+              ...(f.kind !== 'BACKGROUND' ? [{ value: 'colors' as const, label: 'Colores' }] : []),
+              ...(f.kind !== 'BANNER' ? [{ value: 'none' as const, label: 'Sin fondo' }] : []),
+              ...(f.kind !== 'MINI_BG' && (FILE_UPLOADS || artMode === 'media') ? [{ value: 'media' as const, label: 'Imagen o video' }] : []),
             ]} />
           </Field>
         )}
@@ -575,7 +616,7 @@ function CosmeticForm({ cosmetic, achievements, onClose, onSaved }: { cosmetic: 
             })}
           </ul>
         )}
-        {f.kind === 'BANNER' && artMode === 'colors' && (
+        {(f.kind === 'BANNER' || f.kind === 'MINI_BG') && artMode === 'colors' && (
           <div className="flex items-end gap-3">
             <Field label="Color 1"><input type="color" value={b1} onChange={(e) => set('value', `${e.target.value.toUpperCase()},${b2}`)} className="h-11 w-16 rounded-lg border border-linea" /></Field>
             <Field label="Color 2"><input type="color" value={b2} onChange={(e) => set('value', `${b1},${e.target.value.toUpperCase()}`)} className="h-11 w-16 rounded-lg border border-linea" /></Field>
@@ -588,7 +629,7 @@ function CosmeticForm({ cosmetic, achievements, onClose, onSaved }: { cosmetic: 
           </Field>
         )}
         {isArt && artMode !== 'none' && f.value && (
-          <div className={cn('relative overflow-hidden rounded-xl border border-linea', f.kind === 'BACKGROUND' ? 'aspect-video' : 'h-24')}>
+          <div className={cn('relative overflow-hidden rounded-xl border border-linea', f.kind === 'BACKGROUND' ? 'aspect-video' : f.kind === 'MINI_BG' ? 'mx-auto aspect-[4/3] w-64' : 'h-24')}>
             <ArtLayer value={f.value} />
             {uploading && <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-bold text-white">Subiendo…</span>}
           </div>
@@ -641,12 +682,13 @@ function CosmeticsTab() {
                   <button onClick={() => setEditing(c)} className={cn('flex w-full items-center gap-3 rounded-xl border border-linea p-2 text-left hover:border-tinta-500', !c.is_active && 'opacity-50')}>
                     {kind === 'AVATAR' && <TeslaAvatar emoji={c.value} size={40} />}
                     {kind === 'FRAME' && <TeslaAvatar emoji="⚡" frame={c.value} size={40} />}
-                    {(kind === 'BANNER' || kind === 'BACKGROUND') && (
+                    {(kind === 'BANNER' || kind === 'BACKGROUND' || kind === 'MINI_BG') && (
                       <span className="relative h-10 w-16 shrink-0 overflow-hidden rounded-lg border border-linea">
                         {c.value === 'none' ? <span className="absolute inset-0 bg-papel" /> : <ArtLayer value={c.value} still />}
                       </span>
                     )}
                     {kind === 'TITLE' && <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-papel text-xs font-bold">Aa</span>}
+                    {kind === 'THEME' && <ThemeSwatch value={c.value} size={36} />}
                     {kind === 'AURA' && <TeslaAvatar emoji="⚡" aura={c.value} size={32} className="m-1" />}
                     {kind === 'NAME_FX' && <span className="flex h-10 w-16 shrink-0 items-center justify-center font-display font-bold"><NameFx fx={c.value} text="Aa" /></span>}
                     <span className="min-w-0 flex-1">

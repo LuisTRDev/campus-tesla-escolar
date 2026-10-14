@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CheckCheck, Eye, Megaphone, Pin, Trash2 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Button, Empty, ErrorBox, Loading, Modal } from '@/components/ui'
+import { CampusName } from '@/components/tesla'
 import { CourseTag } from '@/components/course'
 import { LinkifiedText } from '@/components/LinkifiedText'
 import { useAsync } from '@/lib/useAsync'
@@ -31,7 +32,7 @@ export function AnnouncementItem({ item, author, offering, compact, onDelete }: 
       <h3 className="mt-1 font-bold text-texto">{item.title}</h3>
       <p className={cn('mt-1 whitespace-pre-line text-[15px] leading-relaxed text-texto', compact && 'line-clamp-3 text-sm text-texto-suave')}><LinkifiedText text={item.body} /></p>
       <div className="mt-2 flex items-center gap-3 text-xs text-texto-suave">
-        <span>{author ?? 'Colegio'}, {formatShort(item.published_at)} a las {formatTime(item.published_at)}</span>
+        <span><CampusName profileId={item.author_id} name={author ?? 'Colegio'} />, {formatShort(item.published_at)} a las {formatTime(item.published_at)}</span>
         {onDelete && (
           <button onClick={onDelete} className="inline-flex items-center gap-1 font-bold hover:text-estado-alerta">
             <Trash2 className="h-3.5 w-3.5" />Eliminar

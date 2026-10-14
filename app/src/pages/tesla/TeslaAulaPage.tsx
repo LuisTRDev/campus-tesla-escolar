@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Award, Check, Heart, PackageCheck, Pencil, Plus, Trophy, Undo2, X } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeader, Panel, Segmented, Select, Textarea } from '@/components/ui'
-import { CoinAmount, NameFx, RankPin, TeslaAvatar } from '@/components/tesla'
+import { CoinAmount, LevelBadge, MiniProfileHover, NameFx, RankPin, TeslaAvatar } from '@/components/tesla'
 import { AdjustModal, AwardModal, RecognizeModal } from '@/components/TeslaActions'
 import { ConstancyBoard, GoalCard } from '@/pages/tesla/PerfilTeslaPage'
 import { RequestRow } from '@/pages/tesla/TiendaPage'
@@ -357,13 +357,16 @@ export default function TeslaAulaPage() {
                     const name = `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim()
                     return (
                       <li key={s.student_id} className="rounded-xl border border-linea bg-superficie p-3">
-                        <Link to={`/perfil-tesla/${s.student_id}`} className="flex items-center gap-3 hover:underline">
-                          <TeslaAvatar emoji={s.avatar} frame={s.frame} aura={s.aura} size={48} />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate font-bold"><NameFx fx={s.name_fx} text={name} /></span>
-                            <span className="flex items-center gap-1 truncate text-xs text-texto-suave"><RankPin tier={s.pin_tier} size={16} />Nivel {s.level} · {s.title}</span>
-                          </span>
-                        </Link>
+                        <MiniProfileHover studentId={s.student_id}>
+                          <Link to={`/perfil-tesla/${s.student_id}`} className="flex items-center gap-3 hover:underline">
+                            <TeslaAvatar emoji={s.avatar} frame={s.frame} aura={s.aura} size={48} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-bold"><NameFx fx={s.name_fx} text={name} /></span>
+                              <span className="flex items-center gap-1 truncate text-xs text-texto-suave"><RankPin tier={s.pin_tier} size={16} />Nivel {s.level} · {s.title}</span>
+                            </span>
+                            <LevelBadge level={s.level} size={34} />
+                          </Link>
+                        </MiniProfileHover>
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                           <span className="tabular-nums text-texto-suave">{(s.xp ?? 0).toLocaleString('es-PE')} XP</span>
                           <CoinAmount value={s.coins ?? 0} className="text-sm font-normal" />

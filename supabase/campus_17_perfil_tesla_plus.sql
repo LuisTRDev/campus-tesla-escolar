@@ -19,7 +19,8 @@
 -- ----------------------------------------------------------------------------
 alter table public.cosmetics drop constraint if exists cosmetics_kind_check;
 alter table public.cosmetics add constraint cosmetics_kind_check
-  check (kind in ('AVATAR', 'FRAME', 'BANNER', 'TITLE', 'BACKGROUND', 'NAME_FX', 'AURA'));
+  -- Incluye THEME y MINI_BG (script 22) para poder volver a ejecutar este script después.
+  check (kind in ('AVATAR', 'FRAME', 'BANNER', 'TITLE', 'BACKGROUND', 'NAME_FX', 'AURA', 'THEME', 'MINI_BG'));
 
 alter table public.cosmetics drop constraint if exists cosmetics_unlock_type_check;
 alter table public.cosmetics add constraint cosmetics_unlock_type_check
@@ -179,7 +180,9 @@ $$;
 alter table public.achievements drop constraint if exists achievements_condition_type_check;
 alter table public.achievements add constraint achievements_condition_type_check check (condition_type in (
   'MANUAL', 'TASKS_ON_TIME', 'TASKS_HIGH', 'STREAK', 'RECOGNITIONS',
-  'MONTH_ATTENDANCE', 'MONTH_PUNCTUALITY', 'LEVEL', 'EARLY_TASKS', 'SPARKS'
+  'MONTH_ATTENDANCE', 'MONTH_PUNCTUALITY', 'LEVEL', 'EARLY_TASKS', 'SPARKS',
+  -- WALL y COLLECTION son del script 22 (para poder volver a ejecutar este script después).
+  'WALL', 'COLLECTION'
 ));
 
 insert into public.achievements (code, name, description, icon, rarity, is_secret, is_seasonal, condition_type, threshold, reward_xp, reward_coins, sort) values

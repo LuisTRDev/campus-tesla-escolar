@@ -407,6 +407,34 @@ Los enlaces de **Drive, Docs, Hojas de cálculo, Presentaciones, Formularios y Y
 
 `VITE_FILE_UPLOADS` solo se usa como respaldo mientras no se haya ejecutado el script 21.
 
+## Perfil Tesla al estilo Steam · script 22
+
+Ejecuta `campus_22_perfil_steam.sql` después del 21 (se puede volver a ejecutar). Si vuelves a ejecutar el 15, el 16 o el 17, ejecuta otra vez el 22 al final: esos scripts reemplazan funciones del perfil. La app nueva funciona también sin el script 22: oculta el muro, los temas y las vitrinas nuevas hasta que lo ejecutes.
+
+Nada de esto sube archivos: temas, marcos, avatares animados, insignias y partículas se dibujan con CSS y SVG, así que funciona igual en modo enlaces y en modo archivos.
+
+| Novedad | Qué hace |
+|---|---|
+| **Portada nueva** | Banner amplio, avatar grande que entra con animación, nombre con su efecto, bloque de nivel y una fila de estadísticas que cuentan hacia arriba (XP, monedas, racha, logros, chispas y cosméticos). La barra de XP se llena al entrar y lleva un brillo que la recorre. |
+| **Dos columnas** | En computadora, el contenido va a la izquierda y a la derecha una barra lateral con el nivel y las Estrellas, la colección de insignias, el muro y los compañeros. En el celular va todo en una columna. |
+| **Insignia de nivel** | Cambia de forma y color cada 10 niveles: círculo, hexágono, escudo, estrella, rombo, doble hexágono, engranaje, llama, corona y Estrella Tesla. Desde el nivel 30 brilla. La ceremonia de subida de nivel avisa cuando cambia. |
+| **Temas del perfil** | Cosmético nuevo que cambia el color de todos los paneles: Clásico, Medianoche, Verano, Acero, Bosque, Cósmico, Sakura, Neón y Gran Estrella. |
+| **Marcos y avatares animados** | 7 marcos (Cristal, Rayo, Circuito vivo, Holográfico, Llamas, Arcoíris y Galaxia) y 8 avatares animados (Robot Tesla, Rayo vivo, Átomo vivo, Búho sabio, Cohete turbo, Planeta, Bobina viva y Dragón de fuego). |
+| **Vitrina de hasta 6 bloques** | A los 5 anteriores se suman la caja de texto, la vitrina de logros (elige 6), los logros más raros, la colección (8 cosméticos y el avance del inventario), el proyecto destacado (un enlace) y el curso favorito. Se ordenan arrastrando o con flechas. |
+| **Rareza de los logros** | Cada logro muestra qué porcentaje del colegio lo tiene (por ejemplo, «2 % del colegio»). Solo se publican totales, nunca quién lo tiene. Las medallas de oro y platino tienen brillo holográfico y se inclinan con el cursor. |
+| **Muro de felicitaciones** | El aula, la familia y los docentes del alumno dejan un sticker y una frase de una lista fija, sin texto libre. Se puede dejar 1 por día a cada alumno y 10 por día en total. Llega un aviso push. El alumno puede cerrar su muro y quitar cualquier mensaje; el autor, el tutor y la dirección también pueden quitarlo. |
+| **Mini-perfil** | Al pasar el cursor (o mantener el dedo) sobre un compañero en *Mi aula*, el ranking, el muro o `/tesla/aula`, aparece su tarjeta con banner, avatar, nivel e insignias. |
+| **Editor nuevo** | Vista previa fija, inventario por tipo con filtros (Todos, Tengo, Bloqueados, En venta), orden por rareza, nombre o precio, marca de «Nuevo» en lo recién desbloqueado y aviso de cambios sin guardar. |
+| **Conjuntos** | Hasta 3 combinaciones guardadas de cosméticos para cambiar de estilo con un toque. |
+| **Sonidos** | Suaves, al subir de nivel, abrir cofres, felicitar y equipar. Vienen apagados; cada alumno los activa en Personalizar, y se recuerda en el dispositivo. |
+| **Moderación** | El tutor o la dirección pueden quitar la presentación, la caja de texto o el proyecto desde la portada del alumno. |
+| **Fondo del mini-perfil** | Cosmético nuevo: la tarjeta que aparece al pasar el cursor se llena con un fondo animado propio (Noche estrellada, Bobina de Tesla, Aurora, Código, Synthwave, Mar profundo, Sakura y Fuegos artificiales, este último por el logro «Muro de la fama»). El editor muestra cómo queda. |
+| **Probar antes de comprar** | En Personalizar, tocar un cosmético bloqueado lo muestra en tu portada, tu fondo y tu mini-perfil sin guardarlo. Si se compra, aparece un botón para comprarlo; si no, dice cómo se consigue. La tienda (`/tienda`) lista los cosméticos en venta con el botón «Probármelo». |
+| **Nombre con efecto en todo el campus** | En grupos, mensajes, foro y anuncios, el nombre de un alumno lleva su efecto, su avatar e insignia de nivel, y abre su mini-perfil. Solo se ve si puedes ver su perfil (su aula, su familia, sus docentes y el personal). |
+| **Logros nuevos** | Primera felicitación, Querido por todos (10) y Muro de la fama (50) por las felicitaciones del muro; Coleccionista (25 %), Gran coleccionista (50 %) y Colección completa (100 %) por los cosméticos; Nueva forma (nivel 20) e Insignia brillante (nivel 30). Se otorgan solos al recibir una felicitación, al conseguir un cosmético o al subir de nivel. |
+
+Todo se queda quieto con **Ajustes → Menos movimiento** o si el dispositivo pide reducir el movimiento. Dirección agrega más temas, marcos y avatares animados en **Recompensas → Cosméticos**.
+
 ## Qué sigue
 
 Competencias transversales y comportamiento en la libreta, la plantilla oficial del SIAGIE (cuando el colegio comparta el formato exacto) y el campus en quechua.

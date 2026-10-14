@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, EyeOff, Megaphone, MessagesSquare, Plus, Users } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeader, Panel, Segmented, Select } from '@/components/ui'
+import { CampusName } from '@/components/tesla'
 import { ChatAttachment, ChatComposer, TypingIndicator, useTyping } from '@/components/chat'
 import { LinkifiedText } from '@/components/LinkifiedText'
 import { useAsync } from '@/lib/useAsync'
@@ -78,7 +79,7 @@ function ChannelThread({ channel }: { channel: Channel }) {
               {showDay && <p className="my-3 text-center text-xs font-bold text-texto-suave">{day === limaToday() ? 'Hoy' : formatShort(m.created_at)}</p>}
               <div className={cn('flex', mine ? 'justify-end' : 'justify-start')}>
                 <div className={cn('group max-w-[85%] rounded-2xl px-4 py-2.5', mine ? 'rounded-br-md bg-tinta text-white' : 'rounded-bl-md bg-superficie ring-1 ring-linea', m.hidden && 'opacity-50')}>
-                  {!mine && <p className="mb-0.5 flex items-center gap-1 text-xs font-bold text-tinta-500">{m.sender_name ?? 'Alguien'}{teacher && <Badge tone="info">Docente</Badge>}</p>}
+                  {!mine && <p className="mb-0.5 flex items-center gap-1 text-xs font-bold text-tinta-500"><CampusName profileId={m.sender_id} name={m.sender_name ?? 'Alguien'} avatar />{teacher && <Badge tone="info">Docente</Badge>}</p>}
                   {m.attachment_path && m.attachment_kind
                     ? <ChatAttachment path={m.attachment_path} kind={m.attachment_kind} name={m.attachment_name} />
                     : <p className="whitespace-pre-line break-words text-[15px] leading-relaxed"><LinkifiedText text={m.body} /></p>}

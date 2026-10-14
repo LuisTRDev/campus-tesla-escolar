@@ -1,0 +1,222 @@
+/* ---------------------------------------------------------------------------
+   Perfil Tesla al estilo Steam (script 22): marcos y avatares animados, temas,
+   insignia de nivel, animaciones de entrada, brillo holográfico, partículas,
+   muro de felicitaciones y mini-perfil.
+   Todo se detiene con «reducir movimiento» (sistema o Ajustes del campus).
+   --------------------------------------------------------------------------- */
+
+/* --- Marcos animados -------------------------------------------------------- */
+.frame-cristal::before {
+  background: conic-gradient(from 0deg, #e0f2fe, #7dd3fc, #f0f9ff, #38bdf8, #e0f2fe, #bae6fd, #f0f9ff, #7dd3fc, #e0f2fe);
+  animation: tesla-spin 14s linear infinite;
+}
+.frame-cristal { box-shadow: 0 0 12px rgba(125, 211, 252, 0.55); }
+
+.frame-rayo::before {
+  background: repeating-conic-gradient(from 0deg, #facc15 0 12deg, #1d4ed8 12deg 18deg, #fff7cc 18deg 30deg, #1d4ed8 30deg 36deg);
+  animation: tesla-spin 2.2s linear infinite;
+}
+.frame-rayo { animation: frame-zap 2.6s steps(1) infinite; }
+@keyframes frame-zap {
+  0%, 88%, 100% { box-shadow: 0 0 10px rgba(250, 204, 21, 0.5); }
+  90%, 94% { box-shadow: 0 0 24px 4px rgba(96, 165, 250, 0.95); }
+}
+
+.frame-circuito::before {
+  background:
+    repeating-conic-gradient(from 0deg, #14b8a6 0 6deg, #021512 6deg 10deg, #5eead4 10deg 12deg, #021512 12deg 22deg);
+  animation: tesla-spin 7s linear infinite reverse;
+}
+.frame-circuito { box-shadow: 0 0 14px rgba(20, 184, 166, 0.55); }
+
+.frame-holo::before {
+  background: conic-gradient(from 0deg, #f0abfc, #93c5fd, #6ee7b7, #fde68a, #fca5a5, #c4b5fd, #f0abfc);
+  animation: tesla-spin 4s linear infinite, frame-hue 6s linear infinite;
+}
+.frame-holo { box-shadow: 0 0 16px rgba(196, 181, 253, 0.7); }
+@keyframes frame-hue { to { filter: hue-rotate(360deg); } }
+
+.frame-llamas::before {
+  background: conic-gradient(from 0deg, #7f1d1d, #f97316, #fde047, #ef4444, #f97316, #7f1d1d, #fb923c, #fde047, #7f1d1d);
+  animation: tesla-spin 3s linear infinite;
+}
+.frame-llamas { animation: frame-flame 1.2s ease-in-out infinite alternate; }
+@keyframes frame-flame {
+  from { box-shadow: 0 -2px 10px rgba(249, 115, 22, 0.55); }
+  to { box-shadow: 0 -6px 22px 2px rgba(239, 68, 68, 0.8); }
+}
+
+.frame-arcoiris::before {
+  background: conic-gradient(#ef4444, #f59e0b, #eab308, #22c55e, #06b6d4, #6366f1, #d946ef, #ef4444);
+  animation: tesla-spin 5s linear infinite;
+}
+
+.frame-galaxia::before {
+  background:
+    radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 1.6px),
+    radial-gradient(circle at 75% 20%, #fff 0 1px, transparent 1.6px),
+    radial-gradient(circle at 60% 80%, #fff 0 1.2px, transparent 1.8px),
+    conic-gradient(from 0deg, #1e1b4b, #7c3aed, #0ea5e9, #1e1b4b, #db2777, #1e1b4b);
+  animation: tesla-spin 9s linear infinite;
+}
+.frame-galaxia { box-shadow: 0 0 18px rgba(124, 58, 237, 0.65); }
+
+/* --- Avatares animados ------------------------------------------------------ */
+.anim-avatar { display: block; border-radius: 9999px; }
+.anim-avatar * { transform-box: fill-box; }
+.aa-eyes { animation: aa-blink 4.5s infinite; transform-origin: center; }
+@keyframes aa-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+.aa-blink-led { animation: aa-led 1.6s ease-in-out infinite; }
+@keyframes aa-led { 50% { opacity: 0.25; } }
+.aa-mouth { animation: aa-talk 3s ease-in-out infinite; transform-origin: center; }
+@keyframes aa-talk { 0%, 70%, 100% { transform: scaleX(1); } 80% { transform: scaleX(0.5); } 90% { transform: scaleX(1.1); } }
+.aa-pulse { animation: aa-pulse 2.2s ease-in-out infinite; transform-origin: center; }
+@keyframes aa-pulse { 50% { transform: scale(1.12); opacity: 0.75; } }
+.aa-zap { animation: aa-zap 2.8s steps(1) infinite; }
+@keyframes aa-zap { 0%, 86%, 100% { filter: none; } 88%, 92% { filter: brightness(1.6) drop-shadow(0 0 4px #fde047); } }
+.aa-spark { animation: aa-spark 2s ease-in-out infinite; transform-origin: center; }
+.aa-s2 { animation-delay: 0.7s; } .aa-s3 { animation-delay: 1.3s; }
+@keyframes aa-spark { 0%, 100% { transform: scale(0); opacity: 0; } 40% { transform: scale(1.4); opacity: 1; } }
+.aa-spin-slow { animation: tesla-spin 6s linear infinite; transform-box: view-box; }
+.aa-look { animation: aa-look 5s ease-in-out infinite; }
+@keyframes aa-look { 0%, 40%, 100% { transform: translateX(0); } 50%, 65% { transform: translateX(-2.5px); } 75%, 90% { transform: translateX(2.5px); } }
+.aa-tassel { animation: aa-swing 2.4s ease-in-out infinite alternate; transform-box: view-box; }
+@keyframes aa-swing { from { transform: rotate(-12deg); } to { transform: rotate(14deg); } }
+.aa-float { animation: aa-float 2.6s ease-in-out infinite; }
+@keyframes aa-float { 50% { transform: translateY(-4px); } }
+.aa-flame { animation: aa-flame 0.35s ease-in-out infinite alternate; transform-box: view-box; }
+.aa-flame2 { animation-duration: 0.25s; }
+@keyframes aa-flame { from { transform: scaleY(0.75); } to { transform: scaleY(1.15); } }
+.aa-stars circle { animation: aa-led 2.4s ease-in-out infinite; }
+.aa-stars circle:nth-child(2n) { animation-delay: 1.1s; }
+.aa-arc { opacity: 0; animation: aa-arc 1.8s steps(1) infinite; filter: drop-shadow(0 0 3px #7dd3fc); }
+.aa-a2 { animation-delay: 0.6s; } .aa-a3 { animation-delay: 1.2s; }
+@keyframes aa-arc { 0%, 30% { opacity: 1; } 31%, 100% { opacity: 0; } }
+.aa-wing { animation: aa-wing 0.9s ease-in-out infinite alternate; transform-box: view-box; }
+.aa-wing2 { animation-name: aa-wing2; }
+@keyframes aa-wing { from { transform: rotate(0); } to { transform: rotate(-14deg); } }
+@keyframes aa-wing2 { from { transform: rotate(0); } to { transform: rotate(14deg); } }
+.aa-smoke circle { animation: aa-smoke 2.6s ease-out infinite; }
+.aa-smoke circle:nth-child(2) { animation-delay: 1.2s; }
+@keyframes aa-smoke { from { transform: translateY(0); opacity: 0.8; } to { transform: translateY(8px) scale(1.6); opacity: 0; } }
+
+/* --- Temas del perfil (cambian las variables de color solo dentro del perfil) */
+.tesla-theme { color: rgb(var(--texto)); }
+.tesla-theme-medianoche {
+  --superficie: 17 24 39; --papel: 9 13 24; --linea: 39 50 72; --texto: 226 232 240; --texto-suave: 148 163 184;
+  --chispa-100: 52 44 18; --tinta-ink: 226 232 240; --tinta-500: 147 197 253; --meter-track: #1e293b; --theme-glow: 96 165 250;
+}
+.tesla-theme-verano {
+  --superficie: 255 251 235; --papel: 254 243 199; --linea: 253 214 140; --texto: 66 32 6; --texto-suave: 146 94 35;
+  --chispa-100: 254 215 170; --tinta-ink: 120 53 15; --tinta-500: 194 65 12; --meter-track: #fde68a; --theme-glow: 251 146 60;
+}
+.tesla-theme-acero {
+  --superficie: 30 41 59; --papel: 15 23 42; --linea: 71 85 105; --texto: 241 245 249; --texto-suave: 166 179 196;
+  --chispa-100: 51 65 85; --tinta-ink: 241 245 249; --tinta-500: 186 230 253; --meter-track: #334155; --theme-glow: 148 163 184;
+}
+.tesla-theme-bosque {
+  --superficie: 20 40 32; --papel: 10 26 20; --linea: 40 74 58; --texto: 220 252 231; --texto-suave: 134 184 152;
+  --chispa-100: 40 70 40; --tinta-ink: 220 252 231; --tinta-500: 134 239 172; --meter-track: #1f4d3a; --theme-glow: 74 222 128;
+}
+.tesla-theme-cosmico {
+  --superficie: 30 20 60; --papel: 15 8 35; --linea: 70 50 120; --texto: 237 233 254; --texto-suave: 180 165 230;
+  --chispa-100: 70 40 100; --tinta-ink: 237 233 254; --tinta-500: 196 181 253; --meter-track: #3b2a6b; --theme-glow: 167 139 250;
+}
+.tesla-theme-sakura {
+  --superficie: 255 241 246; --papel: 253 226 238; --linea: 249 190 214; --texto: 80 20 50; --texto-suave: 157 80 120;
+  --chispa-100: 252 207 225; --tinta-ink: 131 24 67; --tinta-500: 219 39 119; --meter-track: #fbcfe8; --theme-glow: 244 114 182;
+}
+.tesla-theme-neon {
+  --superficie: 12 10 28; --papel: 5 4 15; --linea: 112 40 150; --texto: 250 232 255; --texto-suave: 200 160 230;
+  --chispa-100: 60 20 80; --tinta-ink: 250 232 255; --tinta-500: 244 114 182; --meter-track: #3b0764; --theme-glow: 232 121 249;
+}
+.tesla-theme-oro {
+  --superficie: 38 28 10; --papel: 22 16 4; --linea: 120 90 30; --texto: 255 247 220; --texto-suave: 214 190 130;
+  --chispa-100: 90 70 20; --tinta-ink: 255 247 220; --tinta-500: 250 204 21; --meter-track: #4a3a10; --theme-glow: 250 204 21;
+}
+/* Los paneles brillan con el color del tema. */
+.tesla-theme[class*='tesla-theme-'] .tp-card { box-shadow: 0 0 0 1px rgb(var(--theme-glow, var(--linea)) / 0.25), 0 10px 30px -12px rgb(var(--theme-glow, 0 0 0) / 0.45); }
+.tesla-theme-neon .tp-card { animation: theme-neon 5s ease-in-out infinite; }
+@keyframes theme-neon { 50% { box-shadow: 0 0 0 1px rgb(232 121 249 / 0.55), 0 0 26px -6px rgb(232 121 249 / 0.7); } }
+/* Tinte de la página cuando el perfil no tiene fondo. */
+.tp-theme-tint { background: radial-gradient(120% 80% at 50% 0%, rgb(var(--theme-glow) / 0.35), rgb(var(--papel)) 70%); }
+
+/* --- Insignia de nivel (cambia de forma cada 10 niveles, como en Steam) ---- */
+.level-badge { position: relative; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.level-badge svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.35)); }
+.level-badge-num { position: relative; font-family: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgb(0 0 0 / 0.55); line-height: 1; }
+.level-badge-shine svg { animation: badge-shine 3.2s ease-in-out infinite; }
+@keyframes badge-shine {
+  0%, 100% { filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.35)); }
+  50% { filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.35)) drop-shadow(0 0 8px var(--badge-glow, #facc15)); }
+}
+.level-badge-rainbow svg { animation: badge-shine 3.2s ease-in-out infinite, frame-hue 8s linear infinite; }
+
+/* --- Animaciones de entrada ------------------------------------------------- */
+.tp-rise { animation: tp-rise 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) both; animation-delay: calc(var(--i, 0) * 70ms); }
+@keyframes tp-rise { from { opacity: 0; transform: translateY(18px) scale(0.98); } to { opacity: 1; transform: none; } }
+.tp-pop { animation: tp-pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.35) both; animation-delay: calc(var(--i, 0) * 60ms); }
+@keyframes tp-pop { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: none; } }
+.tp-avatar-in { animation: tp-avatar-in 0.8s cubic-bezier(0.2, 0.8, 0.3, 1.3) both 0.1s; }
+@keyframes tp-avatar-in { from { opacity: 0; transform: scale(0.4) rotate(-20deg); } to { opacity: 1; transform: none; } }
+
+/* Barra de XP: se llena al entrar y lleva un brillo que la recorre. */
+.xp-shine { position: relative; overflow: hidden; }
+.xp-shine::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  animation: xp-sheen 2.8s ease-in-out infinite 1s;
+}
+@keyframes xp-sheen { 60%, 100% { transform: translateX(100%); } }
+
+/* --- Medallas holográficas (se inclinan con el cursor) ---------------------- */
+.holo { position: relative; display: inline-flex; transform-style: preserve-3d; transition: transform 0.25s ease-out; will-change: transform; }
+.holo-on { transform: perspective(500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.06); transition: transform 0.06s linear; }
+.holo-foil::after {
+  content: ''; position: absolute; inset: 0; border-radius: 9999px; pointer-events: none; mix-blend-mode: color-dodge; opacity: 0.55;
+  background:
+    radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.85), transparent 45%),
+    linear-gradient(115deg, transparent 20%, rgb(255 0 200 / 0.35) 35%, rgb(0 255 255 / 0.35) 50%, rgb(255 255 0 / 0.35) 65%, transparent 80%);
+  background-size: 100% 100%, 250% 250%; background-position: center, var(--mx, 50%) var(--my, 50%);
+  animation: holo-idle 6s ease-in-out infinite;
+}
+.holo-GOLD::after { opacity: 0.35; }
+@keyframes holo-idle { 50% { background-position: center, 80% 20%; } }
+
+/* --- Partículas sobre el fondo --------------------------------------------- */
+.tp-particle {
+  position: absolute; bottom: -10px; border-radius: 9999px; background: var(--p, #fff); opacity: 0;
+  box-shadow: 0 0 6px var(--p, #fff); animation: tp-float linear infinite;
+}
+@keyframes tp-float {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  10% { opacity: 0.85; }
+  90% { opacity: 0.6; }
+  100% { transform: translate3d(var(--dx, 20px), -105vh, 0); opacity: 0; }
+}
+
+/* --- Muro de felicitaciones ------------------------------------------------- */
+.wall-sticker { display: inline-flex; align-items: center; justify-content: center; line-height: 1; transition: transform 0.2s; }
+.wall-sticker:hover { transform: scale(1.15) rotate(-6deg); }
+.wall-new .wall-sticker { animation: wall-pop 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.6) both; }
+@keyframes wall-pop { 0% { transform: scale(0) rotate(-40deg); } 70% { transform: scale(1.25) rotate(8deg); } 100% { transform: none; } }
+.wall-bob { animation: wall-bob 3s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -0.4s); }
+@keyframes wall-bob { 50% { transform: translateY(-3px) rotate(4deg); } }
+
+/* --- Mini-perfil flotante --------------------------------------------------- */
+.mini-pop { animation: mini-pop 0.18s ease-out both; }
+@keyframes mini-pop { from { opacity: 0; transform: translateY(6px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+/* --- Editor: elemento arrastrado ------------------------------------------- */
+.drag-ghost { opacity: 0.45; }
+.drag-over { outline: 2px dashed rgb(var(--chispa)); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-avatar *, .tesla-frame, .tesla-frame::before, .level-badge svg, .tp-rise, .tp-pop, .tp-avatar-in, .xp-shine::after,
+  .holo-foil::after, .tp-particle, .wall-sticker, .wall-bob, .mini-pop, .tp-card { animation: none !important; }
+  .tp-particle { display: none; }
+}
+.motion-off .anim-avatar *, .motion-off .tesla-frame, .motion-off .tesla-frame::before, .motion-off .level-badge svg,
+.motion-off .tp-rise, .motion-off .tp-pop, .motion-off .tp-avatar-in, .motion-off .xp-shine::after,
+.motion-off .holo-foil::after, .motion-off .wall-bob, .motion-off .tp-card { animation: none !important; }
+.motion-off .tp-particle { display: none; }

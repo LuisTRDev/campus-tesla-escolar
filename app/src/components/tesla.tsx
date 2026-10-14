@@ -1,20 +1,22 @@
-import { useEffect, useId, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import {
   Award, BookOpen, Brain, CalendarCheck, Check, Clock, Coins, Crown, Flag, Flame, Gem, Hand, Heart, HeartHandshake, Lightbulb, Lock,
-  Medal as MedalIcon, Music, Palette, Rocket, Shield, Sparkles, Star, Sunrise, Target, ThumbsUp, Trophy, Users, Zap, type LucideIcon,
+  Medal as MedalIcon, Music, Package, Palette, Rocket, Shield, Sparkles, Star, Sunrise, Target, ThumbsUp, Trophy, Users, Zap, type LucideIcon,
 } from 'lucide-react'
 import { Badge, Skeleton } from '@/components/ui'
 import { signedUrl } from '@/components/files'
 import { SCENE_ACCENT, Scene, sceneInfo, starPoints } from '@/components/scenes'
+import { AnimatedAvatar, animAvatarKey } from '@/components/avatars'
 import './effects.css'
+import './profile.css'
 import { useAsync } from '@/lib/useAsync'
 import { formatShort } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
-  BUCKET_REWARDS, DEFAULT_PIN_LEVELS, PIN_NAMES, RARITY_LABEL, getProfile, levelProgress, parseArt, rankOf,
-  type Rarity, type TeslaProfile,
+  BUCKET_REWARDS, DEFAULT_PIN_LEVELS, PIN_NAMES, RARITY_LABEL, cachedIdentity, getIdentity, getProfile, levelProgress, parseArt, rankOf,
+  type Rarity, type TeslaIdentity, type TeslaProfile,
 } from '@/services/tesla'
 
 // ---------------------------------------------------------------------------
@@ -75,9 +77,166 @@ export function TeslaAvatar({ emoji, frame, aura, size = 56, className }: {
       style={{ width: size, height: size, padding: Math.max(2, Math.round(size / 18)) }}
     >
       {aura && aura !== 'none' && <span className={cn('aura', `aura-${aura}`)} aria-hidden />}
-      <span className="flex h-full w-full select-none items-center justify-center rounded-full bg-superficie leading-none" style={{ fontSize: size * 0.5 }} aria-hidden>
-        {emoji || '⚡'}
+      <span className="flex h-full w-full select-none items-center justify-center overflow-hidden rounded-full bg-superficie leading-none" style={{ fontSize: size * 0.5 }} aria-hidden>
+        {animAvatarKey(emoji) ? <AnimatedAvatar name={animAvatarKey(emoji)!} /> : emoji || '⚡'}
       </span>
+    </span>
+  )
+}
+
+/** Marcos que dibuja la app (la base acepta cualquier clave de esta lista). */
+export const FRAME_KEYS = ['none', 'bronze', 'silver', 'gold', 'platinum', 'spark', 'coil', 'cristal', 'rayo', 'circuito', 'holo', 'llamas', 'arcoiris', 'galaxia']
+
+/** Temas del perfil: cambian el color de todos los paneles. */
+export const THEMES: { key: string; name: string; swatch: [string, string] }[] = [
+  { key: 'none', name: 'Clásico', swatch: ['#ffffff', '#0b1d33'] },
+  { key: 'medianoche', name: 'Medianoche', swatch: ['#111827', '#60a5fa'] },
+  { key: 'verano', name: 'Verano', swatch: ['#fffbeb', '#fb923c'] },
+  { key: 'acero', name: 'Acero', swatch: ['#1e293b', '#94a3b8'] },
+  { key: 'bosque', name: 'Bosque', swatch: ['#142820', '#4ade80'] },
+  { key: 'cosmico', name: 'Cósmico', swatch: ['#1e143c', '#a78bfa'] },
+  { key: 'sakura', name: 'Sakura', swatch: ['#fff1f6', '#f472b6'] },
+  { key: 'neon', name: 'Neón', swatch: ['#0c0a1c', '#e879f9'] },
+  { key: 'oro', name: 'Gran Estrella', swatch: ['#261c0a', '#facc15'] },
+]
+export const THEME_KEYS = THEMES.map((t) => t.key)
+
+export function themeClass(value: string | null | undefined) {
+  return value && value !== 'none' && THEME_KEYS.includes(value) ? `tesla-theme tesla-theme-${value}` : ''
+}
+
+export function ThemeSwatch({ value, size = 40 }: { value: string; size?: number }) {
+  const t = THEMES.find((x) => x.key === value) ?? THEMES[0]
+  return (
+    <span className="relative inline-block overflow-hidden rounded-lg border border-linea" style={{ width: size * 1.6, height: size }} aria-hidden>
+      <span className="absolute inset-0" style={{ background: t.swatch[0] }} />
+      <span className="absolute bottom-1.5 left-1.5 right-1/3 h-1.5 rounded-full" style={{ background: t.swatch[1] }} />
+      <span className="absolute left-1.5 top-1.5 h-3 w-3 rounded-full" style={{ background: t.swatch[1], opacity: 0.7 }} />
+      <span className="absolute right-1.5 top-1.5 h-1.5 w-1/3 rounded-full" style={{ background: t.swatch[1], opacity: 0.4 }} />
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Animaciones: números que cuentan y medallas que se inclinan
+// ---------------------------------------------------------------------------
+function motionOff() {
+  return typeof window !== 'undefined' && (document.documentElement.classList.contains('motion-off') || prefersReducedMotion())
+}
+
+/** Cuenta desde 0 hasta el valor al aparecer (y suavemente cuando cambia). */
+export function useCountUp(value: number, duration = 900) {
+  const [shown, setShown] = useState(() => (motionOff() ? value : 0))
+  const from = useRef(shown)
+  useEffect(() => {
+    if (motionOff()) { setShown(value); from.current = value; return }
+    const start = performance.now()
+    const a = from.current
+    let raf = 0
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - start) / duration)
+      const v = Math.round(a + (value - a) * (1 - Math.pow(1 - k, 3)))
+      setShown(v)
+      if (k < 1) raf = requestAnimationFrame(tick)
+      else from.current = value
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value, duration])
+  return shown
+}
+
+export function CountUp({ value, className }: { value: number; className?: string }) {
+  const v = useCountUp(value)
+  return <span className={cn('tabular-nums', className)}>{v.toLocaleString('es-PE')}</span>
+}
+
+/** Envuelve algo para que se incline en 3D con el cursor; las rarezas altas llevan brillo holográfico. */
+export function Holo({ children, foil, className }: { children: ReactNode; foil?: 'GOLD' | 'PLATINUM' | null; className?: string }) {
+  const [on, setOn] = useState(false)
+  const move = useCallback((e: ReactPointerEvent<HTMLSpanElement>) => {
+    if (e.pointerType !== 'mouse' || motionOff()) return
+    const r = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - r.left) / r.width
+    const y = (e.clientY - r.top) / r.height
+    const s = e.currentTarget.style
+    s.setProperty('--ry', `${((x - 0.5) * 28).toFixed(1)}deg`)
+    s.setProperty('--rx', `${((0.5 - y) * 28).toFixed(1)}deg`)
+    s.setProperty('--mx', `${(x * 100).toFixed(0)}%`)
+    s.setProperty('--my', `${(y * 100).toFixed(0)}%`)
+    setOn(true)
+  }, [])
+  return (
+    <span className={cn('holo rounded-full', on && 'holo-on', foil && `holo-foil holo-${foil}`, className)} onPointerMove={move} onPointerLeave={() => setOn(false)}>
+      {children}
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Insignia de nivel: cambia de forma y color cada 10 niveles (como en Steam)
+// ---------------------------------------------------------------------------
+const BADGE_STYLES: { colors: [string, string, string]; shape: string; name: string }[] = [
+  { colors: ['#cbd5e1', '#64748b', '#334155'], shape: 'circle', name: 'Círculo' },
+  { colors: ['#fca5a5', '#dc2626', '#7f1d1d'], shape: 'hex', name: 'Hexágono rojo' },
+  { colors: ['#fdba74', '#ea580c', '#7c2d12'], shape: 'shield', name: 'Escudo naranja' },
+  { colors: ['#fde68a', '#d97706', '#78350f'], shape: 'star', name: 'Estrella dorada' },
+  { colors: ['#86efac', '#16a34a', '#14532d'], shape: 'diamond', name: 'Rombo esmeralda' },
+  { colors: ['#93c5fd', '#2563eb', '#1e3a8a'], shape: 'hex2', name: 'Doble hexágono azul' },
+  { colors: ['#d8b4fe', '#9333ea', '#4c1d95'], shape: 'gear', name: 'Engranaje violeta' },
+  { colors: ['#f9a8d4', '#db2777', '#831843'], shape: 'flame', name: 'Llama rosa' },
+  { colors: ['#a5f3fc', '#0891b2', '#164e63'], shape: 'crown', name: 'Corona turquesa' },
+  { colors: ['#fef08a', '#f472b6', '#6366f1'], shape: 'tesla', name: 'Estrella Tesla' },
+]
+
+export function badgeStyleOf(level: number) {
+  return BADGE_STYLES[Math.min(BADGE_STYLES.length - 1, Math.floor(Math.max(0, level) / 10))]
+}
+
+function polygon(n: number, r: number, rot = -90, cx = 50, cy = 50) {
+  return Array.from({ length: n }, (_, i) => {
+    const a = ((rot + (360 / n) * i) * Math.PI) / 180
+    return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`
+  }).join(' ')
+}
+
+function BadgeShape({ shape, fill, stroke }: { shape: string; fill: string; stroke: string }) {
+  const p = { fill, stroke, strokeWidth: 4, strokeLinejoin: 'round' as const }
+  switch (shape) {
+    case 'hex': return <polygon points={polygon(6, 44, -90)} {...p} />
+    case 'shield': return <path d="M50 5 L88 18 V48 Q88 78 50 95 Q12 78 12 48 V18 Z" {...p} />
+    case 'star': return <polygon points={starPoints(50, 50, 47, 32, 8)} {...p} />
+    case 'diamond': return <polygon points="50,4 94,50 50,96 6,50" {...p} />
+    case 'hex2': return <><polygon points={polygon(6, 46, 0)} {...p} opacity="0.55" /><polygon points={polygon(6, 38, -90)} {...p} /></>
+    case 'gear': return <><polygon points={starPoints(50, 50, 47, 38, 12)} {...p} /><circle cx="50" cy="50" r="32" fill={fill} stroke={stroke} strokeWidth="2" /></>
+    case 'flame': return <path d="M50 4 Q62 24 74 30 Q92 44 86 66 Q80 92 50 96 Q20 92 14 66 Q8 44 26 30 Q38 24 50 4 Z" {...p} />
+    case 'crown': return <path d="M10 30 L30 46 L50 14 L70 46 L90 30 L84 88 H16 Z" {...p} />
+    case 'tesla': return <><polygon points={starPoints(50, 50, 48, 22, 16)} {...p} opacity="0.6" /><polygon points={starPoints(50, 50, 44, 30, 8)} {...p} /></>
+    default: return <circle cx="50" cy="50" r="44" {...p} />
+  }
+}
+
+export function LevelBadge({ level, size = 56, className }: { level: number; size?: number; className?: string }) {
+  const id = useId().replace(/:/g, '')
+  const st = badgeStyleOf(level)
+  const [light, mid, dark] = st.colors
+  const decade = Math.floor(level / 10)
+  return (
+    <span
+      className={cn('level-badge', decade >= 3 && decade < 9 && 'level-badge-shine', decade >= 9 && 'level-badge-rainbow', className)}
+      style={{ width: size, height: size, '--badge-glow': mid } as CSSProperties}
+      role="img"
+      aria-label={`Nivel ${level}`}
+      title={`Nivel ${level} · ${st.name}`}
+    >
+      <svg viewBox="0 0 100 100" aria-hidden>
+        <defs>
+          <linearGradient id={`${id}f`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={light} /><stop offset="0.5" stopColor={mid} /><stop offset="1" stopColor={dark} /></linearGradient>
+        </defs>
+        <BadgeShape shape={st.shape} fill={`url(#${id}f)`} stroke={dark} />
+        <ellipse cx="36" cy="28" rx="16" ry="6" fill="#fff" opacity="0.3" transform="rotate(-30 36 28)" />
+      </svg>
+      <span className="level-badge-num" style={{ fontSize: size * (level >= 100 ? 0.3 : 0.38) }}>{level}</span>
     </span>
   )
 }
@@ -106,9 +265,15 @@ export function CoinAmount({ value, className, signed }: { value: number; classN
   )
 }
 
-export function LevelBar({ profile, className }: { profile: Pick<TeslaProfile, 'xp' | 'level' | 'level_xp' | 'next_level_xp'>; className?: string }) {
+export function LevelBar({ profile, className, big }: { profile: Pick<TeslaProfile, 'xp' | 'level' | 'level_xp' | 'next_level_xp'>; className?: string; big?: boolean }) {
   const v = levelProgress(profile)
   const missing = profile.next_level_xp - profile.xp
+  // Se llena desde cero al aparecer.
+  const [shown, setShown] = useState(() => (motionOff() ? v : 0))
+  useEffect(() => {
+    const t = window.setTimeout(() => setShown(v), 120)
+    return () => window.clearTimeout(t)
+  }, [v])
   return (
     <div className={className}>
       <div className="flex items-baseline justify-between gap-2 text-sm">
@@ -116,10 +281,10 @@ export function LevelBar({ profile, className }: { profile: Pick<TeslaProfile, '
         <span className="text-texto-suave tabular-nums">{missing.toLocaleString('es-PE')} XP para el nivel {profile.level + 1}</span>
       </div>
       <div
-        className="mt-1.5 h-3 overflow-hidden rounded-full bg-[var(--meter-track)]"
+        className={cn('mt-1.5 overflow-hidden rounded-full bg-[var(--meter-track)]', big ? 'h-4' : 'h-3')}
         role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(v * 100)} aria-label={`Avance del nivel ${profile.level}`}
       >
-        <div className="xp-fill h-full rounded-full transition-[width] duration-700 ease-out" style={{ width: `${Math.max(v * 100, 3)}%` }} />
+        <div className="xp-fill xp-shine h-full rounded-full transition-[width] duration-1000 ease-out" style={{ width: `${Math.max(shown * 100, 3)}%` }} />
       </div>
     </div>
   )
@@ -204,18 +369,49 @@ function useParallax(enabled: boolean) {
   return setEl
 }
 
-/** Fondo de toda la página del perfil, como en los perfiles de Steam. */
-export function ProfileBackdrop({ value }: { value?: string | null }) {
+/** Partículas que suben despacio sobre el fondo, con los colores del perfil. */
+function Particles({ colors }: { colors: [string, string] }) {
+  const items = Array.from({ length: 22 }, (_, i) => {
+    const r = (n: number) => ((i * 9301 + n * 49297) % 233280) / 233280
+    return {
+      left: `${(r(1) * 100).toFixed(1)}%`, size: 2 + Math.round(r(2) * 4), dur: 9 + r(3) * 12, delay: -r(4) * 20,
+      dx: `${Math.round((r(5) - 0.5) * 120)}px`, color: i % 3 === 0 ? '#ffffff' : colors[i % 2],
+    }
+  })
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {items.map((p, i) => (
+        <span key={i} className="tp-particle" style={{
+          left: p.left, width: p.size, height: p.size, animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s`,
+          '--dx': p.dx, '--p': p.color,
+        } as CSSProperties} />
+      ))}
+    </div>
+  )
+}
+
+/** Fondo de toda la página del perfil, como en los perfiles de Steam (con tinte del tema si no hay fondo). */
+export function ProfileBackdrop({ value, accent, theme, particles = true }: {
+  value?: string | null; accent?: [string, string] | null; theme?: string | null; particles?: boolean
+}) {
   const art = parseArt(value)
   const show = art.type !== 'none' && art.type !== 'colors'
+  const tint = !show && !!themeClass(theme)
   const ref = useParallax(show)
-  if (!show) return null
+  if (!show && !tint) return null
   return createPortal(
-    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden print:hidden lg:left-64" aria-hidden>
-      <div ref={ref} className="absolute inset-0 transition-transform duration-300 ease-out" style={{ transform: 'scale(1.06)' }}>
-        <ArtLayer value={value} />
-      </div>
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgb(var(--papel) / 0) 35%, rgb(var(--papel) / 0.35) 75%, rgb(var(--papel) / 0.7) 100%)' }} />
+    <div className={cn('pointer-events-none fixed inset-0 -z-10 overflow-hidden print:hidden lg:left-64', tint && themeClass(theme))} aria-hidden>
+      {show ? (
+        <>
+          <div ref={ref} className="absolute inset-0 transition-transform duration-300 ease-out" style={{ transform: 'scale(1.06)' }}>
+            <ArtLayer value={value} />
+          </div>
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgb(var(--papel) / 0) 35%, rgb(var(--papel) / 0.35) 75%, rgb(var(--papel) / 0.7) 100%)' }} />
+        </>
+      ) : (
+        <div className="tp-theme-tint absolute inset-0" />
+      )}
+      {particles && <Particles colors={accent ?? ['#fde68a', '#93c5fd']} />}
     </div>,
     document.body,
   )
@@ -311,10 +507,23 @@ export function PinPath({ profile }: { profile: TeslaProfile }) {
 // Portada del perfil (banner, avatar, título, Estrella, monedas e insignias)
 // ---------------------------------------------------------------------------
 export type HeroPreview = {
-  avatar?: string; frame?: string; banner?: string; title?: string; background?: string; name_fx?: string; aura?: string
+  avatar?: string; frame?: string; banner?: string; title?: string; background?: string; name_fx?: string; aura?: string; theme?: string; mini_bg?: string
   bio?: string | null; featured?: TeslaProfile['featured']
 }
 
+function HeroStat({ icon, value, label, i }: { icon: ReactNode; value: ReactNode; label: string; i: number }) {
+  return (
+    <div className="tp-pop flex min-w-0 items-center gap-2 rounded-xl bg-papel/70 px-3 py-2" style={{ '--i': i } as CSSProperties}>
+      <span className="shrink-0" aria-hidden>{icon}</span>
+      <span className="min-w-0">
+        <span className="block font-display text-lg font-bold leading-none">{value}</span>
+        <span className="block truncate text-[11px] font-bold uppercase tracking-wide text-texto-suave">{label}</span>
+      </span>
+    </div>
+  )
+}
+
+/** Portada del perfil al estilo Steam: banner amplio, avatar grande, nombre con efecto e insignia de nivel. */
 export function ProfileHero({ profile, preview, actions, glass }: { profile: TeslaProfile; preview?: HeroPreview; actions?: ReactNode; glass?: boolean }) {
   const featured = preview?.featured ?? profile.featured
   const bio = preview?.bio !== undefined ? preview.bio : profile.bio
@@ -323,66 +532,173 @@ export function ProfileHero({ profile, preview, actions, glass }: { profile: Tes
   const rank = rankOf(profile.level, profile.pin_levels)
 
   return (
-    <section className={cn('overflow-hidden rounded-2xl border border-linea', glass ? 'bg-superficie/85 shadow-xl backdrop-blur-md' : 'bg-superficie')}>
-      <div className="relative h-28 sm:h-40">
+    <section className={cn('tp-card tp-rise relative overflow-hidden rounded-2xl border border-linea', glass ? 'bg-superficie/85 shadow-2xl backdrop-blur-md' : 'bg-superficie shadow-sm')}>
+      <div className="relative h-36 sm:h-56">
         <ArtLayer value={preview?.banner ?? profile.banner?.value} />
+        <div className="absolute inset-x-0 bottom-0 h-2/3" style={{ background: 'linear-gradient(180deg, transparent, rgb(var(--superficie) / 0.92))' }} aria-hidden />
         {actions && <div className="absolute right-3 top-3 z-10 flex flex-wrap justify-end gap-2">{actions}</div>}
       </div>
-      <div className="px-5 pb-5">
-        {/* El avatar y la Estrella se montan sobre el banner (z-10 para que el banner no los tape). */}
-        <div className="relative z-10 -mt-12 flex items-end justify-between gap-4 sm:-mt-14">
-          <TeslaAvatar emoji={preview?.avatar ?? profile.avatar?.value} frame={preview?.frame ?? profile.frame?.value} aura={preview?.aura ?? profile.aura?.value} size={104} className="shadow-lg" />
-          <div className="flex flex-col items-center">
-            <RankPin tier={rank.tier} stars={rank.stars} size={64} />
-            <span className="level-chip -mt-1 inline-flex items-baseline gap-1 rounded-lg px-2.5 py-1 leading-none">
-              <span className="text-[10px] font-bold uppercase tracking-wide">Nivel</span>
-              <span className="font-display text-lg font-bold">{profile.level}</span>
-            </span>
+      <div className="relative z-10 -mt-20 px-5 pb-5 sm:-mt-24 sm:px-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          <div className="tp-avatar-in shrink-0 self-start sm:self-auto">
+            <TeslaAvatar emoji={preview?.avatar ?? profile.avatar?.value} frame={preview?.frame ?? profile.frame?.value}
+              aura={preview?.aura ?? profile.aura?.value} size={136} className="shadow-2xl" />
+          </div>
+          <div className="min-w-0 flex-1 pb-1">
+            {title && <p className="inline-block rounded-md bg-tinta/85 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.16em] text-chispa">{title}</p>}
+            <h1 className="mt-1 truncate font-display text-3xl font-bold leading-tight sm:text-4xl">
+              <NameFx fx={preview?.name_fx ?? profile.name_fx?.value} text={name || 'Alumno'} />
+            </h1>
+            <p className="flex flex-wrap items-center gap-x-2 text-sm text-texto-suave">
+              <span>{profile.classroom}</span>
+              <span aria-hidden>·</span>
+              <span className={cn('inline-flex items-center gap-1 font-bold', PIN_TEXT[rank.tier])}><Star className="h-3.5 w-3.5" aria-hidden />{rank.fullName}</span>
+            </p>
+            {bio && <p className="mt-2 max-w-prosa text-[15px] italic text-texto-suave">“{bio}”</p>}
+          </div>
+          {/* Bloque de nivel, como el de Steam */}
+          <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-linea bg-superficie/80 p-3 shadow-sm">
+            <div className="text-right">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-texto-suave">Nivel</p>
+              <p className="font-display text-sm font-bold"><CountUp value={profile.xp} /> XP</p>
+            </div>
+            <LevelBadge level={profile.level} size={60} />
+            <RankPin tier={rank.tier} stars={rank.stars} size={46} />
           </div>
         </div>
-        <div className="mt-2 min-w-0">
-          {title && <p className="text-xs font-bold uppercase tracking-wider text-chispa-600">{title}</p>}
-          <h1 className="truncate font-display text-2xl font-bold leading-tight sm:text-3xl"><NameFx fx={preview?.name_fx ?? profile.name_fx?.value} text={name || 'Alumno'} /></h1>
-          <p className="flex flex-wrap items-center gap-x-2 text-sm text-texto-suave">
-            <span>{profile.classroom}</span>
-            <span aria-hidden>·</span>
-            <span className={cn('inline-flex items-center gap-1 font-bold', PIN_TEXT[rank.tier])}><Star className="h-3.5 w-3.5" aria-hidden />{rank.fullName}</span>
-          </p>
-        </div>
 
-        <LevelBar profile={profile} className="mt-4" />
+        <LevelBar profile={profile} className="mt-5" big />
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <span className="inline-flex items-center gap-1 font-bold tabular-nums"><Zap className="h-4 w-4 text-estado-info" aria-hidden />{profile.xp.toLocaleString('es-PE')} XP</span>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <HeroStat i={0} icon={<Zap className="h-5 w-5 text-estado-info" />} value={<CountUp value={profile.xp} />} label="XP total" />
           {profile.coins !== undefined && (
-            <span className="inline-flex items-center gap-1.5">
-              <CoinAmount value={profile.coins} />
-              {!!profile.reserved && <span className="text-texto-suave">({profile.reserved} reservadas)</span>}
-            </span>
+            <HeroStat i={1} icon={<Coins className="h-5 w-5 text-chispa-600" />} value={<CountUp value={profile.coins} />}
+              label={profile.reserved ? `${profile.reserved} reservadas` : 'Monedas'} />
           )}
-          {profile.current_streak !== undefined && profile.current_streak > 0 && (
-            <span className="inline-flex items-center gap-1 font-bold"><Flame className="h-4 w-4 text-estado-tarde" aria-hidden />Racha de {profile.current_streak}</span>
+          {profile.current_streak !== undefined && (
+            <HeroStat i={2} icon={<Flame className={cn('h-5 w-5 text-estado-tarde', profile.current_streak > 0 && 'animate-pulse')} />} value={<CountUp value={profile.current_streak} />} label="Racha" />
           )}
-          <span className="inline-flex items-center gap-1 text-texto-suave"><Trophy className="h-4 w-4" aria-hidden />{profile.counts.total} logro{profile.counts.total === 1 ? '' : 's'}</span>
+          <HeroStat i={3} icon={<Trophy className="h-5 w-5 text-chispa-600" />} value={<CountUp value={profile.counts.total} />} label={profile.counts.total === 1 ? 'Logro' : 'Logros'} />
+          <HeroStat i={4} icon={<Sparkles className="h-5 w-5 text-chispa-600" />} value={<CountUp value={profile.sparks ?? 0} />} label="Chispas" />
+          {profile.cosmetics_owned !== undefined && (
+            <HeroStat i={5} icon={<Package className="h-5 w-5 text-[#8b5cf6]" />} value={<CountUp value={profile.cosmetics_owned} />} label="Cosméticos" />
+          )}
         </div>
 
-        {(featured.length > 0 || bio) && (
-          <div className="mt-4 flex flex-col gap-3 border-t border-linea pt-4 sm:flex-row sm:items-center">
-            {featured.length > 0 && (
-              <ul className="flex gap-2" aria-label="Insignias destacadas">
-                {featured.map((f) => (
-                  <li key={f.id} title={`${f.name} · ${RARITY_LABEL[f.rarity]}`}>
-                    <Medal icon={f.icon} rarity={f.rarity} size={44} />
-                    <span className="sr-only">{f.name}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {bio && <p className="min-w-0 flex-1 text-[15px] italic text-texto-suave sm:border-l sm:border-linea sm:pl-4">“{bio}”</p>}
+        {featured.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-linea pt-4">
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-texto-suave">Insignias destacadas</span>
+            <ul className="flex gap-3" aria-label="Insignias destacadas">
+              {featured.map((f, i) => (
+                <li key={f.id} title={`${f.name} · ${RARITY_LABEL[f.rarity]}`} className="tp-pop" style={{ '--i': i + 3 } as CSSProperties}>
+                  <Holo foil={f.rarity === 'GOLD' || f.rarity === 'PLATINUM' ? f.rarity : null}><Medal icon={f.icon} rarity={f.rarity} size={50} /></Holo>
+                  <span className="sr-only">{f.name}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>
     </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Mini-perfil flotante (al pasar el cursor o mantener el dedo sobre un alumno)
+// ---------------------------------------------------------------------------
+const miniCache = new Map<number, Promise<TeslaProfile>>()
+function miniProfile(id: number) {
+  let p = miniCache.get(id)
+  if (!p) {
+    p = getProfile(id)
+    p.catch(() => miniCache.delete(id))
+    miniCache.set(id, p)
+    // Se renueva cada 2 minutos.
+    window.setTimeout(() => miniCache.delete(id), 120_000)
+  }
+  return p
+}
+
+/** Tarjeta del mini-perfil. Con un «Fondo del mini-perfil» elegido, el fondo ocupa toda la tarjeta (como en Steam). */
+export function MiniCard({ profile, preview }: { profile: TeslaProfile; preview?: HeroPreview }) {
+  const rank = rankOf(profile.level, profile.pin_levels)
+  const bg = preview?.mini_bg ?? profile.mini_bg?.value
+  const hasBg = !!bg && bg !== 'none'
+  const theme = preview?.theme ?? profile.theme?.value
+  return (
+    <div className={cn('relative w-72 overflow-hidden rounded-2xl border border-linea bg-superficie text-texto shadow-2xl', themeClass(theme))}>
+      {hasBg && (
+        <>
+          <ArtLayer value={bg} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgb(var(--superficie) / 0.05) 0%, rgb(var(--superficie) / 0.55) 45%, rgb(var(--superficie) / 0.92) 100%)' }} aria-hidden />
+        </>
+      )}
+      <div className="relative h-20">{!hasBg && <ArtLayer value={preview?.banner ?? profile.banner?.value} />}</div>
+      <div className="relative -mt-9 px-4 pb-4">
+        <div className="flex items-end gap-3">
+          <TeslaAvatar emoji={preview?.avatar ?? profile.avatar?.value} frame={preview?.frame ?? profile.frame?.value} aura={preview?.aura ?? profile.aura?.value} size={64} className="shadow-lg" />
+          <LevelBadge level={profile.level} size={38} className="mb-1 ml-auto" />
+        </div>
+        <p className="mt-2 truncate font-display text-lg font-bold leading-tight"><NameFx fx={preview?.name_fx ?? profile.name_fx?.value} text={`${profile.first_name ?? ''} ${(profile.last_name ?? '').split(' ')[0]}`.trim()} /></p>
+        {(preview?.title ?? profile.title?.value) && <p className="text-[11px] font-bold uppercase tracking-wider text-chispa-600">{preview?.title ?? profile.title?.value}</p>}
+        <p className={cn('mt-1 flex items-center gap-1 text-xs font-bold', PIN_TEXT[rank.tier])}><RankPin tier={rank.tier} size={18} />{rank.fullName}</p>
+        {profile.featured.length > 0 && (
+          <div className="mt-3 flex gap-2">{profile.featured.map((f) => <Medal key={f.id} icon={f.icon} rarity={f.rarity} size={34} />)}</div>
+        )}
+        <p className="mt-2 text-xs text-texto-suave">{profile.counts.total} logros · {profile.sparks ?? 0} chispas</p>
+      </div>
+    </div>
+  )
+}
+
+export function MiniProfileHover({ studentId, children, className }: { studentId: number; children: ReactNode; className?: string }) {
+  const [pos, setPos] = useState<{ x: number; y: number; above: boolean } | null>(null)
+  const [data, setData] = useState<TeslaProfile | null>(null)
+  const el = useRef<HTMLSpanElement | null>(null)
+  const timer = useRef(0)
+  const longPress = useRef(false)
+
+  const open = useCallback(() => {
+    const r = el.current?.getBoundingClientRect()
+    if (!r) return
+    const above = r.bottom + 260 > window.innerHeight && r.top > 280
+    setPos({ x: Math.max(8, Math.min(window.innerWidth - 296, r.left)), y: above ? r.top - 8 : r.bottom + 8, above })
+    miniProfile(studentId).then(setData).catch(() => setPos(null))
+  }, [studentId])
+  const close = useCallback(() => { window.clearTimeout(timer.current); setPos(null) }, [])
+
+  useEffect(() => {
+    if (!pos) return
+    const off = () => close()
+    window.addEventListener('scroll', off, { passive: true, capture: true })
+    window.addEventListener('pointerdown', off)
+    return () => { window.removeEventListener('scroll', off, { capture: true }); window.removeEventListener('pointerdown', off) }
+  }, [pos, close])
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+
+  return (
+    <span
+      ref={el}
+      className={cn('block', className)}
+      onPointerEnter={(e) => { if (e.pointerType === 'mouse') { window.clearTimeout(timer.current); timer.current = window.setTimeout(open, 350) } }}
+      onPointerLeave={(e) => { if (e.pointerType === 'mouse') close() }}
+      onPointerDown={(e) => {
+        if (e.pointerType === 'mouse') return
+        longPress.current = false
+        timer.current = window.setTimeout(() => { longPress.current = true; open() }, 450)
+      }}
+      onPointerUp={() => window.clearTimeout(timer.current)}
+      onClickCapture={(e) => { if (longPress.current) { e.preventDefault(); e.stopPropagation(); longPress.current = false } }}
+      onContextMenu={(e) => { if (longPress.current) e.preventDefault() }}
+    >
+      {children}
+      {pos && data && createPortal(
+        <div className="mini-pop pointer-events-none fixed z-[70]" style={{ left: pos.x, top: pos.y, transform: pos.above ? 'translateY(-100%)' : undefined }} role="tooltip">
+          <MiniCard profile={data} />
+        </div>,
+        document.body,
+      )}
+    </span>
   )
 }
 
@@ -420,5 +736,37 @@ export function TeslaSummaryCard({ studentId, forFamily }: { studentId: number; 
         </div>
       </div>
     </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Nombre de una persona en todo el campus (mensajes, grupos, foro y anuncios).
+// Si es un alumno cuyo perfil puedes ver, lleva su efecto de nombre, su avatar
+// opcional y el mini-perfil al pasar el cursor; si no, se ve como texto normal.
+// ---------------------------------------------------------------------------
+export function useTeslaIdentity(profileId: string | null | undefined): TeslaIdentity | null {
+  const [id, setId] = useState<TeslaIdentity | null>(() => (profileId ? cachedIdentity(profileId) ?? null : null))
+  useEffect(() => {
+    if (!profileId) { setId(null); return }
+    let alive = true
+    getIdentity(profileId).then((v) => { if (alive) setId(v) }).catch(() => undefined)
+    return () => { alive = false }
+  }, [profileId])
+  return id
+}
+
+export function CampusName({ profileId, name, avatar, className }: {
+  profileId: string | null | undefined; name: string; avatar?: boolean; className?: string
+}) {
+  const who = useTeslaIdentity(profileId)
+  if (!who) return <span className={className}>{name}</span>
+  return (
+    <MiniProfileHover studentId={who.student_id} className={cn('inline-flex max-w-full', className)}>
+      <span className="inline-flex max-w-full items-center gap-1.5">
+        {avatar && <TeslaAvatar emoji={who.avatar} frame={who.frame} size={22} />}
+        <NameFx fx={who.name_fx} text={name} className="truncate" />
+        <LevelBadge level={who.level} size={18} />
+      </span>
+    </MiniProfileHover>
   )
 }

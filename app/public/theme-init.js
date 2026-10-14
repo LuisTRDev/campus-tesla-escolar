@@ -5,7 +5,7 @@
     var dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
     if (dark) document.documentElement.classList.add('dark')
   } catch (e) { /* sin almacenamiento: tema claro */ }
-})()
+})();
 
 /* Preferencias de lectura (Ajustes): texto grande, menos movimiento y alto contraste. */
 (function () {
@@ -16,4 +16,4 @@
     if (r.reduceMotion) c.add('motion-off')
     if (r.highContrast) c.add('contrast-high')
   } catch (e) { /* sin almacenamiento */ }
-})()
+})();

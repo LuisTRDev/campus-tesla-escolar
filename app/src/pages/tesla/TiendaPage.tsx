@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Gift, Package, Sparkles, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Eye, Gift, Package, Sparkles, X } from 'lucide-react'
 import { useAuth, useFocusStudent } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeader, Panel, Skeleton } from '@/components/ui'
-import { CoinAmount } from '@/components/tesla'
+import { CoinAmount, RarityBadge, isAnimatedArt } from '@/components/tesla'
+import { CosmeticPreview } from '@/pages/tesla/PerfilTeslaExtras'
 import { signedUrl } from '@/components/files'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
@@ -10,8 +12,8 @@ import { toMessage } from '@/lib/errors'
 import { formatShort, limaToday } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
-  BUCKET_REWARDS, REQUEST_STATUS, cancelRequest, expireRequests, getProfile, listRequests, listRewards, requestReward, rewardAvailability,
-  type Reward, type RewardRequest,
+  BUCKET_REWARDS, KIND_LABEL, REQUEST_STATUS, cancelRequest, expireRequests, getProfile, listCosmetics, listOwnedCosmetics, listRequests, listRewards,
+  requestReward, rewardAvailability, type Reward, type RewardRequest, type TeslaProfile,
 } from '@/services/tesla'
 
 /** Imagen de una recompensa (bucket privado, URL firmada). */
@@ -160,6 +162,8 @@ export default function TiendaPage() {
             </ul>
           )}
 
+          <CosmeticShop profile={data.profile} isStudent={isStudent} coins={coins} />
+
           <Panel title={isStudent ? 'Mis canjes' : 'Canjes'}>
             {data.requests.length === 0 ? (
               <p className="text-sm text-texto-suave">Todavía no hay canjes.</p>
@@ -202,5 +206,39 @@ export default function TiendaPage() {
         )}
       </Modal>
     </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Cosméticos en venta: se prueban en el perfil antes de comprarlos
+// ---------------------------------------------------------------------------
+function CosmeticShop({ profile, isStudent, coins }: { profile: TeslaProfile; isStudent: boolean; coins: number }) {
+  const { data } = useAsync(async () => {
+    const [cosmetics, owned] = await Promise.all([listCosmetics(), listOwnedCosmetics(profile.student_id)])
+    const mine = new Set(owned)
+    return cosmetics.filter((c) => c.unlock_type === 'PURCHASE' && !mine.has(c.id)).sort((a, b) => (a.price_coins ?? 0) - (b.price_coins ?? 0))
+  }, [profile.student_id])
+  if (!data || data.length === 0) return null
+  return (
+    <Panel title="Cosméticos para tu Perfil Tesla"
+      action={<span className="text-sm text-texto-suave">{isStudent ? 'Pruébalos en tu perfil antes de comprarlos' : 'Tu hijo puede probarlos antes de comprarlos'}</span>}>
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+        {data.map((c) => (
+          <li key={c.id} className="art-tile flex flex-col items-center gap-1.5 rounded-xl border border-linea p-3 text-center">
+            <div className="flex h-20 items-center justify-center"><CosmeticPreview c={c} size={52} avatar={profile.avatar?.value} /></div>
+            <p className="line-clamp-1 text-sm font-bold">{c.name}</p>
+            <p className="text-xs text-texto-suave">{KIND_LABEL[c.kind]}{isAnimatedArt(c.value) ? ' · animado' : ''}</p>
+            <RarityBadge rarity={c.rarity} />
+            <CoinAmount value={c.price_coins ?? 0} className={cn('text-sm', coins < (c.price_coins ?? 0) && 'text-texto-suave')} />
+            {isStudent && (
+              <Link to={`/perfil-tesla?vista=personalizar&probar=${c.id}`} title="Ver cómo se ve en tu perfil antes de comprarlo"
+                className="mt-1 inline-flex items-center gap-1 rounded-lg bg-tinta px-2.5 py-1.5 text-xs font-bold text-white hover:bg-tinta-700">
+                <Eye className="h-3.5 w-3.5" />Probármelo
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Panel>
   )
 }

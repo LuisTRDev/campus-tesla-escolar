@@ -1,23 +1,30 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import {
-  Check, Coins, Flame, Gift, Heart, Lock, Medal as MedalIcon, PackageCheck, Share2, Sparkles, Star, Target, Trophy, Zap,
+  BookOpen, Check, Coins, ExternalLink, Flame, Gem, Gift, Heart, Lock, Medal as MedalIcon, MessageSquareQuote, Package, PackageCheck, Rocket, Send,
+  Share2, Sparkles, Star, Target, Trash2, Trophy, Zap,
 } from 'lucide-react'
 import { Badge, Button, Empty, ErrorBox, Loading, Modal, Panel } from '@/components/ui'
 import {
-  ArtLayer, CoinAmount, Medal, NameFx, PIN_TEXT, RankPin, RarityBadge, TeslaAvatar, TeslaIcon, isAnimatedArt,
+  ArtLayer, CoinAmount, Holo, Medal, MiniProfileHover, NameFx, PIN_TEXT, RankPin, RarityBadge, TeslaAvatar, TeslaIcon, ThemeSwatch, isAnimatedArt,
 } from '@/components/tesla'
 import { shareProfileCard } from '@/components/shareCard'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
 import { formatShort } from '@/lib/format'
+import { linkName } from '@/lib/links'
+import { playSound } from '@/lib/teslaSound'
 import { cn } from '@/lib/utils'
 import {
-  DEFAULT_PIN_LEVELS, KIND_LABEL, PIN_NAMES, RARITIES, RARITY_LABEL, SPARK_KINDS,
-  chestOdds, claimMission, claimSeasonReward, getMissions, getSeason, getTimeline, giveSpark, listChests, listCosmetics,
-  listOwnedCosmetics, mySparksToday, openChest, rankOf,
+  DEFAULT_PIN_LEVELS, KIND_LABEL, PIN_NAMES, RARITIES, RARITY_LABEL, SPARK_KINDS, WALL_PHRASES, WALL_STICKERS,
+  chestOdds, claimMission, claimSeasonReward, getMissions, getSeason, getTimeline, getWall, giveSpark, listChests, listCosmetics,
+  listOwnedCosmetics, mySparksToday, openChest, postWall, rankOf, rarityLabel, removeWallPost,
   type Chest, type ChestResult, type Rarity, type SeasonCosmetic, type SparkKind, type TeslaProfile, type TimelineEvent,
+  type WallSticker,
 } from '@/services/tesla'
+
+const linkHost = (url: string) => linkName(url)
 
 // ---------------------------------------------------------------------------
 // Vista previa de cualquier cosmético (premios de temporada y de cofres)
@@ -29,6 +36,7 @@ export function CosmeticPreview({ c, size = 64, avatar }: { c: Pick<SeasonCosmet
     case 'AURA': return <TeslaAvatar emoji={avatar} aura={c.value} size={size * 0.8} className="m-[10%]" />
     case 'NAME_FX': return <span className="font-display text-lg font-bold"><NameFx fx={c.value} text={c.name} /></span>
     case 'TITLE': return <span className="text-xs font-bold uppercase tracking-wider text-chispa-600">{c.value}</span>
+    case 'THEME': return <ThemeSwatch value={c.value} size={size * 0.7} />
     default:
       return (
         <span className="relative block overflow-hidden rounded-lg border border-linea" style={{ width: size * 1.6, height: size }}>
@@ -41,28 +49,114 @@ export function CosmeticPreview({ c, size = 64, avatar }: { c: Pick<SeasonCosmet
 // ---------------------------------------------------------------------------
 // Vitrina
 // ---------------------------------------------------------------------------
-function ShowcaseCard({ title, icon, children, className }: { title: string; icon: ReactNode; children: ReactNode; className?: string }) {
+function ShowcaseCard({ title, icon, children, className, i = 0, wide }: { title: string; icon: ReactNode; children: ReactNode; className?: string; i?: number; wide?: boolean }) {
   return (
-    <section className={cn('rounded-2xl border border-linea bg-superficie p-4', className)}>
+    <section className={cn('tp-card tp-rise rounded-2xl border border-linea bg-superficie p-4', wide && 'sm:col-span-2', className)} style={{ '--i': i } as CSSProperties}>
       <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-texto-suave">{icon}{title}</h3>
       {children}
     </section>
   )
 }
 
-export function ShowcaseSection({ profile }: { profile: TeslaProfile }) {
+export function ShowcaseSection({ profile, empty }: { profile: TeslaProfile; empty?: ReactNode }) {
   const blocks = profile.showcase ?? []
   const data = profile.showcase_data ?? {}
-  if (blocks.length === 0) return null
+  if (blocks.length === 0) return <>{empty ?? null}</>
   const levels = profile.pin_levels?.length === 4 ? profile.pin_levels : DEFAULT_PIN_LEVELS
   const rank = rankOf(profile.level, levels)
   const delivered = new Set((profile.pins ?? []).map((p) => p.tier))
 
   return (
-    <div className="mt-4 grid gap-4 sm:grid-cols-2">
-      {blocks.map((b) => {
+    <div className="grid gap-4 sm:grid-cols-2">
+      {blocks.map((b, i) => {
+        if (b === 'TEXT' && data.TEXT) return (
+          <ShowcaseCard key={b} i={i} wide title={data.TEXT.title || 'Sobre mí'} icon={<MessageSquareQuote className="h-4 w-4 text-chispa-600" />}>
+            <p className="whitespace-pre-line text-[15px] leading-relaxed">{data.TEXT.body}</p>
+          </ShowcaseCard>
+        )
+        if (b === 'ACHIEVEMENTS' && data.ACHIEVEMENTS) return (
+          <ShowcaseCard key={b} i={i} wide title="Vitrina de logros" icon={<Trophy className="h-4 w-4 text-chispa-600" />}>
+            {data.ACHIEVEMENTS.length === 0 ? <p className="text-sm text-texto-suave">Todavía no eligió logros para mostrar.</p> : (
+              <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                {data.ACHIEVEMENTS.map((a, k) => (
+                  <li key={a.id} className="tp-pop flex flex-col items-center text-center" style={{ '--i': k } as CSSProperties} title={a.name}>
+                    <Holo foil={a.rarity === 'GOLD' || a.rarity === 'PLATINUM' ? a.rarity : null}><Medal icon={a.icon} rarity={a.rarity} size={64} /></Holo>
+                    <span className="mt-1.5 line-clamp-2 text-xs font-bold leading-tight">{a.name}</span>
+                    {a.pct != null && <span className="text-[11px] text-texto-suave">{rarityLabel(a.pct)}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </ShowcaseCard>
+        )
+        if (b === 'RAREST' && data.RAREST) return (
+          <ShowcaseCard key={b} i={i} title="Logros más raros" icon={<Gem className="h-4 w-4 text-[#2f8fa3]" />}>
+            {data.RAREST.length === 0 ? <p className="text-sm text-texto-suave">Todavía sin logros.</p> : (
+              <ul className="space-y-2.5">
+                {data.RAREST.map((a) => (
+                  <li key={a.id} className="flex items-center gap-3">
+                    <Holo foil={a.rarity === 'GOLD' || a.rarity === 'PLATINUM' ? a.rarity : null}><Medal icon={a.icon} rarity={a.rarity} size={44} /></Holo>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-bold leading-tight">{a.name}</span>
+                      <span className="block truncate text-xs text-texto-suave">{a.description}</span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-papel px-2 py-0.5 text-xs font-bold tabular-nums">{rarityLabel(a.pct)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </ShowcaseCard>
+        )
+        if (b === 'COLLECTION' && data.COLLECTION) return (
+          <ShowcaseCard key={b} i={i} wide title="Colección" icon={<Package className="h-4 w-4 text-[#8b5cf6]" />}>
+            <div className="mb-3 flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--meter-track)]">
+                <div className="xp-fill h-full rounded-full" style={{ width: `${(data.COLLECTION.owned / Math.max(1, data.COLLECTION.total)) * 100}%` }} />
+              </div>
+              <span className="text-sm font-bold tabular-nums">{data.COLLECTION.owned} de {data.COLLECTION.total}</span>
+            </div>
+            {data.COLLECTION.items.length > 0 && (
+              <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {data.COLLECTION.items.map((c, k) => (
+                  <li key={c.id} className="tp-pop flex flex-col items-center gap-1 rounded-xl bg-papel/70 p-2 text-center" style={{ '--i': k } as CSSProperties}>
+                    <div className="flex h-16 items-center justify-center"><CosmeticPreview c={c} size={46} avatar={profile.avatar?.value} /></div>
+                    <span className="max-w-full truncate text-xs font-bold">{c.name}</span>
+                    <RarityBadge rarity={c.rarity} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </ShowcaseCard>
+        )
+        if (b === 'PROJECT' && data.PROJECT) return (
+          <ShowcaseCard key={b} i={i} title="Proyecto destacado" icon={<Rocket className="h-4 w-4 text-estado-info" />}>
+            <a href={data.PROJECT.url} target="_blank" rel="noopener noreferrer nofollow"
+              className="group flex items-center gap-3 rounded-xl border border-linea p-3 transition-colors hover:border-tinta-500">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow">
+                <ExternalLink className="h-5 w-5 transition-transform group-hover:scale-110" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-bold">{data.PROJECT.title}</span>
+                <span className="block truncate text-xs text-texto-suave">{linkHost(data.PROJECT.url)}</span>
+              </span>
+            </a>
+            {data.PROJECT.note && <p className="mt-2 text-sm text-texto-suave">{data.PROJECT.note}</p>}
+          </ShowcaseCard>
+        )
+        if (b === 'COURSE' && data.COURSE) return (
+          <ShowcaseCard key={b} i={i} title="Curso favorito" icon={<BookOpen className="h-4 w-4 text-estado-ok" />}>
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow"><Heart className="h-5 w-5" /></span>
+              <span className="min-w-0">
+                <span className="block truncate font-display text-xl font-bold">{data.COURSE.name}</span>
+                {data.COURSE.teacher && <span className="block truncate text-xs text-texto-suave">con {data.COURSE.teacher}</span>}
+              </span>
+            </div>
+            {data.COURSE.note && <p className="mt-2 text-sm italic text-texto-suave">“{data.COURSE.note}”</p>}
+          </ShowcaseCard>
+        )
         if (b === 'STREAK' && data.STREAK) return (
-          <ShowcaseCard key={b} title="Racha" icon={<Flame className="h-4 w-4 text-estado-tarde" />}>
+          <ShowcaseCard key={b} i={i} title="Racha" icon={<Flame className="h-4 w-4 text-estado-tarde" />}>
             <div className="flex items-center gap-4">
               <span className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
                 <Flame className={cn('h-9 w-9', data.STREAK.current > 0 && 'animate-pulse')} />
@@ -75,7 +169,7 @@ export function ShowcaseSection({ profile }: { profile: TeslaProfile }) {
           </ShowcaseCard>
         )
         if (b === 'STATS' && data.STATS) return (
-          <ShowcaseCard key={b} title="Estadísticas" icon={<Target className="h-4 w-4 text-estado-info" />}>
+          <ShowcaseCard key={b} i={i} title="Estadísticas" icon={<Target className="h-4 w-4 text-estado-info" />}>
             <dl className="grid grid-cols-2 gap-2">
               {[
                 ['A tiempo', data.STATS.on_time], ['Anticipadas', data.STATS.early], ['Con A o AD', data.STATS.high], ['Reconocimientos', data.STATS.recognitions],
@@ -89,7 +183,7 @@ export function ShowcaseSection({ profile }: { profile: TeslaProfile }) {
           </ShowcaseCard>
         )
         if (b === 'PINS') return (
-          <ShowcaseCard key={b} title="Estrellas Tesla" icon={<Star className="h-4 w-4 text-chispa-600" />}>
+          <ShowcaseCard key={b} i={i} title="Estrellas Tesla" icon={<Star className="h-4 w-4 text-chispa-600" />}>
             <div className="flex justify-between gap-2">
               {[1, 2, 3, 4].map((t) => (
                 <div key={t} className="flex flex-col items-center text-center">
@@ -102,7 +196,7 @@ export function ShowcaseSection({ profile }: { profile: TeslaProfile }) {
           </ShowcaseCard>
         )
         if (b === 'SPARKS' && data.SPARKS) return (
-          <ShowcaseCard key={b} title="Chispas" icon={<Sparkles className="h-4 w-4 text-chispa-600" />}>
+          <ShowcaseCard key={b} i={i} title="Chispas" icon={<Sparkles className="h-4 w-4 text-chispa-600" />}>
             <p className="font-display text-4xl font-bold leading-none tabular-nums">{data.SPARKS.total}<span className="ml-2 text-base font-normal text-texto-suave">de sus compañeros</span></p>
             <ul className="mt-3 flex flex-wrap gap-1.5">
               {SPARK_KINDS.filter((k) => data.SPARKS!.kinds[k.value]).map((k) => (
@@ -112,7 +206,7 @@ export function ShowcaseSection({ profile }: { profile: TeslaProfile }) {
           </ShowcaseCard>
         )
         if (b === 'RECENT' && data.RECENT) return (
-          <ShowcaseCard key={b} title="Últimos logros" icon={<Trophy className="h-4 w-4 text-chispa-600" />}>
+          <ShowcaseCard key={b} i={i} title="Últimos logros" icon={<Trophy className="h-4 w-4 text-chispa-600" />}>
             {data.RECENT.length === 0 ? <p className="text-sm text-texto-suave">Todavía sin logros.</p> : (
               <ul className="grid grid-cols-2 gap-2">
                 {data.RECENT.map((a) => (
@@ -373,12 +467,14 @@ export function CofresTab({ profile, onChange }: { profile: TeslaProfile; onChan
   async function open(chest: Chest) {
     if (!confirm(`¿Abrir «${chest.name}» por ${chest.price} monedas?`)) return
     setOpening({ chest, result: null })
+    playSound('chest')
     const started = Date.now()
     try {
       const result = await openChest(chest.id)
       // Deja terminar la animación del cofre antes de mostrar el premio.
       await new Promise((r) => setTimeout(r, Math.max(0, 1000 - (Date.now() - started))))
       setOpening({ chest, result })
+      playSound('reveal')
       void reload(true)
       onChange()
     } catch (err) {
@@ -515,5 +611,132 @@ export function TrayectoriaTab({ studentId }: { studentId: number }) {
         ))}
       </ol>
     </Panel>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Muro de felicitaciones (solo stickers y frases predefinidas)
+// ---------------------------------------------------------------------------
+const stickerEmoji = (s: WallSticker) => WALL_STICKERS.find((x) => x.value === s)?.emoji ?? '⚡'
+
+export function WallTab({ profile, compact, onChange }: { profile: TeslaProfile; compact?: boolean; onChange?: () => void }) {
+  const toast = useToast()
+  const [sticker, setSticker] = useState<WallSticker | null>(null)
+  const [phrase, setPhrase] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [fresh, setFresh] = useState<number | null>(null)
+  const { data, loading, error, reload } = useAsync(() => getWall(profile.student_id), [profile.student_id])
+  const canPost = !profile.is_self && profile.wall_enabled !== false
+
+  async function send() {
+    if (!sticker || !phrase) return
+    setBusy(true)
+    try {
+      const id = await postWall(profile.student_id, sticker, phrase)
+      playSound('pop')
+      setFresh(Number(id))
+      setSticker(null)
+      setPhrase(null)
+      toast(`🎉 Le dejaste una felicitación a ${profile.first_name ?? 'tu compañero'}.`)
+      await reload(true)
+      onChange?.()
+    } catch (err) {
+      toast(toMessage(err), 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function remove(id: number) {
+    if (!confirm('¿Quitar este mensaje del muro?')) return
+    try {
+      await removeWallPost(id)
+      await reload(true)
+      onChange?.()
+    } catch (err) {
+      toast(toMessage(err), 'error')
+    }
+  }
+
+  if (error) {
+    return compact ? null : <ErrorBox message={/tesla_wall|function/i.test(error) ? 'El muro estará disponible cuando la dirección ejecute el script 22.' : error} onRetry={() => void reload()} />
+  }
+  const posts = data ?? []
+  const shown = compact ? posts.slice(0, 4) : posts
+
+  return (
+    <div className="space-y-4">
+      {canPost && !compact && (
+        <Panel title={`Felicitar a ${profile.first_name ?? 'este alumno'}`} className="tp-card">
+          <p className="text-sm text-texto-suave">Elige un sticker y una frase. Puedes dejar una felicitación por día.</p>
+          <ul className="mt-3 grid grid-cols-6 gap-2 sm:grid-cols-12" aria-label="Stickers">
+            {WALL_STICKERS.map((s) => (
+              <li key={s.value}>
+                <button type="button" aria-pressed={sticker === s.value} aria-label={s.label} title={s.label} onClick={() => setSticker(s.value)}
+                  className={cn('wall-sticker flex aspect-square w-full items-center justify-center rounded-xl border text-2xl',
+                    sticker === s.value ? 'border-tinta bg-chispa-100 shadow-inner' : 'border-linea hover:border-tinta-500')}>
+                  {s.emoji}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <ul className="mt-3 flex flex-wrap gap-2" aria-label="Frases">
+            {WALL_PHRASES.map((p) => (
+              <li key={p.value}>
+                <button type="button" aria-pressed={phrase === p.value} onClick={() => setPhrase(p.value)}
+                  className={cn('rounded-full border px-3 py-1.5 text-sm font-bold transition-colors',
+                    phrase === p.value ? 'border-tinta bg-chispa-100 text-tinta' : 'border-linea hover:border-tinta-500')}>
+                  {p.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <p className="min-w-0 truncate text-sm text-texto-suave">
+              {sticker && phrase ? <>Vista previa: <span className="text-lg">{stickerEmoji(sticker)}</span> <b>{WALL_PHRASES.find((p) => p.value === phrase)?.label}</b></> : 'Elige un sticker y una frase.'}
+            </p>
+            <Button onClick={() => void send()} loading={busy} disabled={!sticker || !phrase}><Send className="h-4 w-4" />Publicar</Button>
+          </div>
+        </Panel>
+      )}
+      {!compact && profile.wall_enabled === false && !profile.is_self && (
+        <p className="rounded-xl bg-superficie p-3 text-sm text-texto-suave">{profile.first_name ?? 'Este alumno'} cerró su muro por ahora.</p>
+      )}
+
+      <section className={cn(compact ? '' : 'tp-card rounded-2xl border border-linea bg-superficie p-4')}>
+        {!compact && <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-texto-suave">Mensajes ({posts.length})</h3>}
+        {loading && !data ? <Loading rows={2} /> : shown.length === 0 ? (
+          <p className="text-sm text-texto-suave">{profile.is_self ? 'Cuando tus compañeros, tu familia o tus docentes te feliciten, aparecerá aquí.' : 'Todavía no hay mensajes. ¡Sé el primero en felicitar!'}</p>
+        ) : (
+          <ul className={cn('grid gap-3', !compact && 'sm:grid-cols-2')}>
+            {shown.map((w, i) => (
+              <li key={w.id} className={cn('tp-rise flex items-center gap-3 rounded-xl bg-papel/70 p-3', fresh === w.id && 'wall-new')} style={{ '--i': i } as CSSProperties}>
+                <span className="wall-sticker wall-bob shrink-0 text-4xl" style={{ '--i': i } as CSSProperties} aria-hidden>{stickerEmoji(w.sticker)}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-lg font-bold leading-tight">{w.text}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-xs text-texto-suave">
+                    {w.author.kind === 'STUDENT' ? (
+                      <MiniProfileHover studentId={w.author.student_id} className="inline-flex">
+                        <Link to={`/perfil-tesla/${w.author.student_id}`} className="inline-flex items-center gap-1.5 font-bold hover:underline">
+                          <TeslaAvatar emoji={w.author.avatar} frame={w.author.frame} size={20} />{w.author.name}
+                        </Link>
+                      </MiniProfileHover>
+                    ) : (
+                      <b>{w.author.name}{w.author.kind === 'STAFF' && <span className="font-normal"> · {w.author.role}</span>}</b>
+                    )}
+                    <span aria-hidden>·</span>{formatShort(w.created_at)}
+                  </p>
+                </div>
+                {w.can_remove && !compact && (
+                  <button type="button" onClick={() => void remove(w.id)} className="rounded-lg p-2 text-texto-suave hover:bg-superficie hover:text-estado-alerta" aria-label="Quitar mensaje">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
   )
 }

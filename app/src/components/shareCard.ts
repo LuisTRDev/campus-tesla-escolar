@@ -1,3 +1,4 @@
+import { avatarEmoji } from '@/components/avatars'
 import { SCENE_ACCENT, starPoints } from '@/components/scenes'
 import { PIN_METAL } from '@/components/tesla'
 import { RARITY_LABEL, parseArt, rankOf, type TeslaProfile } from '@/services/tesla'
@@ -86,7 +87,7 @@ export function buildShareSvg(profile: TeslaProfile): string {
   <text x="540" y="96" text-anchor="middle" font-size="30" font-weight="800" letter-spacing="10" fill="${a2}">PERFIL TESLA</text>
   <circle cx="540" cy="400" r="170" fill="url(#ring)"/>
   <circle cx="540" cy="400" r="154" fill="#0b1222"/>
-  <text x="540" y="404" text-anchor="middle" dominant-baseline="central" font-size="170">${esc(profile.avatar?.value ?? '⚡')}</text>
+  <text x="540" y="404" text-anchor="middle" dominant-baseline="central" font-size="170">${esc(avatarEmoji(profile.avatar?.value))}</text>
   ${profile.title?.value ? `<text x="540" y="636" text-anchor="middle" font-size="30" font-weight="800" letter-spacing="4" fill="#f0b429">${esc(profile.title.value.toUpperCase())}</text>` : ''}
   ${lines.map((l, i) => `<text x="540" y="${706 + i * 70}" text-anchor="middle" font-size="64" font-weight="800" fill="#fff">${esc(l)}</text>`).join('')}
   <text x="540" y="${706 + lines.length * 70 - 12}" text-anchor="middle" font-size="30" fill="#ffffff" fill-opacity="0.7">${esc(profile.classroom)}</text>
