@@ -47,6 +47,7 @@ const SystemPage = lazyPage(() => import('@/pages/admin/SystemPage'))
 const AjustesPage = lazyPage(() => import('@/pages/AjustesPage'))
 const CarnetPage = lazyPage(() => import('@/pages/carnet/CarnetPage'))
 const DiplomaPage = lazyPage(() => import('@/pages/diploma/DiplomaPage'))
+const AntitrampaPage = lazyPage(() => import('@/pages/integridad/AntitrampaPage'))
 
 const L = ({ children }: { children: ReactNode }) => <Suspense fallback={<Loading shape="page" />}>{children}</Suspense>
 
@@ -135,6 +136,7 @@ export default function App() {
         <Route path="tienda" element={isFamily ? <TiendaPage /> : home} />
         <Route path="carnet" element={isFamily ? <CarnetPage /> : home} />
         <Route path="diploma" element={<DiplomaPage />} />
+        <Route path="anti-trampa" element={isAdmin || isTeacher ? <AntitrampaPage /> : home} />
         <Route path="tesla/aula" element={isTeacher || isStaff ? <TeslaAulaPage /> : home} />
         <Route path="admin/recompensas" element={isAdmin ? <AdminRecompensas /> : home} />
         <Route path="admin/cursos" element={isStaff ? <AdminCourses /> : home} />

@@ -263,3 +263,38 @@ export function sharedSegments(a: string, b: string, instructions = ''): { a: Se
   const hitChars = sa.filter((s) => s.hit).reduce((n, s) => n + s.text.length, 0)
   return { a: sa, b: sb, ratio: a.length ? hitChars / a.length : 0 }
 }
+
+// ---------------------------------------------------------------------------
+// Rasgos de un texto en el navegador: la misma cuenta que campus_text_features
+// (script 23), para que el panel anti-trampa pueda mostrar los indicios en vivo.
+// ---------------------------------------------------------------------------
+export function textFeatures(text: string): TextFeatures {
+  const t = text ?? ''
+  const words = t.split(/[^\p{L}0-9]+/u).filter(Boolean)
+  const sentences = t.split(/[.!?…]+[\s"”»)]*|\n+/).map((s) => s.trim()).filter((s) => /\p{L}/u.test(s))
+    .map((s) => s.split(/\s+/).filter((z) => /\p{L}/u.test(z)).length)
+  const n = words.length
+  const sn = sentences.length
+  const avgS = sn ? sentences.reduce((a, b) => a + b, 0) / sn : 0
+  const sd = sn ? Math.sqrt(sentences.reduce((a, b) => a + (b - avgS) ** 2, 0) / sn) : 0
+  const count = (re: RegExp) => (t.match(re) ?? []).length
+  const qmarks = count(/[?!]/g)
+  const round = (x: number, d: number) => Math.round(x * 10 ** d) / 10 ** d
+  return {
+    words: n,
+    sentences: sn,
+    avg_sentence: round(avgS, 2),
+    sentence_cv: avgS > 0 ? round(sd / avgS, 3) : 0,
+    avg_word: n ? round(words.reduce((a, w) => a + w.length, 0) / n, 3) : 0,
+    long_ratio: n ? round(words.filter((w) => w.length >= 9).length / n, 3) : 0,
+    ttr: n ? round(new Set(words.map((w) => w.toLowerCase())).size / n, 3) : 0,
+    accent_rate: n ? round(words.filter((w) => /[áéíóúÁÉÍÓÚ]/.test(w)).length / n, 3) : 0,
+    comma_rate: n ? round((count(/,/g) * 100) / n, 2) : 0,
+    semi_rate: n ? round((count(/[;:]/g) * 100) / n, 2) : 0,
+    dashes: count(/—/g),
+    curly: count(/[“”‘’«»]/g),
+    hidden: count(/[​‌‍⁠﻿­]/g),
+    markdown: count(/(^|\n)\s*(#{1,6}\s|[-*•]\s|\d+[.)]\s)|\*\*[^*]+\*\*/g),
+    inverted_ok: qmarks ? round(Math.min(count(/[¿¡]/g) / qmarks, 1), 2) : undefined,
+  }
+}

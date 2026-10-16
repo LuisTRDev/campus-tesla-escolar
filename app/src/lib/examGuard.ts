@@ -22,14 +22,18 @@ function writeQueue(key: string, q: GuardEvent[]) {
   } catch { /* sin almacenamiento */ }
 }
 
-export function useExamGuard({ attemptId, settings, questionId, onStatus, onBlocked }: {
+export function useExamGuard({ attemptId, settings, questionId, onStatus, onBlocked, demo, onEvent }: {
   attemptId: number | null
   settings: QuizSettings
   questionId: number | null
   onStatus: (s: GuardStatus) => void
   onBlocked?: (what: 'paste' | 'copy') => void
+  /** Modo prueba (panel anti-trampa): los mismos detectores, pero nada se envía ni se guarda. */
+  demo?: boolean
+  /** Cada evento detectado, al instante (lo usa el modo prueba para mostrarlo en vivo). */
+  onEvent?: (e: GuardEvent) => void
 }) {
-  const key = attemptId ? `quiz-guard:${attemptId}` : ''
+  const key = demo ? 'quiz-guard:demo' : attemptId ? `quiz-guard:${attemptId}` : ''
   const queue = useRef<GuardEvent[]>([])
   const sending = useRef(false)
   const disabled = useRef(false)
@@ -37,17 +41,31 @@ export function useExamGuard({ attemptId, settings, questionId, onStatus, onBloc
   const blockedRef = useRef(onBlocked)
   const qRef = useRef<number | null>(questionId)
   const qStart = useRef(Date.now())
+  const eventRef = useRef(onEvent)
+  const demoLeaves = useRef(0)
   const [needFullscreen, setNeedFullscreen] = useState(false)
   statusRef.current = onStatus
   blockedRef.current = onBlocked
+  eventRef.current = onEvent
 
   const push = useCallback((e: GuardEvent) => {
     if (!key) return
-    queue.current.push({ ...e, c: Date.now() })
-    writeQueue(key, queue.current)
-  }, [key])
+    const ev = { ...e, c: Date.now() }
+    queue.current.push(ev)
+    if (!demo) writeQueue(key, queue.current)
+    eventRef.current?.(ev)
+  }, [key, demo])
 
   const flush = useCallback(async () => {
+    if (demo) {
+      // Prueba: el servidor no interviene; se aplica aquí la misma regla de salidas.
+      demoLeaves.current += queue.current.filter((e) => e.t === 'LEAVE').length
+      queue.current = []
+      const max = settings.max_leaves ?? 3
+      const action = settings.leave_action ?? 'WARN'
+      if (demoLeaves.current) statusRef.current({ closed: action === 'CLOSE' && demoLeaves.current >= max, leaves: demoLeaves.current, max, action })
+      return
+    }
     if (!attemptId || sending.current || disabled.current || !queue.current.length || !navigator.onLine) return
     sending.current = true
     const batch = queue.current.slice(0, 60)
@@ -61,7 +79,7 @@ export function useExamGuard({ attemptId, settings, questionId, onStatus, onBloc
     } finally {
       sending.current = false
     }
-  }, [attemptId, key])
+  }, [attemptId, key, demo, settings.max_leaves, settings.leave_action])
 
   // Tiempo en cada pregunta (solo mientras la evaluación está a la vista).
   const closeQuestion = useCallback(() => {
@@ -77,8 +95,9 @@ export function useExamGuard({ attemptId, settings, questionId, onStatus, onBloc
   }, [questionId, closeQuestion])
 
   useEffect(() => {
-    if (!attemptId) return
-    queue.current = readQueue(key)
+    if (!attemptId && !demo) return
+    queue.current = demo ? [] : readQueue(key)
+    demoLeaves.current = 0
     let awaySince: number | null = null
     let lastCtx = 0
     let shrunk = false
@@ -153,7 +172,7 @@ export function useExamGuard({ attemptId, settings, questionId, onStatus, onBloc
     // Otra pestaña con el mismo intento.
     let channel: BroadcastChannel | null = null
     try {
-      channel = new BroadcastChannel(`quiz-${attemptId}`)
+      channel = new BroadcastChannel(demo ? 'quiz-demo' : `quiz-${attemptId}`)
       channel.onmessage = (m) => {
         if (m.data === 'hola') channel?.postMessage('aqui')
         if (m.data === 'hola' || m.data === 'aqui') { push({ t: 'MULTITAB' }); void flush() }
@@ -191,7 +210,7 @@ export function useExamGuard({ attemptId, settings, questionId, onStatus, onBloc
       window.clearTimeout(resizeTimer)
       channel?.close()
     }
-  }, [attemptId, key, push, flush, settings.block_paste, settings.fullscreen])
+  }, [attemptId, demo, key, push, flush, settings.block_paste, settings.fullscreen])
 
   /** Cierra el tiempo de la pregunta actual y envía todo (antes de terminar). */
   const finalize = useCallback(async () => {

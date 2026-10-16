@@ -94,7 +94,7 @@ export function ReviewControls({ kind, refId, review, onChanged }: { kind: 'ATTE
 // ---------------------------------------------------------------------------
 // Línea de tiempo del examen
 // ---------------------------------------------------------------------------
-const EVENT_LABEL: Record<string, string> = {
+export const EVENT_LABEL: Record<string, string> = {
   LEAVE: 'Salió de la evaluación', PASTE: 'Pegó texto', COPY: 'Intentó copiar', CONTEXT: 'Abrió el menú contextual',
   FS_EXIT: 'Salió de la pantalla completa', RESIZE: 'Achicó la ventana o dividió la pantalla', MULTITAB: 'La evaluación estaba abierta en otra pestaña',
   OFFLINE: 'Se quedó sin conexión', RESUME: 'Volvió a abrir la evaluación', DEVICE: 'Intentó continuar en otro dispositivo', RELEASED: 'El docente liberó el dispositivo',
@@ -132,7 +132,7 @@ export function ExamTimeline({ attemptId, questionNumber }: { attemptId: number;
 // ---------------------------------------------------------------------------
 // Comparación lado a lado
 // ---------------------------------------------------------------------------
-function Marked({ segments }: { segments: Segment[] }) {
+export function Marked({ segments }: { segments: Segment[] }) {
   return (
     <p className="whitespace-pre-line text-sm leading-relaxed">
       {segments.map((s, i) => (s.hit ? <mark key={i} className="rounded bg-estado-alerta/20 px-0.5 text-texto">{s.text}</mark> : <span key={i}>{s.text}</span>))}

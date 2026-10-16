@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { Bell, KeyRound, LogOut, Monitor, Moon, MoreHorizontal, RefreshCw, Search, Settings, Sun, X } from 'lucide-react'
 import { Escudo } from '@/components/brand'
 import {
-  IcoAgenda, IcoAjustes, IcoAlertas, IcoAulas, IcoBimestres, IcoCampana, IcoCarnet, IcoCircular, IcoCitas, IcoConsolidado, IcoCuaderno, IcoEncuestas, IcoEscudo,
+  IcoAgenda, IcoAjustes, IcoAlertas, IcoAntitrampa, IcoAulas, IcoBimestres, IcoCampana, IcoCarnet, IcoCircular, IcoCitas, IcoConsolidado, IcoCuaderno, IcoEncuestas, IcoEscudo,
   IcoGrupos, IcoJustificacion, IcoLibreta, IcoMegafono, IcoMensajes, IcoNotas, IcoPanel, IcoPlanificador, IcoRayo, IcoRecursos, IcoSistema, IcoTareas, IcoTienda,
 } from '@/components/icons'
 import type { ComponentType } from 'react'
@@ -61,6 +61,7 @@ const I = {
   system: { to: '/admin/sistema', label: 'Sistema', icon: IcoSistema },
   settings: { to: '/ajustes', label: 'Ajustes', icon: IcoAjustes },
   carnet: { to: '/carnet', label: 'Carnet', icon: IcoCarnet },
+  antitrampa: { to: '/anti-trampa', label: 'Anti-trampa', icon: IcoAntitrampa },
 } satisfies Record<string, NavItem>
 
 /** Las 4 primeras van en la barra inferior del celular; el resto, en "Más". */
@@ -69,7 +70,7 @@ function navFor(role: Role, isTutor: boolean, perms: CampusPermission[] = []): N
   switch (role) {
     case 'TEACHER':
       return [
-        I.home, I.myCourses, I.grades, I.messages, I.planner, ...(isTutor ? [I.consolidated] : []), I.alerts, I.teslaClass, I.appointments,
+        I.home, I.myCourses, I.grades, I.messages, I.planner, ...(isTutor ? [I.consolidated] : []), I.alerts, I.antitrampa, I.teslaClass, I.appointments,
         I.channels, I.resources, ...(isTutor || secretary ? [I.justifications] : []), I.agenda, I.schedule, I.circulars, I.announcements,
         I.surveys, I.settings,
       ]
@@ -83,7 +84,7 @@ function navFor(role: Role, isTutor: boolean, perms: CampusPermission[] = []): N
     case 'ADMIN':
     case 'MANAGEMENT':
       return [
-        I.panel, I.circulars, I.messages, I.alerts, I.consolidated, I.adminCourses, I.teslaClass, I.rewards, I.justifications, I.channels,
+        I.panel, I.circulars, I.messages, I.alerts, I.antitrampa, I.consolidated, I.adminCourses, I.teslaClass, I.rewards, I.justifications, I.channels,
         I.surveys, I.agenda, I.schedule, I.periods, I.accounts, I.system, I.announcements, I.settings,
       ]
     default:

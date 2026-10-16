@@ -147,6 +147,28 @@ export const setIntegrityReview = (kind: 'ATTEMPT' | 'SUBMISSION', refId: number
   rpc<void>('set_integrity_review', { p_kind: kind, p_ref_id: positiveInteger(refId), p_status: status, p_note: note ?? null })
 
 /** Cómo se escribió la entrega. Si falta el script 23, no pasa nada. */
+// ---------------------------------------------------------------------------
+// Panel anti-trampa (script 24)
+// ---------------------------------------------------------------------------
+export type IntegrityOverview = {
+  scope: 'SCHOOL' | 'MINE'
+  since: string
+  quizzes: Record<'total' | 'free' | 'standard' | 'strict' | 'custom' | 'with_code' | 'lock_device' | 'sequential' | 'block_paste' | 'fullscreen' | 'watermark' | 'shuffle' | 'pick' | 'time_limit' | 'close_on_leave' | 'hidden_answers', number>
+  attempts: Record<'total' | 'finished' | 'with_events' | 'events' | 'leaves' | 'leave_ms' | 'pastes' | 'copies' | 'fs_exits' | 'resizes' | 'multitab' | 'devices' | 'resumes' | 'offline' | 'auto_closed', number> & { last_event: string | null }
+  submissions: Record<'analyzed' | 'with_text' | 'writing_logged' | 'mostly_pasted', number>
+  reviews: Record<'reviewed' | 'false_positive' | 'confirmed', number>
+}
+
+/** Indicadores de los últimos `days` días. null si la base no tiene el script 24. */
+export async function integrityOverview(days = 30): Promise<IntegrityOverview | null> {
+  try {
+    return await rpc<IntegrityOverview>('integrity_overview', { p_days: Math.min(365, Math.max(1, Math.round(days))) })
+  } catch (err) {
+    if (isMissingFunction(err)) return null
+    throw err
+  }
+}
+
 export async function logWriting(assignmentId: number, metrics: WritingMetrics): Promise<void> {
   try {
     await rpc<void>('integrity_log_writing', { p_assignment_id: positiveInteger(assignmentId), p_metrics: metrics })

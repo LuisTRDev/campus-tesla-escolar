@@ -70,7 +70,14 @@ const TABLES = {
   students, classrooms: [room], course_offerings: [offering], assignments: [task], submissions: [], academic_years: [{ id: 1 }],
   grading_periods: [], subjects: [], schedule_blocks: schedule, circulars: [circular], circular_recipients: [], achievements: [], student_achievements: [],
 }
-const RPC = { tesla_profile: teslaProfile, tesla_classroom_profiles: [], tesla_constancy_board: [] }
+const overview = {
+  scope: 'SCHOOL', since: day(30),
+  quizzes: { total: 12, free: 0, standard: 7, strict: 5, custom: 0, with_code: 6, lock_device: 5, sequential: 5, block_paste: 5, fullscreen: 3, watermark: 10, shuffle: 9, pick: 1, time_limit: 8, close_on_leave: 5, hidden_answers: 6 },
+  attempts: { total: 284, finished: 281, with_events: 71, events: 412, leaves: 96, leave_ms: 2954000, pastes: 23, copies: 17, fs_exits: 6, resizes: 9, multitab: 3, devices: 2, resumes: 14, offline: 11, auto_closed: 4, last_event: day(0.05) },
+  submissions: { analyzed: 530, with_text: 310, writing_logged: 402, mostly_pasted: 19 },
+  reviews: { reviewed: 12, false_positive: 8, confirmed: 3 },
+}
+const RPC = { tesla_profile: teslaProfile, tesla_classroom_profiles: [], tesla_constancy_board: [], integrity_overview: overview }
 
 // Pantallas: [nombre, ruta, usuario (null = sin sesión), opciones]
 const PHONE = { width: 390, height: 844, mobile: true }
@@ -88,6 +95,7 @@ const SCREENS = [
   ['docente-inicio-oscuro', '/', 'teacher', { theme: 'dark' }],
   ['docente-comunicado', '/comunicados/12', 'teacher', {}],
   ['docente-alto-contraste', '/horario', 'teacher', { contrast: true }],
+  ['docente-antitrampa', '/anti-trampa', 'teacher', {}],
 ]
 
 // ---------------------------------------------------------------------------

@@ -67,5 +67,8 @@ export function useWritingMetrics(id: string | null) {
     return m.typed + m.pasted > 0 ? m : null
   }, [key, get])
 
-  return { onPaste, track, take }
+  /** Lo acumulado hasta ahora, sin borrarlo (el panel anti-trampa lo muestra en vivo). */
+  const peek = useCallback((): Required<WritingMetrics> => ({ ...get() }), [get])
+
+  return { onPaste, track, take, peek }
 }

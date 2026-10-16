@@ -310,3 +310,14 @@ export function IcoSistema({ className }: P) {
     </Svg>
   )
 }
+
+/** Anti-trampa: el escudo con un ojo vigilante. */
+export function IcoAntitrampa({ className }: P) {
+  return (
+    <Svg className={className}>
+      <path className="ti-fill" d="M12 2.8l7.5 2.6V11c0 4.6-3.1 7.8-7.5 10.2C7.6 18.8 4.5 15.6 4.5 11V5.4z" />
+      <path d="M7.6 11.6s1.7-3 4.4-3 4.4 3 4.4 3-1.7 3-4.4 3-4.4-3-4.4-3z" strokeWidth="1.7" />
+      <circle className="ti-acc" cx="12" cy="11.6" r="1.4" strokeWidth="1.5" />
+    </Svg>
+  )
+}

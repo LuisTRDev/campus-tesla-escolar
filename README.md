@@ -479,3 +479,15 @@ Ningún detector de IA es seguro: úsalo para conversar con el alumno (por ejemp
 ## Qué sigue
 
 Competencias transversales y comportamiento en la libreta, la plantilla oficial del SIAGIE (cuando el colegio comparta el formato exacto) y el campus en quechua.
+
+## Panel anti-trampa · script 24
+
+Ejecuta `campus_24_panel_antitrampa.sql` después del 23 (se puede volver a ejecutar). Agrega una sola función de lectura, `integrity_overview(días)`, y no cambia datos ni permisos.
+
+En **Menú → Anti-trampa** (dirección y docentes) se ve:
+
+- **Estado e indicadores** de los últimos 7, 30 o 90 días: evaluaciones protegidas, intentos monitoreados, salidas y pegados detectados, envíos automáticos, intentos desde otro dispositivo, entregas analizadas y alertas revisadas. Dirección ve todo el colegio; cada docente, solo sus evaluaciones y tareas.
+- **Los 23 sistemas en cuatro capas** (antes de empezar, durante el examen, al corregir y tareas escritas), con su estado y cuántas veces actuó cada uno.
+- **Laboratorio en vivo** para comprobar que funcionan, con el mismo código que protege las evaluaciones reales: un examen de prueba en modo estricto (salir de la pestaña, pegar, copiar, clic derecho, pantalla completa, pantalla dividida, otra pestaña, sin internet; a la tercera salida «se envía sola»), un cuadro de escritura que mide tecleado frente a pegado e indicios de IA, y una comparación de dos entregas que marca los tramos copiados. Nada de lo que se hace en el laboratorio se guarda.
+
+Sin el script 24 la sección funciona igual, pero sin los números (muestra un aviso).

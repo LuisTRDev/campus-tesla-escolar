@@ -549,3 +549,7 @@ html.contrast-high .greeting-hero .greeting-orb { display: none; }
 .carnet-cara svg { display: block; }
 /* Con "menos movimiento" o modo ahorro cambia de cara sin girar. */
 html.motion-off .carnet-giro, html.lite .carnet-giro { transition: none; }
+
+/* Panel anti-trampa: ondas de radar alrededor del escudo (protección activa). */
+.radar { border: 2px solid rgb(64 196 128 / 0.55); animation: radar 2.4s var(--ease-out) infinite; }
+@keyframes radar { from { transform: scale(0.7); opacity: 0.9; } to { transform: scale(1.35); opacity: 0; } }
