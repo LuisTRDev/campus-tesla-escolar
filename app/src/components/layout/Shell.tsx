@@ -1,10 +1,10 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
-import { Bell, KeyRound, LogOut, Monitor, Moon, MoreHorizontal, RefreshCw, Search, Settings, ShieldCheck, Sun, X } from 'lucide-react'
+import { Bell, KeyRound, LogOut, Monitor, Moon, MoreHorizontal, RefreshCw, Search, Settings, Sun, X } from 'lucide-react'
 import { Escudo } from '@/components/brand'
 import {
-  IcoAgenda, IcoAlertas, IcoAulas, IcoBimestres, IcoCampana, IcoCarnet, IcoCircular, IcoCitas, IcoConsolidado, IcoCuaderno, IcoEncuestas, IcoEscudo,
-  IcoGrupos, IcoJustificacion, IcoLibreta, IcoMegafono, IcoMensajes, IcoNotas, IcoPanel, IcoPlanificador, IcoRayo, IcoRecursos, IcoTareas, IcoTienda,
+  IcoAgenda, IcoAjustes, IcoAlertas, IcoAulas, IcoBimestres, IcoCampana, IcoCarnet, IcoCircular, IcoCitas, IcoConsolidado, IcoCuaderno, IcoEncuestas, IcoEscudo,
+  IcoGrupos, IcoJustificacion, IcoLibreta, IcoMegafono, IcoMensajes, IcoNotas, IcoPanel, IcoPlanificador, IcoRayo, IcoRecursos, IcoSistema, IcoTareas, IcoTienda,
 } from '@/components/icons'
 import type { ComponentType } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
@@ -58,8 +58,9 @@ const I = {
   channels: { to: '/grupos', label: 'Grupos', icon: IcoGrupos },
   surveys: { to: '/encuestas', label: 'Encuestas', icon: IcoEncuestas },
   resources: { to: '/recursos', label: 'Recursos', icon: IcoRecursos },
-  system: { to: '/admin/sistema', label: 'Sistema', icon: ShieldCheck },
-  settings: { to: '/ajustes', label: 'Ajustes', icon: Settings },
+  system: { to: '/admin/sistema', label: 'Sistema', icon: IcoSistema },
+  settings: { to: '/ajustes', label: 'Ajustes', icon: IcoAjustes },
+  carnet: { to: '/carnet', label: 'Carnet', icon: IcoCarnet },
 } satisfies Record<string, NavItem>
 
 /** Las 4 primeras van en la barra inferior del celular; el resto, en "Más". */
@@ -73,11 +74,11 @@ function navFor(role: Role, isTutor: boolean, perms: CampusPermission[] = []): N
         I.surveys, I.settings,
       ]
     case 'STUDENT':
-      return [I.home, I.tasks, I.tesla, I.agenda, I.store, I.courses, I.channels, I.schedule, I.reportCard, I.announcements, I.surveys, I.settings]
+      return [I.home, I.tasks, I.tesla, I.agenda, I.store, I.courses, I.carnet, I.channels, I.schedule, I.reportCard, I.announcements, I.surveys, I.settings]
     case 'GUARDIAN':
       return [
         I.summary, I.circulars, I.messages, I.tasks, I.appointments, I.justifications, I.agenda, I.schedule, I.reportCard, I.tesla,
-        I.store, I.courses, I.channels, I.announcements, I.surveys, I.settings,
+        I.store, I.courses, I.carnet, I.channels, I.announcements, I.surveys, I.settings,
       ]
     case 'ADMIN':
     case 'MANAGEMENT':

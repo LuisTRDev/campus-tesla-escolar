@@ -521,3 +521,31 @@ html.denso table { font-size: 0.875rem; }
 .tabla-colegio thead th { background-color: rgb(var(--papel)); }
 .tabla-colegio tbody tr { transition: background-color var(--dur-1) ease; }
 .tabla-colegio tbody tr:hover { background-color: rgb(var(--chispa-100) / 0.45); }
+
+/* Diploma: una hoja A4 horizontal, a color y sin márgenes. */
+.diploma, .diploma * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+@media print {
+  .diploma { page: diploma; width: 297mm; height: 210mm; max-width: none; aspect-ratio: auto; }
+  .diploma .text-\[clamp\(26px\,5\.4vw\,60px\)\] { font-size: 54px; }
+}
+@page diploma { size: A4 landscape; margin: 0; }
+
+/* Alto contraste (Ajustes): sin texturas decorativas detrás del texto y con bordes más marcados. */
+html.contrast-high .celosia, html.contrast-high .tesla-sparks { display: none; }
+html.contrast-high .cinta { border-block-width: 3px; border-color: #8a6100; }
+html.contrast-high .sello { box-shadow: inset 0 0 0 2.5px currentColor; }
+html.contrast-high .franja-tick { width: 8px; }
+html.contrast-high .shell-side { --tw-text-opacity: 1; }
+html.contrast-high .shell-side [class*="text-white/"] { color: #fff; }
+html.contrast-high .greeting-hero .greeting-orb { display: none; }
+
+/* Carnet con dos caras: gira en 3D sobre su eje vertical (con rebote al final). */
+.carnet-escena { perspective: 1800px; }
+.carnet-giro { position: relative; transform-style: preserve-3d; transition: transform 0.85s var(--ease-spring); }
+.carnet-giro.vuelta { transform: rotateY(180deg); }
+.carnet-giro:active { scale: 0.985; }
+.carnet-cara { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.carnet-cara-atras { position: absolute; inset: 0; transform: rotateY(180deg); }
+.carnet-cara svg { display: block; }
+/* Con "menos movimiento" o modo ahorro cambia de cara sin girar. */
+html.motion-off .carnet-giro, html.lite .carnet-giro { transition: none; }

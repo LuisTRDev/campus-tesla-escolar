@@ -6,6 +6,7 @@ import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeade
 import { CoinAmount, LevelBadge, MiniProfileHover, NameFx, RankPin, TeslaAvatar } from '@/components/tesla'
 import { AdjustModal, AwardModal, RecognizeModal } from '@/components/TeslaActions'
 import { ConstancyBoard, GoalCard } from '@/pages/tesla/PerfilTeslaPage'
+import { CuadroHonor } from '@/components/CuadroHonor'
 import { RequestRow } from '@/pages/tesla/TiendaPage'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
@@ -286,6 +287,7 @@ function GoalsTab({ classroomId, canManage }: { classroomId: number; canManage: 
         )}
       </Panel>
       <Panel title="Ranking de constancia" className="h-fit"><ConstancyBoard classroomId={classroomId} /></Panel>
+      <div className="lg:col-span-2"><CuadroHonor classroomId={classroomId} /></div>
       <GoalForm key={editing === 'new' ? 'new' : editing?.id ?? 'none'} classroomId={classroomId} goal={editing} onClose={() => setEditing(null)} onSaved={() => void reload(true)} />
     </div>
   )

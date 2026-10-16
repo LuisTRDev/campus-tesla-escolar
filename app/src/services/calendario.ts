@@ -109,10 +109,12 @@ export async function deleteEvent(id: number): Promise<void> {
   must(await supabase.from('school_events').delete().eq('id', positiveInteger(id)))
 }
 
+// Colores del escudo: exámenes en el rojo de la T, actividades en el azul de la N,
+// reuniones en el dorado oscuro del borde; feriados en verde y el resto en gris.
 export const EVENT_COLORS: Record<EventKind, string> = {
-  EXAM: '#C4412F',
+  EXAM: '#D63620',
   HOLIDAY: '#1E8E5A',
-  ACTIVITY: '#2563EB',
-  MEETING: '#7C3AED',
+  ACTIVITY: '#1F3A5F',
+  MEETING: '#9A6A00',
   OTHER: '#5B6B82',
 }

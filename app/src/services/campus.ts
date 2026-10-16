@@ -674,3 +674,29 @@ export function subjectFitsClassroom(subject: Subject, classroom: Classroom | nu
   if (!subject.level || !classroom?.level) return true
   return subject.level.trim().toLowerCase() === classroom.level.trim().toLowerCase()
 }
+
+// ---------------------------------------------------------------------------
+// Carnet escolar digital
+// ---------------------------------------------------------------------------
+export type StudentCard = { id: number; first_name: string | null; last_name: string | null; dni: string | null }
+
+/** Datos del carnet. El alumno y su familia ya pueden leer su propia fila (igual que en la libreta). */
+export async function getStudentCard(studentId: number): Promise<StudentCard | null> {
+  const { data, error } = await supabase.from('students').select('id, first_name, last_name, dni').eq('id', positiveInteger(studentId)).maybeSingle()
+  if (error) throw error
+  return (data as StudentCard | null) ?? null
+}
+
+/** Lo que codifica el QR: el DNI o el código del colegio (el mismo con el que se ingresa). */
+export function carnetCode(card: StudentCard): string {
+  return (card.dni ?? '').trim().toUpperCase() || `NT-${card.id}`
+}
+
+/** Nombre del tutor(a) del aula, para el reverso del carnet (igual que en la libreta). */
+export async function getClassroomTutorName(classroomId: number): Promise<string | null> {
+  const { data, error } = await supabase.from('classrooms').select('tutor_id').eq('id', positiveInteger(classroomId)).maybeSingle()
+  if (error) throw error
+  const tutorId = (data as { tutor_id: string | null } | null)?.tutor_id ?? null
+  if (!tutorId) return null
+  return (await getPeopleNames([tutorId]))[tutorId] ?? null
+}

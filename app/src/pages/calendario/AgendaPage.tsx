@@ -256,9 +256,10 @@ export default function AgendaPage() {
         >
           {data.loading ? <Loading shape="table" rows={4} /> : (
             <>
-              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-texto-suave">
-                {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i}>{d}</span>)}
+              <div className="grid grid-cols-7 gap-1 text-center font-slab text-[11px] font-extrabold uppercase text-texto-suave">
+                {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i} className={cn(i > 4 && 'opacity-60')}>{d}</span>)}
               </div>
+              <div className="franja-h mt-1 h-[5px] rounded-sm" aria-hidden />
               <div className="mt-1 grid touch-pan-y grid-cols-7 gap-1" {...swipe}>
                 {grid.map((d) => {
                   const list = byDay.get(d) ?? []
@@ -274,6 +275,7 @@ export default function AgendaPage() {
                         selected === d ? 'border-tinta ring-2 ring-chispa/60' : 'border-linea hover:border-tinta-500',
                         !inMonth && 'opacity-40',
                         holiday && 'bg-estado-ok/5',
+                        inMonth && !holiday && [5, 6].includes(grid.indexOf(d) % 7) && 'bg-papel',
                       )}
                     >
                       <span className={cn('text-xs font-bold', d === today ? 'inline-flex h-5 w-5 items-center justify-center self-start rounded-full bg-chispa text-tinta' : 'text-texto-suave')}>{Number(d.slice(8))}</span>

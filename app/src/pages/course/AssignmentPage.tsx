@@ -8,6 +8,7 @@ import { FileDropzone, LinkListField, StoredFileCard, usePreview } from '@/compo
 import { FILE_UPLOADS, linkName } from '@/lib/links'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
+import { playSound } from '@/lib/teslaSound'
 import { toMessage } from '@/lib/errors'
 import { BUCKET_MATERIALS, BUCKET_SUBMISSIONS } from '@/lib/supabase'
 import { formatDue, formatShort, formatTime, relativeDue } from '@/lib/format'
@@ -160,6 +161,7 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
       clearDraft()
       haptic('success')
       toast(data ? 'Entrega actualizada.' : '¡Tarea entregada! Eso es disciplina.')
+      if (!data) playSound('campana')
       void reload(true)
     } catch (err) {
       toast(toMessage(err), 'error')

@@ -14,6 +14,7 @@ import { CofresTab, RetosTab, ShareButton, ShowcaseSection, SparkButton, Trayect
 import { AdjustModal, AwardModal, RecognizeModal } from '@/components/TeslaActions'
 import { ProgressRing } from '@/components/course'
 import { Cinta } from '@/components/brand'
+import { CuadroHonor } from '@/components/CuadroHonor'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
@@ -131,6 +132,7 @@ function AchievementsTab({ profile }: { profile: TeslaProfile }) {
                       {a.is_secret && <Badge tone="info">Secreto</Badge>}
                     </p>
                     {e.note && <p className="mt-1 text-xs italic text-texto-suave">“{e.note}”</p>}
+                    <Link to={`/diploma?alumno=${profile.student_id}&logro=${a.id}`} className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-tinta-500 hover:underline"><Award className="h-3.5 w-3.5" />Diploma</Link>
                   </div>
                 </li>
               )
@@ -299,6 +301,7 @@ function ClassroomTab({ profile }: { profile: TeslaProfile }) {
   return (
     <div className="grid gap-6 2xl:grid-cols-[1.4fr_1fr]">
       <div className="space-y-6">
+        <CuadroHonor classroomId={classroomId} />
         <Panel title="Metas del aula" className="tp-card">
           {data.goals.length === 0 ? (
             <Empty title="No hay metas activas" art="tasks" compact>El tutor puede proponer una meta para todo el aula.</Empty>

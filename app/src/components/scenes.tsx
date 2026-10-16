@@ -23,6 +23,8 @@ export const SCENES: { key: string; name: string; animated: boolean }[] = [
   { key: 'nieve', name: 'Nevada', animated: true },
   { key: 'andes', name: 'Cordillera', animated: false },
   { key: 'cuaderno', name: 'Cuaderno', animated: false },
+  { key: 'patio', name: 'Patio del colegio', animated: false },
+  { key: 'mural', name: 'Mural TN', animated: false },
 ]
 
 export const sceneInfo = (key: string) => SCENES.find((s) => s.key === key)
@@ -43,6 +45,8 @@ export const SCENE_ACCENT: Record<string, [string, string, string]> = {
   nieve: ['#93c5fd', '#e0f2fe', '#1e293b'],
   andes: ['#8b5cf6', '#fb923c', '#1e1b4b'],
   cuaderno: ['#3b82f6', '#93c5fd', '#1e3a8a'],
+  patio: ['#D63620', '#F2B51C', '#102442'],
+  mural: ['#D63620', '#1F3A5F', '#102442'],
 }
 
 type Vars = CSSProperties & Record<`--${string}`, string | number>
@@ -441,9 +445,60 @@ function Nieve() {
   )
 }
 
+/** El patio techado del colegio: cielo de Cañete, techo de vigas rojas en celosía y el círculo de la cancha. */
+function PatioColegio() {
+  const up = (x: number) => { const t = x / 160; return 34 - 30 * t * (1 - t) * 4 * 0.5 }
+  const low = (x: number) => up(x) + 5
+  const zig = Array.from({ length: 33 }, (_, i) => { const x = i * 5; return `${x},${i % 2 ? low(x) : up(x)}` }).join(' ')
+  return (
+    <div className="scene">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" aria-hidden>
+        <defs>
+          <linearGradient id="pt-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9cc4ea" /><stop offset="1" stopColor="#e9f1f8" /></linearGradient>
+        </defs>
+        <rect width="160" height="90" fill="url(#pt-sky)" />
+        <rect y="40" width="160" height="18" fill="#c9b8a6" />
+        <rect x="22" y="44" width="116" height="9" rx="1" fill="#102442" />
+        <rect x="25" y="46" width="5" height="5" rx="1" fill="#F2B51C" />
+        <rect x="34" y="47.2" width="60" height="2" rx="1" fill="#fff" />
+        <path d={`M0 ${up(0)} Q80 2 160 ${up(160)} V0 H0 Z`} fill="#d9dee5" opacity="0.9" />
+        <path d={`M0 ${up(0)} Q80 2 160 ${up(160)}`} stroke="#D63620" strokeWidth="1.6" fill="none" />
+        <path d={`M0 ${low(0)} Q80 9 160 ${low(160)}`} stroke="#D63620" strokeWidth="1.2" fill="none" />
+        <polyline points={zig} stroke="#D63620" strokeWidth="0.7" fill="none" />
+        {[8, 56, 104, 152].map((x) => <rect key={x} x={x - 1} y={low(x)} width="2" height={90 - low(x)} fill="#D63620" />)}
+        <rect y="58" width="160" height="32" fill="#cfd4da" />
+        <ellipse cx="80" cy="76" rx="34" ry="7" fill="none" stroke="#3d4b5c" strokeOpacity="0.55" strokeWidth="1.2" />
+        <rect y="58" width="160" height="2.4" fill="#F2B51C" opacity="0.8" />
+      </svg>
+    </div>
+  )
+}
+
+/** El mural de la entrada: la "T" roja y la "N" azul pintadas sobre ladrillo blanco. */
+function MuralTN() {
+  const bricks = Array.from({ length: 12 }, (_, r) => Array.from({ length: 9 }, (_, c) => (
+    <rect key={`${r}-${c}`} x={c * 20 - (r % 2 ? 10 : 0)} y={r * 8} width="19" height="7" rx="0.6" fill="#f4f1ec" />
+  )))
+  return (
+    <div className="scene">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" aria-hidden>
+        <rect width="160" height="90" fill="#d9d3ca" />
+        {bricks}
+        <g transform="translate(58 10) scale(0.7)" opacity="0.94">
+          <path d="M10 8H90V38H78V26H62V80H72V94H28V80H38V26H22V38H10Z" fill="#D63620" />
+          <path d="M30 76V40H42L58 62V40H70V76H58L42 54V76Z" fill="#1F3A5F" stroke="#f4f1ec" strokeWidth="3" paintOrder="stroke" />
+        </g>
+        <rect y="84" width="160" height="3" fill="#D63620" />
+        <rect y="87" width="160" height="3" fill="#F2B51C" />
+      </svg>
+    </div>
+  )
+}
+
 const SCENE_COMPONENTS: Record<string, () => JSX.Element> = {
   galaxia: Galaxia, aurora: Aurora, bobina: Bobina, circuito: Circuito, synthwave: Synthwave, oceano: Oceano,
   sakura: Sakura, academia: Academia, codigo: Codigo, lava: Lava, fuegos: Fuegos, nieve: Nieve, andes: Andes, cuaderno: Cuaderno,
+  patio: PatioColegio, mural: MuralTN,
 }
 
 export function Scene({ name, className }: { name: string; className?: string }) {

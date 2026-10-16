@@ -997,3 +997,39 @@ export const VALORES: { key: Valor; label: string; hint: string }[] = [
   { key: 'LIDERAZGO', label: 'Liderazgo', hint: 'Reconocimientos, chispas y apoyo a tus compañeros.' },
   { key: 'EXCELENCIA', label: 'Excelencia', hint: 'Notas altas, niveles y colecciones completas.' },
 ]
+
+// ---------------------------------------------------------------------------
+// Cuadro de honor del bimestre: los alumnos con más logros de cada valor.
+// Solo entran quienes aparecen en el ranking del aula (respeta "ocultarme de los rankings").
+// ---------------------------------------------------------------------------
+export type HonorEntry = { student: ClassmateCard; count: number; place: number }
+export type HonorRoll = Record<Valor, HonorEntry[]>
+
+export async function listHonorRoll(classroomId: number, period: { starts_on: string; ends_on: string } | null): Promise<HonorRoll> {
+  const [cards, board, catalog] = await Promise.all([listClassroomCards(classroomId), listBoard(classroomId, 'CONSTANCY'), listAchievements()])
+  const visible = new Set(board.map((b) => b.student_id))
+  const mates = cards.filter((c) => visible.has(c.student_id))
+  const empty: HonorRoll = { DISCIPLINA: [], LIDERAZGO: [], EXCELENCIA: [] }
+  if (!mates.length) return empty
+  let q = supabase.from('student_achievements').select('student_id, achievement_id, earned_at').in('student_id', mates.map((m) => m.student_id))
+  if (period) q = q.gte('earned_at', `${period.starts_on}T00:00:00-05:00`).lte('earned_at', `${period.ends_on}T23:59:59-05:00`)
+  const rows = must(await q) as { student_id: number; achievement_id: number; earned_at: string }[]
+  const valorOf = new Map(catalog.map((a) => [a.id, VALOR_DE[a.condition_type]]))
+  const tally = new Map<string, number>()
+  for (const r of rows) {
+    const v = valorOf.get(Number(r.achievement_id))
+    if (!v) continue
+    const k = `${v}:${Number(r.student_id)}`
+    tally.set(k, (tally.get(k) ?? 0) + 1)
+  }
+  const out: HonorRoll = { DISCIPLINA: [], LIDERAZGO: [], EXCELENCIA: [] }
+  for (const { key } of VALORES) {
+    const ranked = mates
+      .map((m) => ({ student: m, count: tally.get(`${key}:${m.student_id}`) ?? 0 }))
+      .filter((e) => e.count > 0)
+      .sort((a, b) => b.count - a.count || b.student.level - a.student.level)
+    // Empates comparten puesto.
+    out[key] = ranked.slice(0, 3).map((e) => ({ ...e, place: 1 + ranked.findIndex((x) => x.count === e.count) }))
+  }
+  return out
+}

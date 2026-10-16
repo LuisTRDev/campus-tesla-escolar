@@ -38,7 +38,14 @@ export function useSoundsEnabled(): [boolean, (on: boolean) => void] {
 
 type Note = { f: number; at: number; dur: number; type?: OscillatorType; gain?: number }
 
-const SOUNDS: Record<'levelup' | 'chest' | 'reveal' | 'pop' | 'equip', Note[]> = {
+// Campana de mano del colegio: dos toques con los armónicos de una campana (1 · 2 · 2,76 · 5,4).
+const bell = (f: number, at: number): Note[] => [
+  { f, at, dur: 1.3, type: 'sine', gain: 0.09 }, { f: f * 2, at, dur: 0.9, type: 'sine', gain: 0.035 },
+  { f: f * 2.76, at, dur: 0.7, type: 'sine', gain: 0.03 }, { f: f * 5.4, at, dur: 0.3, type: 'sine', gain: 0.012 },
+]
+
+const SOUNDS: Record<'levelup' | 'chest' | 'reveal' | 'pop' | 'equip' | 'campana', Note[]> = {
+  campana: [...bell(988, 0), ...bell(988, 0.3)],
   levelup: [
     { f: 523.25, at: 0, dur: 0.14 }, { f: 659.25, at: 0.12, dur: 0.14 }, { f: 783.99, at: 0.24, dur: 0.14 },
     { f: 1046.5, at: 0.36, dur: 0.5, type: 'triangle' }, { f: 1318.5, at: 0.36, dur: 0.5, type: 'sine', gain: 0.06 },

@@ -35,19 +35,20 @@ function nameLines(name: string): string[] {
   return lines
 }
 
-function pinSvg(tier: number, stars: number, cx: number, cy: number, scale: number) {
+/** Estrella Tesla (pin) como texto SVG. `idp` evita choques de ids si hay varias en la misma página. */
+export function pinSvg(tier: number, stars: number, cx: number, cy: number, scale: number, idp = 'p') {
   const [light, mid, dark, deep] = PIN_METAL[tier] ?? PIN_METAL[0]
   const starRow = Array.from({ length: stars }).map((_, i) =>
-    `<polygon points="${starPoints(32 + (i - (stars - 1) / 2) * 10, 65, 4.6, 1.9, 5)}" fill="url(#pm)" stroke="${deep}" stroke-width="0.6"/>`).join('')
+    `<polygon points="${starPoints(32 + (i - (stars - 1) / 2) * 10, 65, 4.6, 1.9, 5)}" fill="url(#${idp}m)" stroke="${deep}" stroke-width="0.6"/>`).join('')
   return `
   <defs>
-    <linearGradient id="pm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${light}"/><stop offset="0.45" stop-color="${mid}"/><stop offset="1" stop-color="${dark}"/></linearGradient>
-    <radialGradient id="pc" cx="0.38" cy="0.32" r="0.8"><stop offset="0" stop-color="${mid}"/><stop offset="1" stop-color="${deep}"/></radialGradient>
+    <linearGradient id="${idp}m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${light}"/><stop offset="0.45" stop-color="${mid}"/><stop offset="1" stop-color="${dark}"/></linearGradient>
+    <radialGradient id="${idp}c" cx="0.38" cy="0.32" r="0.8"><stop offset="0" stop-color="${mid}"/><stop offset="1" stop-color="${deep}"/></radialGradient>
   </defs>
   <g transform="translate(${cx - 32 * scale} ${cy - 36 * scale}) scale(${scale})">
     ${tier === 4 ? `<polygon points="${starPoints(32, 30, 31, 24, 16)}" fill="${dark}" opacity="0.55"/>` : ''}
-    <polygon points="${starPoints(32, 30, 29, 19)}" fill="url(#pm)" stroke="${deep}" stroke-width="1" stroke-linejoin="round"/>
-    <circle cx="32" cy="30" r="13.5" fill="url(#pc)" stroke="${light}" stroke-width="1.6"/>
+    <polygon points="${starPoints(32, 30, 29, 19)}" fill="url(#${idp}m)" stroke="${deep}" stroke-width="1" stroke-linejoin="round"/>
+    <circle cx="32" cy="30" r="13.5" fill="url(#${idp}c)" stroke="${light}" stroke-width="1.6"/>
     <path d="M34.5 19.5 L25.5 32.5 H31 L28.5 41.5 L38.5 27.5 H33 Z" fill="${tier === 0 ? '#cbd5e1' : '#fff'}" stroke="${deep}" stroke-width="0.7" stroke-linejoin="round"/>
     <ellipse cx="22" cy="17" rx="8" ry="3.4" fill="#fff" opacity="0.35" transform="rotate(-35 22 17)"/>
     ${starRow}

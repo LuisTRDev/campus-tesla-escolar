@@ -180,6 +180,14 @@ export type Season = { key: string; label: string; emoji: string } | null
 export function currentSeason(date = new Date()): Season {
   const [m, d] = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima', month: 'numeric', day: 'numeric' }).format(date).split(/\D+/).map(Number)
   const md = m * 100 + d
+  // Fechas que se celebran en el colegio. Día de la Madre: 2.º domingo de mayo; del Padre: 3.er domingo de junio.
+  const year = Number(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima', year: 'numeric' }).format(date))
+  const nthSunday = (month: number, n: number) => { const first = new Date(Date.UTC(year, month - 1, 1)).getUTCDay(); return 1 + ((7 - first) % 7) + (n - 1) * 7 }
+  const madre = nthSunday(5, 2)
+  const padre = nthSunday(6, 3)
+  if (m === 5 && d >= madre - 3 && d <= madre) return { key: 'madre', label: '¡Feliz Día de la Madre!', emoji: '💐' }
+  if (m === 6 && d >= padre - 3 && d <= padre) return { key: 'padre', label: '¡Feliz Día del Padre!', emoji: '👔' }
+  if (md === 706) return { key: 'maestro', label: '¡Feliz Día del Maestro! Gracias por su pasión por educar', emoji: '🍎' }
   if (md >= 301 && md <= 315) return { key: 'inicio', label: '¡Bienvenidos al nuevo año escolar!', emoji: '🎒' }
   if (md >= 720 && md <= 731) return { key: 'patrias', label: '¡Felices Fiestas Patrias!', emoji: '🇵🇪' }
   if (md >= 1201 && md <= 1231) return { key: 'navidad', label: '¡Feliz Navidad!', emoji: '🎄' }

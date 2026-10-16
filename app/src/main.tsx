@@ -1,7 +1,12 @@
 import { installProductionConsoleGuards } from '@/lib/security'
 import { registerServiceWorker } from '@/lib/push'
+import archivoUrl from '@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2?url'
 
 installProductionConsoleGuards()
+
+// La fuente de titulares (Archivo) se pide ya, en paralelo con la app: evita el salto de letra al abrir.
+const preload = Object.assign(document.createElement('link'), { rel: 'preload', as: 'font', type: 'font/woff2', href: archivoUrl, crossOrigin: 'anonymous' })
+document.head.appendChild(preload)
 
 const root = document.getElementById('root')!
 const missing = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'].filter((k) => !import.meta.env[k])

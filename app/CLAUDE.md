@@ -22,6 +22,7 @@ Se ejecutan desde `app/`:
 - `npm run dev`: servidor de desarrollo en http://localhost:5173
 - `npm run build`: `tsc -b && vite build && node scripts/size-budget.mjs` (es también la única revisión de tipos). El último paso falla si el primer arranque (entrada + `bootstrap` + sus imports estáticos) supera el presupuesto en KB gzip: carga lo nuevo con `lazy` en vez de subir el límite.
 - `npm run preview`: sirve la carpeta `dist/` ya compilada
+- `npm run visual` (después de `npm run build`): pruebas visuales. Captura 13 pantallas con Supabase simulado, fecha congelada y sin animaciones, y las compara con `visual/base`; `npm run visual -- --actualizar` acepta los cambios. Usa Edge o Chrome instalados (o `BROWSER_PATH`). La carpeta `visual/` no se sube al repositorio (las capturas dependen de la máquina).
 
 No hay pruebas automáticas ni linter. `tsconfig.app.json` tiene `strict`, `noUnusedLocals` y `noUnusedParameters`, así que un import sin usar rompe el build.
 
@@ -46,6 +47,8 @@ Variables de entorno (`.env.local`, ver `.env.example`): `VITE_SUPABASE_URL`, `V
 **Rendimiento (`src/lib/perf.ts`):** las pantallas se declaran con `lazyPage` en `App.tsx` (todas, incluido el inicio de cada rol) y `usePrefetch` precarga las más usadas por rol con buena conexión. El modo ahorro es la clase `lite` en `<html>` (la aplica `public/theme-init.js` antes de pintar y se cambia en Ajustes); las reglas CSS están al final de `src/index.css`. `sync.ts` refresca cada 2 min (5 en modo ahorro), se pausa tras 5 min sin interacción y durante un examen (`focus-mode`).
 
 **Interfaz:** los componentes base están en `src/components/ui/index.tsx` (Button, campos, Empty, Loading, paneles que suben desde abajo, etc.) y el marco y menú de la app en `src/components/layout/Shell.tsx`. Diseño pensado primero para celular. Usa el alias `@/` para `src/`.
+
+**Identidad del colegio:** escudo y monograma en `src/components/brand.tsx` (trazos compartidos en `escudoPaths.ts`), iconos propios en `src/components/icons.tsx` (las partes `ti-fill`/`ti-acc` se pintan de rojo y dorado solo cuando el enlace está activo) y utilidades CSS en `src/index.css`: `franja-h`/`franja-v` (franja del buzo), `celosia` (vigas del patio), `cinta`, `sello`, `lema`, `btn-parche`/`btn-accion` y `tabla-colegio`. Las duraciones y curvas de las animaciones son variables (`--dur-1..3`, `--ease-out`, `--ease-spring`). Las fuentes se declaran en `src/fonts.css` solo con el alfabeto latino.
 
 **Temas:** los colores de Tailwind son variables CSS definidas en `src/index.css` (formato `R G B`) con valores para modo claro y oscuro; el modo oscuro es la clase `dark`, que `public/theme-init.js` aplica antes de pintar. Usa los nombres semánticos (`tinta`, `chispa`, `papel`, `superficie`, `linea`, `texto`/`texto-suave`, `estado-ok|tarde|alerta|info`) en vez de los colores de Tailwind por defecto. Ojo: `text-tinta` usa su propia variable `--tinta-ink` para aclararse en modo oscuro, mientras que `bg-tinta` sigue siendo azul oscuro.
 
