@@ -85,7 +85,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(payload.title || 'Campus Tesla', {
     body: payload.body || '',
     icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    badge: '/icons/badge-96.png', // silueta blanca: Android la usa en la barra de estado
     tag: payload.tag,
     renotify: !!payload.tag,
     lang: 'es-PE',

@@ -6,46 +6,63 @@
    Paleta (R G B). Modo claro por defecto; .dark en <html> activa el oscuro.
    --------------------------------------------------------------------------- */
 @layer base {
+  /* Identidad del escudo: azul de la "N" y del blazer, rojo de la "T", dorado del borde.
+     El rojo es de marca; los errores van en un rojo rosado (estado-alerta) y siempre con icono. */
   :root,
   .force-light {
-    --tinta: 11 29 51;
-    --tinta-700: 22 50 90;
-    --tinta-500: 43 74 117;
-    --tinta-ink: 11 29 51;
+    --tinta: 16 36 66;
+    --tinta-700: 29 56 98;
+    --tinta-500: 58 92 140;
+    --tinta-ink: 16 36 66;
+    --rojo: 214 54 32;
+    --rojo-600: 178 40 22;
+    --rojo-100: 252 229 222;
     --chispa: 240 180 41;
     --chispa-600: 214 154 18;
+    --chispa-ink: 146 98 0;
     --chispa-100: 253 241 211;
     --papel: 244 246 249;
     --superficie: 255 255 255;
     --linea: 220 227 236;
-    --texto: 27 36 51;
-    --texto-suave: 91 107 130;
+    --texto: 24 34 52;
+    --texto-suave: 88 104 128;
     --estado-ok: 30 142 90;
     --estado-tarde: 184 114 15;
-    --estado-alerta: 196 65 47;
+    --estado-alerta: 194 30 86;
     --estado-info: 37 99 235;
+    /* Movimiento: rápido (respuesta a un toque), medio (entrar y salir), lento (escenas). */
+    --dur-1: 120ms;
+    --dur-2: 220ms;
+    --dur-3: 380ms;
+    --ease-out: cubic-bezier(0.2, 0.8, 0.3, 1);
+    --ease-spring: cubic-bezier(0.3, 1.45, 0.5, 1);
     /* Gráficos: escala divergente de niveles (azul = logro, rojo = proceso/inicio) y medidores */
     --lv-ad: #1c5cab; --lv-a: #86b6ef; --lv-b: #f19a90; --lv-c: #b8322f;
     --meter-fill: #2a78d6; --meter-track: #cde2fb;
     color-scheme: light;
   }
 
+  /* Modo oscuro: azul del blazer, no gris. */
   .dark {
-    --tinta: 38 70 122;
-    --tinta-700: 50 88 148;
+    --tinta: 32 62 112;
+    --tinta-700: 46 82 140;
     --tinta-500: 140 176 230;
     --tinta-ink: 233 238 245;
+    --rojo: 240 92 64;
+    --rojo-600: 248 122 98;
+    --rojo-100: 72 26 20;
     --chispa: 240 180 41;
     --chispa-600: 245 196 80;
+    --chispa-ink: 245 196 80;
     --chispa-100: 60 47 16;
-    --papel: 10 16 25;
-    --superficie: 19 28 41;
-    --linea: 40 52 70;
+    --papel: 8 15 30;
+    --superficie: 16 28 50;
+    --linea: 36 52 80;
     --texto: 230 235 242;
-    --texto-suave: 152 166 187;
+    --texto-suave: 152 167 192;
     --estado-ok: 64 196 128;
     --estado-tarde: 232 165 64;
-    --estado-alerta: 240 112 92;
+    --estado-alerta: 251 113 150;
     --estado-info: 102 153 250;
     --lv-ad: #86b6ef; --lv-a: #184f95; --lv-b: #8e2c2a; --lv-c: #f08a80;
     --meter-fill: #3987e5; --meter-track: #17345c;
@@ -64,11 +81,64 @@
     transition: background-color 0.2s ease;
   }
   h1, h2, h3 { text-wrap: balance; }
-  ::selection { background: #F0B429; color: #0B1D33; }
-  :focus-visible { outline: 3px solid #F0B429; outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: rgb(var(--chispa)); color: #102442; }
+  :focus-visible { outline: 3px solid rgb(var(--chispa)); outline-offset: 2px; border-radius: 6px; }
   input[type='file'] { @apply text-sm file:mr-3 file:rounded-md file:border-0 file:bg-papel file:px-3 file:py-1.5 file:font-bold file:text-texto; }
   .dark img.logo-chip { background: #fff; }
+  /* Notas, puntos y asistencia: cifras del mismo ancho para que las columnas no bailen. */
+  table, .cifras { font-variant-numeric: tabular-nums; }
 }
+
+/* ---------------------------------------------------------------------------
+   Identidad del colegio
+   --------------------------------------------------------------------------- */
+@layer utilities {
+  /* Titulares extendidos, como las letras del banner del patio. */
+  .font-display { font-stretch: 112%; }
+  /* Mayúsculas espaciadas del lema y los valores ("PASIÓN POR EDUCAR"). */
+  .lema { text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; }
+}
+
+/* Franja del buzo: azul, rojo y dorado en bandas paralelas. Sobre el azul del
+   menú la banda azul se funde y queda la franja roja y amarilla del pantalón. */
+.franja-h { background: linear-gradient(180deg, rgb(var(--tinta)) 0 33.4%, rgb(var(--rojo)) 33.4% 66.7%, rgb(var(--chispa)) 66.7%); }
+.franja-v { background: linear-gradient(90deg, rgb(var(--tinta)) 0 33.4%, rgb(var(--rojo)) 33.4% 66.7%, rgb(var(--chispa)) 66.7%); }
+/* Marca corta junto a los títulos de los paneles. */
+.franja-tick { display: inline-block; width: 6px; height: 1.05em; border-radius: 2px; background: linear-gradient(90deg, rgb(var(--rojo)) 0 50%, rgb(var(--chispa)) 50%); flex-shrink: 0; }
+
+/* Barra superior al cambiar de pantalla. */
+@keyframes ruta-carga {
+  0% { transform: scaleX(0); opacity: 1; }
+  70% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+.ruta-carga { transform-origin: left; animation: ruta-carga 0.7s var(--ease-out) both; }
+
+/* Botón primario como parche bordado: azul con ribete rojo abajo; se hunde al presionar. */
+.btn-parche {
+  box-shadow: inset 0 -3px 0 rgb(var(--rojo)), 0 1px 2px rgb(16 36 66 / 0.25);
+  transition: background-color var(--dur-1) ease, box-shadow var(--dur-1) ease, transform var(--dur-1) ease;
+}
+.btn-parche:hover:not(:disabled) { box-shadow: inset 0 -3px 0 rgb(var(--chispa)), 0 4px 14px rgb(16 36 66 / 0.28); }
+.btn-parche:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgb(var(--rojo)), 0 0 0 rgb(0 0 0 / 0); }
+/* Botón de acción (Entregar, Enviar): rojo de la T con ribete dorado. */
+.btn-accion {
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.22), 0 1px 2px rgb(120 30 15 / 0.3);
+  transition: background-color var(--dur-1) ease, box-shadow var(--dur-1) ease, transform var(--dur-1) ease;
+}
+.btn-accion:hover:not(:disabled) { box-shadow: inset 0 -3px 0 rgb(var(--chispa)), 0 4px 14px rgb(var(--rojo) / 0.35); }
+.btn-accion:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.22); }
+
+/* Calificación como sello: doble aro, como un sello de tinta. */
+.sello { box-shadow: inset 0 0 0 1.5px currentColor, inset 0 0 0 3px rgb(var(--superficie) / 0.9); }
+.sello-lleno { box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.85), inset 0 0 0 3px rgb(0 0 0 / 0.12); }
+
+/* Iconos propios (src/components/icons.tsx): las partes de relleno se colorean
+   solo cuando el enlace está activo, en los colores del escudo. */
+.ti-fill, .ti-acc { fill: transparent; transition: fill var(--dur-2) ease; }
+[aria-current='page'] .ti-fill, .ti-on .ti-fill { fill: rgb(var(--rojo)); }
+[aria-current='page'] .ti-acc, .ti-on .ti-acc { fill: rgb(var(--chispa)); }
+.shell-side [aria-current='page'] .ti-fill { fill: rgb(var(--rojo) / 0.9); }
 
 /* Lomo del cuaderno: una textura sutil de tela, como el forro de los cuadernos. */
 .notebook-spine {
@@ -165,29 +235,29 @@
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.toast-in { animation: toast-in 0.2s ease-out; }
+.toast-in { animation: toast-in var(--dur-2) var(--ease-out); }
 
 @keyframes modal-in {
   from { opacity: 0; transform: translateY(12px) scale(0.98); }
   to { opacity: 1; transform: none; }
 }
-dialog[open].modal-in { animation: modal-in 0.18s ease-out; }
+dialog[open].modal-in { animation: modal-in var(--dur-2) var(--ease-out); }
 
 @keyframes sheet-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-dialog[open].sheet-in { animation: sheet-up 0.26s cubic-bezier(0.2, 0.9, 0.3, 1); }
-.sheet-up { animation: sheet-up 0.26s cubic-bezier(0.2, 0.9, 0.3, 1); }
+dialog[open].sheet-in { animation: sheet-up 0.28s var(--ease-out); }
+.sheet-up { animation: sheet-up 0.28s var(--ease-out); }
 
 @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
-.backdrop-in { animation: backdrop-in 0.2s ease-out; }
+.backdrop-in { animation: backdrop-in var(--dur-2) ease-out; }
 
 @keyframes page-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
-.page-in { animation: page-in 0.22s ease-out; }
+.page-in { animation: page-in var(--dur-2) var(--ease-out); }
 
 /* Sello de "Entregado": cae, rebota y queda inclinado. */
 @keyframes stamp {
@@ -229,7 +299,7 @@ html.focus-mode main { padding-top: 1.25rem; }
 
 /* Check que aparece al guardar. */
 @keyframes check-pop { 0% { transform: scale(0.3) rotate(-30deg); opacity: 0; } 60% { transform: scale(1.25) rotate(8deg); opacity: 1; } 100% { transform: none; } }
-.check-pop { animation: check-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.3) both; }
+.check-pop { animation: check-pop 0.45s var(--ease-spring) both; }
 
 /* Botón de entregar: barra de progreso que se llena. */
 .progress-fill { position: relative; overflow: hidden; }
@@ -240,8 +310,8 @@ html.focus-mode main { padding-top: 1.25rem; }
 @keyframes progress-fill { to { transform: scaleX(0.92); } }
 
 /* Transiciones entre pantallas (navegadores con View Transitions). */
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.22s; }
-::view-transition-group(*) { animation-duration: 0.35s; animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-2); }
+::view-transition-group(*) { animation-duration: var(--dur-3); animation-timing-function: var(--ease-out); }
 
 /* Saludo del inicio según la hora. */
 .greeting-orb { position: absolute; right: -40px; top: -60px; width: 220px; height: 220px; border-radius: 9999px; filter: blur(2px); }
@@ -262,11 +332,11 @@ html.focus-mode main { padding-top: 1.25rem; }
 /* Gráficos: las barras crecen al aparecer. */
 @keyframes bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 @keyframes bar-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.bar-grow { transform-origin: bottom; animation: bar-grow 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
-.bar-grow-x { transform-origin: left; animation: bar-grow-x 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.bar-grow { transform-origin: bottom; animation: bar-grow 0.7s var(--ease-out) both; }
+.bar-grow-x { transform-origin: left; animation: bar-grow-x 0.7s var(--ease-out) both; }
 
 /* Tarjetas de curso con escena: la portada se agranda un poco al pasar. */
-.course-cover .scene { transition: transform 0.4s ease; }
+.course-cover .scene { transition: transform var(--dur-3) var(--ease-out); }
 .course-cover:hover .scene { transform: scale(1.06); }
 
 /* Grabación de audio: punto que late. */
@@ -283,13 +353,13 @@ html.focus-mode main { padding-top: 1.25rem; }
   @page { size: A4; margin: 12mm; }
   :root, .dark {
     --papel: 255 255 255; --superficie: 255 255 255; --texto: 0 0 0; --texto-suave: 91 107 130;
-    --linea: 200 208 220; --tinta: 11 29 51; --tinta-ink: 11 29 51;
+    --linea: 200 208 220; --tinta: 16 36 66; --tinta-ink: 16 36 66;
   }
   body { background: #fff; }
   .report-card { break-after: page; }
   .report-card:last-child { break-after: auto; }
 }
-.bar-grow-left { transform-origin: right; animation: bar-grow-x 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.bar-grow-left { transform-origin: right; animation: bar-grow-x 0.7s var(--ease-out) both; }
 
 /* ---------------------------------------------------------------------------
    Modo ahorro (src/lib/perf.ts): en celulares modestos o con datos limitados
@@ -307,3 +377,147 @@ html.lite .shadow-2xl, html.lite .shadow-xl { box-shadow: 0 1px 3px rgb(0 0 0 / 
 
 /* Modo examen: sin rebote al deslizar ni selección accidental del texto de las preguntas. */
 .exam-mode { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+
+/* ---------------------------------------------------------------------------
+   Cinta del escudo (src/components/brand.tsx): banda con borde dorado y
+   puntas dobladas detrás, en letra slab como "DISCIPLINA · LIDERAZGO · EXCELENCIA".
+   --------------------------------------------------------------------------- */
+.cinta {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.95em 0.35em;
+  padding: 0.28em 0.95em;
+  font-family: 'Roboto Slab Variable', Georgia, serif;
+  font-weight: 800;
+  font-size: 0.8em;
+  line-height: 1.15;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #2b2f36;
+  background: #fff;
+  border-block: 2px solid #f2b51c;
+}
+.cinta::before, .cinta::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 0.38em;
+  bottom: -0.38em;
+  width: 1.25em;
+  background: #b07d0c;
+}
+.cinta::before { left: -0.95em; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 38% 50%); }
+.cinta::after { right: -0.95em; clip-path: polygon(0 0, 100% 0, 62% 50%, 100% 100%, 0 100%); }
+.cinta-oro { background: #f2b51c; border-color: #ffd86b; color: #102442; }
+.cinta-roja { background: #d63620; border-color: #f2b51c; color: #fff; }
+.cinta-roja::before, .cinta-roja::after { background: #8f2213; }
+
+/* Medallas de logros con forma de escudo. */
+.forma-escudo { clip-path: polygon(50% 0%, 97% 9%, 97% 50%, 90% 70%, 74% 87%, 50% 100%, 26% 87%, 10% 70%, 3% 50%, 3% 9%); }
+.medal-wrap-PLATINUM { filter: drop-shadow(0 0 7px rgba(120, 220, 240, 0.55)); }
+
+/* Indicador de la pestaña activa (barra inferior): se abre desde el centro. */
+@keyframes tab-on { from { scale: 0 1; } to { scale: 1 1; } }
+.tab-on { animation: tab-on var(--dur-2) var(--ease-spring) both; }
+
+/* ===========================================================================
+   Fase 3 y 4: pantallas y movimiento con la identidad del colegio
+   =========================================================================== */
+
+/* Celosía del techo del patio: las vigas rojas en zigzag (armadura Warren). */
+.celosia {
+  background-image:
+    linear-gradient(60deg, transparent 47%, var(--celosia, rgb(214 54 32 / 0.16)) 47% 53%, transparent 53%),
+    linear-gradient(-60deg, transparent 47%, var(--celosia, rgb(214 54 32 / 0.16)) 47% 53%, transparent 53%),
+    linear-gradient(0deg, transparent 0 calc(100% - 2px), var(--celosia, rgb(214 54 32 / 0.16)) calc(100% - 2px));
+  background-size: 46px 40px;
+}
+.celosia-suave { --celosia: rgb(255 255 255 / 0.045); }
+
+/* Letrero "BIENVENIDOS" de la entrada: placa oscura con letras blancas en slab. */
+.letrero {
+  display: inline-block;
+  padding: 0.35em 0.9em 0.3em;
+  font-family: 'Roboto Slab Variable', Georgia, serif;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #fff;
+  background: #121a26;
+  border: 2px solid rgb(255 255 255 / 0.18);
+  border-radius: 4px;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.35), inset 0 -3px 0 rgb(0 0 0 / 0.4);
+}
+
+/* El escudo entra al abrir el ingreso: cae, rebota y brilla una vez. */
+@keyframes escudo-in {
+  0% { opacity: 0; transform: translateY(-14px) scale(0.86) rotate(-4deg); }
+  60% { opacity: 1; transform: translateY(2px) scale(1.03) rotate(1deg); }
+  100% { opacity: 1; transform: none; }
+}
+.escudo-in { animation: escudo-in 0.7s var(--ease-spring) both; }
+@keyframes brillo-pasa { from { transform: translateX(-120%) skewX(-18deg); } to { transform: translateX(220%) skewX(-18deg); } }
+.brillo { position: relative; overflow: hidden; }
+.brillo::after {
+  content: ''; position: absolute; inset: 0; width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  animation: brillo-pasa 1.1s ease-out 0.7s both;
+  pointer-events: none;
+}
+
+/* Cintas de los valores: aparecen una tras otra. */
+@keyframes cinta-in { from { opacity: 0; transform: translateY(8px) scale(0.94); } to { opacity: 1; transform: none; } }
+.cinta-in { animation: cinta-in var(--dur-3) var(--ease-spring) both; animation-delay: calc(0.5s + var(--i, 0) * 0.12s); }
+
+/* Carga: el monograma TN se dibuja con su contorno dorado y luego se rellena. */
+.tn-draw path { stroke-dasharray: 420; stroke-dashoffset: 420; fill-opacity: 0; animation: tn-trazo 1.3s var(--ease-out) forwards, tn-relleno 0.4s ease-out 1s forwards; }
+.tn-draw path + path { animation-delay: 0.25s, 1.15s; }
+@keyframes tn-trazo { to { stroke-dashoffset: 0; } }
+@keyframes tn-relleno { to { fill-opacity: 1; } }
+@keyframes tn-latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+.tn-latido { animation: tn-latido 1.6s ease-in-out 1.4s infinite; }
+
+/* Indicador que se desliza bajo la pestaña o el segmento activo. */
+.desliza { transition-duration: var(--dur-3); transition-timing-function: var(--ease-spring); }
+
+/* Deslizar para actualizar: el rayo baja, gira y se carga de dorado. */
+.jalar { transition: transform var(--dur-2) var(--ease-out), opacity var(--dur-2) ease; }
+.jalar-listo svg { color: rgb(var(--chispa-600)); }
+@keyframes rayo-gira { to { transform: rotate(360deg); } }
+.jalar-cargando svg { animation: rayo-gira 0.8s linear infinite; color: rgb(var(--chispa-600)); }
+
+/* Chispa dorada que sale del sello de "Entregado". */
+.chispa-burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.chispa-burst i {
+  position: absolute; left: -2px; top: -9px; width: 4px; height: 18px; border-radius: 4px;
+  background: linear-gradient(rgb(var(--chispa)), rgb(var(--rojo)));
+  transform: rotate(var(--a)) translateY(0); opacity: 0;
+  animation: chispa-sale 0.7s var(--ease-out) 0.3s both;
+}
+@keyframes chispa-sale {
+  0% { opacity: 1; transform: rotate(var(--a)) translateY(-10px) scaleY(0.4); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(-70px) scaleY(1); }
+}
+
+/* Tablas compactas para docentes y dirección (Ajustes → Tablas compactas). */
+html.denso table th, html.denso table td { padding-top: 0.3rem; padding-bottom: 0.3rem; }
+html.denso table { font-size: 0.875rem; }
+/* En pantallas táctiles el "jalar para recargar" del navegador se reemplaza por el del campus. */
+@media (pointer: coarse) { html, body { overscroll-behavior-y: none; } }
+/* Sobre el azul de la formación, el sol y la luna van atenuados. */
+.greeting-hero .greeting-orb { opacity: 0.45; }
+/* La libreta conserva el escudo y la franja a color al imprimir. */
+.report-card, .report-card * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+/* Tablas de notas y del panel: encabezado con la franja roja y dorada del buzo arriba. */
+.tabla-colegio thead tr:first-child th {
+  border-top: 6px solid;
+  border-image: linear-gradient(180deg, rgb(var(--rojo)) 0 50%, rgb(var(--chispa)) 50%) 1;
+}
+.tabla-colegio thead th { background-color: rgb(var(--papel)); }
+.tabla-colegio tbody tr { transition: background-color var(--dur-1) ease; }
+.tabla-colegio tbody tr:hover { background-color: rgb(var(--chispa-100) / 0.45); }

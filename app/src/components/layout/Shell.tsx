@@ -1,20 +1,22 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
+import { Bell, KeyRound, LogOut, Monitor, Moon, MoreHorizontal, RefreshCw, Search, Settings, ShieldCheck, Sun, X } from 'lucide-react'
+import { Escudo } from '@/components/brand'
 import {
-  AlertTriangle, BarChart3, Bell, BookOpen, CalendarClock, ClipboardCheck, FileCheck, Gift, Library, ListTodo, MessagesSquare, Settings, ShieldCheck, Trophy,
-  CalendarCheck, CalendarDays, CalendarRange, ClipboardList, Clock, FileSignature, FileText, Home, KeyRound,
-  LayoutGrid, LogOut, Megaphone, MessageCircle, Monitor, Moon, MoreHorizontal, RefreshCw, Search, Sun, Table2, Users, X,
-} from 'lucide-react'
+  IcoAgenda, IcoAlertas, IcoAulas, IcoBimestres, IcoCampana, IcoCarnet, IcoCircular, IcoCitas, IcoConsolidado, IcoCuaderno, IcoEncuestas, IcoEscudo,
+  IcoGrupos, IcoJustificacion, IcoLibreta, IcoMegafono, IcoMensajes, IcoNotas, IcoPanel, IcoPlanificador, IcoRayo, IcoRecursos, IcoTareas, IcoTienda,
+} from '@/components/icons'
 import type { ComponentType } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Loading, useSwipeDown } from '@/components/ui'
 import { useTheme } from '@/lib/theme'
-import { isUpdateAvailable, startBackgroundSync, useUpdateAvailable } from '@/lib/sync'
+import { isUpdateAvailable, refreshNow, startBackgroundSync, useUpdateAvailable } from '@/lib/sync'
+import { usePullRefresh } from '@/lib/usePullRefresh'
 import { cn } from '@/lib/utils'
 import { studentName } from '@/services/campus'
 import { ROLE_LABELS, type Role } from '@/types'
 import { InstallBanner, OfflineBanner, ShortcutsHelp } from '@/components/ux'
-import { installErrorReporting, trackPage } from '@/lib/ux'
+import { applyReadingPrefs, installErrorReporting, trackPage } from '@/lib/ux'
 import { useAsync } from '@/lib/useAsync'
 import { publishDueContent } from '@/services/aprendizaje'
 import { myPermissions, type CampusPermission } from '@/services/gestion'
@@ -23,38 +25,39 @@ import { myPermissions, type CampusPermission } from '@/services/gestion'
 const CommandPalette = lazy(() => import('@/components/CommandPalette').then((m) => ({ default: m.CommandPalette })))
 const Onboarding = lazy(() => import('@/components/Onboarding').then((m) => ({ default: m.Onboarding })))
 const TeslaCelebration = lazy(() => import('@/components/TeslaCelebration').then((m) => ({ default: m.TeslaCelebration })))
+const SidebarRank = lazy(() => import('@/components/SidebarRank').then((m) => ({ default: m.SidebarRank })))
 
 type NavItem = { to: string; label: string; icon: ComponentType<{ className?: string }> }
 
 const I = {
-  home: { to: '/', label: 'Inicio', icon: Home },
-  summary: { to: '/', label: 'Resumen', icon: Home },
-  courses: { to: '/cursos', label: 'Cursos', icon: BookOpen },
-  myCourses: { to: '/cursos', label: 'Mis cursos', icon: BookOpen },
-  tasks: { to: '/tareas', label: 'Tareas', icon: CalendarCheck },
-  grades: { to: '/notas', label: 'Notas', icon: ClipboardList },
-  consolidated: { to: '/consolidado', label: 'Consolidado', icon: Table2 },
-  reportCard: { to: '/libreta', label: 'Libreta', icon: FileText },
-  circulars: { to: '/comunicados', label: 'Comunicados', icon: FileSignature },
-  messages: { to: '/mensajes', label: 'Mensajes', icon: MessageCircle },
-  agenda: { to: '/agenda', label: 'Agenda', icon: CalendarDays },
-  schedule: { to: '/horario', label: 'Horario', icon: Clock },
-  announcements: { to: '/anuncios', label: 'Anuncios', icon: Megaphone },
-  panel: { to: '/', label: 'Panel', icon: BarChart3 },
-  adminCourses: { to: '/admin/cursos', label: 'Cursos por aula', icon: LayoutGrid },
-  accounts: { to: '/admin/cuentas', label: 'Cuentas', icon: Users },
-  periods: { to: '/admin/bimestres', label: 'Bimestres', icon: CalendarRange },
-  tesla: { to: '/perfil-tesla', label: 'Perfil Tesla', icon: Trophy },
-  store: { to: '/tienda', label: 'Tienda', icon: Gift },
-  teslaClass: { to: '/tesla/aula', label: 'Perfil Tesla', icon: Trophy },
-  rewards: { to: '/admin/recompensas', label: 'Recompensas', icon: Gift },
-  planner: { to: '/planificador', label: 'Planificador', icon: ListTodo },
-  alerts: { to: '/alertas', label: 'Alertas', icon: AlertTriangle },
-  appointments: { to: '/citas', label: 'Citas', icon: CalendarClock },
-  justifications: { to: '/justificaciones', label: 'Justificaciones', icon: FileCheck },
-  channels: { to: '/grupos', label: 'Grupos', icon: MessagesSquare },
-  surveys: { to: '/encuestas', label: 'Encuestas', icon: ClipboardCheck },
-  resources: { to: '/recursos', label: 'Recursos', icon: Library },
+  home: { to: '/', label: 'Inicio', icon: IcoEscudo },
+  summary: { to: '/', label: 'Resumen', icon: IcoEscudo },
+  courses: { to: '/cursos', label: 'Cursos', icon: IcoCuaderno },
+  myCourses: { to: '/cursos', label: 'Mis cursos', icon: IcoCuaderno },
+  tasks: { to: '/tareas', label: 'Tareas', icon: IcoTareas },
+  grades: { to: '/notas', label: 'Notas', icon: IcoNotas },
+  consolidated: { to: '/consolidado', label: 'Consolidado', icon: IcoConsolidado },
+  reportCard: { to: '/libreta', label: 'Libreta', icon: IcoLibreta },
+  circulars: { to: '/comunicados', label: 'Comunicados', icon: IcoCircular },
+  messages: { to: '/mensajes', label: 'Mensajes', icon: IcoMensajes },
+  agenda: { to: '/agenda', label: 'Agenda', icon: IcoAgenda },
+  schedule: { to: '/horario', label: 'Horario', icon: IcoCampana },
+  announcements: { to: '/anuncios', label: 'Anuncios', icon: IcoMegafono },
+  panel: { to: '/', label: 'Panel', icon: IcoPanel },
+  adminCourses: { to: '/admin/cursos', label: 'Cursos por aula', icon: IcoAulas },
+  accounts: { to: '/admin/cuentas', label: 'Cuentas', icon: IcoCarnet },
+  periods: { to: '/admin/bimestres', label: 'Bimestres', icon: IcoBimestres },
+  tesla: { to: '/perfil-tesla', label: 'Perfil Tesla', icon: IcoRayo },
+  store: { to: '/tienda', label: 'Tienda', icon: IcoTienda },
+  teslaClass: { to: '/tesla/aula', label: 'Perfil Tesla', icon: IcoRayo },
+  rewards: { to: '/admin/recompensas', label: 'Recompensas', icon: IcoTienda },
+  planner: { to: '/planificador', label: 'Planificador', icon: IcoPlanificador },
+  alerts: { to: '/alertas', label: 'Alertas', icon: IcoAlertas },
+  appointments: { to: '/citas', label: 'Citas', icon: IcoCitas },
+  justifications: { to: '/justificaciones', label: 'Justificaciones', icon: IcoJustificacion },
+  channels: { to: '/grupos', label: 'Grupos', icon: IcoGrupos },
+  surveys: { to: '/encuestas', label: 'Encuestas', icon: IcoEncuestas },
+  resources: { to: '/recursos', label: 'Recursos', icon: IcoRecursos },
   system: { to: '/admin/sistema', label: 'Sistema', icon: ShieldCheck },
   settings: { to: '/ajustes', label: 'Ajustes', icon: Settings },
 } satisfies Record<string, NavItem>
@@ -132,7 +135,8 @@ function ThemeButton({ className, withLabel }: { className?: string; withLabel?:
 }
 
 export function Shell() {
-  const { profile, signOut, children, tutorClassrooms, setActiveChildId, selfStudent } = useAuth()
+  const { profile, signOut, children, tutorClassrooms, setActiveChildId, selfStudent, activeChild } = useAuth()
+  const pull = usePullRefresh(refreshNow)
   const [params] = useSearchParams()
   const location = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
@@ -146,6 +150,13 @@ export function Shell() {
   // Sincronización en segundo plano mientras la sesión está abierta.
   useEffect(() => startBackgroundSync(), [])
   useEffect(() => installErrorReporting(), [])
+  // Docentes y personal: <html data-personal> activa las tablas compactas por defecto (Ajustes).
+  const staff = !!profile && profile.role !== 'STUDENT' && profile.role !== 'GUARDIAN'
+  useEffect(() => {
+    document.documentElement.dataset.personal = staff ? '1' : '0'
+    applyReadingPrefs()
+  }, [staff])
+
   const { data: perms } = useAsync(() => (profile ? myPermissions(profile.id).catch(() => []) : Promise.resolve([])), [profile?.id], { live: false })
 
   // Cada pantalla: estadística de uso y publicación de lo programado.
@@ -187,15 +198,24 @@ export function Shell() {
   const primary = items.slice(0, 4)
   const more = items.slice(4)
   const moreActive = more.some((i) => i.to !== '/' && location.pathname.startsWith(i.to))
+  // Pestaña activa de la barra inferior: el indicador tricolor se desliza hasta ella.
+  const isOn = (to: string) => (to === '/' ? location.pathname === '/' : location.pathname === to || location.pathname.startsWith(`${to}/`))
+  const tabCount = primary.length + (more.length > 0 ? 1 : 0)
+  const tabIndex = primary.findIndex((i) => isOn(i.to))
+  const activeTab = tabIndex >= 0 ? tabIndex : moreActive ? primary.length : -1
+  const rankStudentId = profile.role === 'STUDENT' ? selfStudent?.id : profile.role === 'GUARDIAN' ? activeChild?.id : undefined
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_1fr] print:block">
       {/* Barra lateral (escritorio) */}
-      <aside className="shell-chrome sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-tinta px-4 py-6 text-white lg:flex print:hidden">
+      <aside className="shell-chrome shell-side isolate sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-tinta dark:bg-[#0c1a33] py-6 pl-4 pr-6 text-white lg:flex print:hidden">
+        {/* Franja del buzo en el borde del menú */}
+        <span className="celosia celosia-suave pointer-events-none absolute inset-0 -z-10" aria-hidden />
+        <span className="franja-v pointer-events-none absolute inset-y-0 right-0 w-[9px]" aria-hidden />
         <div className="flex items-center gap-3 px-2">
-          <img src="/images/logo-nikola-tesla.png" alt="" className="h-10 w-10 rounded-lg bg-white object-contain p-1" />
+          <Escudo className="h-12 w-11 shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]" />
           <div className="leading-tight">
-            <p className="font-display text-lg font-bold">Campus Tesla</p>
+            <p className="font-display text-lg font-extrabold uppercase tracking-wide">Campus Tesla</p>
             <p className="text-xs text-white/60">{ROLE_LABELS[profile.role]}</p>
           </div>
         </div>
@@ -225,18 +245,20 @@ export function Shell() {
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) => cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-[15px] font-bold transition-colors',
-                isActive ? 'bg-white text-[#0B1D33]' : 'text-white/75 hover:bg-white/10 hover:text-white',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-[15px] font-bold transition duration-rapido',
+                isActive ? 'bg-white text-[#102442] shadow-[inset_4px_0_0_rgb(var(--rojo))]' : 'text-white/75 hover:translate-x-0.5 hover:bg-white/10 hover:text-white',
               )}
             >
-              <item.icon className="h-[18px] w-[18px]" />
+              <item.icon className="h-5 w-5 shrink-0" />
               {item.label}
             </NavLink>
           ))}
         </nav>
 
         <div className="mt-auto border-t border-white/10 px-2 pt-4">
+          <p className="lema mb-3 text-[10px] text-chispa">Pasión por educar</p>
           <p className="truncate text-sm font-bold">{profile.full_name}</p>
+          {rankStudentId && <Suspense fallback={null}><SidebarRank studentId={rankStudentId} /></Suspense>}
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-white/70">
             <NavLink to="/notificaciones" className="inline-flex items-center gap-1.5 hover:text-white"><Bell className="h-4 w-4" />Avisos</NavLink>
             <NavLink to="/ajustes" className="inline-flex items-center gap-1.5 hover:text-white"><Settings className="h-4 w-4" />Ajustes</NavLink>
@@ -248,11 +270,12 @@ export function Shell() {
       </aside>
 
       {/* Barra superior (móvil) */}
-      <header className="shell-chrome sticky top-0 z-30 border-b border-linea bg-superficie px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden print:hidden">
+      <header className="shell-chrome sticky top-0 z-30 bg-superficie px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden print:hidden">
+        <span className="franja-h absolute inset-x-0 bottom-0 h-[4px]" aria-hidden />
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">
-            <img src="/images/logo-nikola-tesla.png" alt="" className="logo-chip h-8 w-8 rounded-md object-contain" />
-            <p className="truncate font-display text-lg font-bold text-tinta">Campus Tesla</p>
+            <Escudo className="h-9 w-8 shrink-0" />
+            <p className="truncate font-display text-lg font-extrabold uppercase tracking-wide text-tinta">Campus Tesla</p>
           </div>
           <div className="flex items-center">
             {canSearch && <button onClick={() => setSearchOpen(true)} className="rounded-md p-2.5 text-texto-suave" aria-label="Buscar"><Search className="h-5 w-5" /></button>}
@@ -262,6 +285,17 @@ export function Shell() {
         </div>
         {profile.role === 'GUARDIAN' && children.length > 1 && <div className="mt-3"><ChildSwitcher compact /></div>}
       </header>
+
+      {/* Deslizar para actualizar (celular): el rayo baja y se carga de dorado */}
+      {pull.state !== 'idle' && (
+        <div className={cn('jalar pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center lg:hidden', pull.state === 'ready' && 'jalar-listo', pull.state === 'refreshing' && 'jalar-cargando')} style={{ transform: `translateY(${pull.dy}px)`, opacity: Math.min(1, pull.dy / 40) }} aria-hidden>
+          <span className="mt-1 flex h-10 w-10 items-center justify-center rounded-full border border-linea bg-superficie text-texto-suave shadow-md"><IcoRayo className={cn('h-5 w-5', pull.state !== 'pulling' && 'ti-on')} /></span>
+        </div>
+      )}
+      {pull.state === 'refreshing' && <span className="sr-only" role="status">Actualizando…</span>}
+
+      {/* Barra tricolor al cambiar de pantalla */}
+      <span key={`ruta${location.pathname}`} className="franja-h ruta-carga pointer-events-none fixed inset-x-0 top-0 z-50 h-[3px] print:hidden" aria-hidden />
 
       <main className="min-w-0 px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-12 lg:pt-10 print:p-0">
         <InstallBanner />
@@ -282,16 +316,19 @@ export function Shell() {
 
       {/* Navegación inferior (móvil) */}
       <nav className="shell-chrome fixed inset-x-0 bottom-0 z-30 flex border-t border-linea bg-superficie pb-[env(safe-area-inset-bottom)] lg:hidden print:hidden" aria-label="Principal">
+        {activeTab >= 0 && (
+          <span className="franja-h tab-on pointer-events-none absolute top-0 h-[5px] w-9 rounded-b-sm" style={{ left: `calc(${((activeTab + 0.5) / tabCount) * 100}% - 1.125rem)`, transition: 'left var(--dur-3) var(--ease-spring)' }} aria-hidden />
+        )}
         {primary.map((item) => (
           <NavLink
             key={item.to + item.label}
             to={item.to}
             end={item.to === '/'}
-            className={({ isActive }) => cn('flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-bold', isActive ? 'text-tinta' : 'text-texto-suave')}
+            className={({ isActive }) => cn('relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-bold', isActive ? 'text-tinta' : 'text-texto-suave')}
           >
             {({ isActive }) => (
               <>
-                <span className={cn('rounded-full px-4 py-1 transition-colors', isActive && 'bg-chispa-100')}><item.icon className="h-5 w-5" /></span>
+                <span className={cn('rounded-full px-4 py-1 transition duration-medio', isActive && 'bg-chispa-100')}><item.icon className="h-5 w-5" /></span>
                 {item.label}
               </>
             )}
@@ -300,7 +337,7 @@ export function Shell() {
         {more.length > 0 && (
           <button
             onClick={() => setMoreOpen(true)}
-            className={cn('flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-bold', moreActive ? 'text-tinta' : 'text-texto-suave')}
+            className={cn('relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-bold', moreActive ? 'text-tinta' : 'text-texto-suave')}
             aria-haspopup="dialog"
           >
             <span className={cn('rounded-full px-4 py-1', moreActive && 'bg-chispa-100')}><MoreHorizontal className="h-5 w-5" /></span>

@@ -53,14 +53,14 @@ export function RarityBadge({ rarity, className }: { rarity: Rarity; className?:
 // Medalla de logro
 // ---------------------------------------------------------------------------
 export function Medal({ icon, rarity, locked, size = 56, secret }: { icon: string; rarity: Rarity; locked?: boolean; size?: number; secret?: boolean }) {
+  // Forma de escudo, como el del colegio; el brillo del platino va por fuera del recorte.
   return (
-    <span
-      className={cn('medal relative inline-flex shrink-0 items-center justify-center rounded-full', locked ? 'medal-locked' : `medal-${rarity}`)}
-      style={{ width: size, height: size }}
-    >
-      <span className="flex items-center justify-center rounded-full bg-black/15" style={{ width: size - 10, height: size - 10 }}>
-        {secret ? <Lock className="h-1/2 w-1/2 text-white/90" /> : <TeslaIcon name={icon} className="h-1/2 w-1/2 text-white drop-shadow" />}
-      </span>
+    <span className={cn('medal relative inline-flex shrink-0 items-center justify-center', !locked && `medal-wrap-${rarity}`)} style={{ width: size, height: size }}>
+      <span className={cn('forma-escudo absolute inset-0', locked ? 'medal-locked' : `medal-${rarity}`)} aria-hidden />
+      <span className="forma-escudo absolute bg-black/15" style={{ inset: Math.max(3, Math.round(size / 11)) }} aria-hidden />
+      {secret
+        ? <Lock className="relative h-[46%] w-[46%] -translate-y-[4%] text-white/90" />
+        : <TeslaIcon name={icon} className="relative h-[46%] w-[46%] -translate-y-[4%] text-white drop-shadow" />}
     </span>
   )
 }
@@ -326,7 +326,7 @@ export function isAnimatedArt(value: string | null | undefined) {
 }
 
 /** Dibuja un banner o fondo ocupando todo su contenedor (que debe ser `relative`). */
-export function ArtLayer({ value, still, className }: { value?: string | null; still?: boolean; className?: string }) {
+export function ArtLayer({ value, still, className, colegio }: { value?: string | null; still?: boolean; className?: string; colegio?: boolean }) {
   const art = parseArt(value)
   return (
     <div className={cn('absolute inset-0 overflow-hidden', still && 'art-still', className)} aria-hidden>
@@ -338,7 +338,15 @@ export function ArtLayer({ value, still, className }: { value?: string | null; s
       )}
       {art.type === 'scene' && <Scene name={art.key} />}
       {(art.type === 'img' || art.type === 'vid') && <MediaArt type={art.type} path={art.path} still={still} />}
-      {art.type === 'none' && <div className="absolute inset-0 bg-papel" />}
+      {art.type === 'none' && !colegio && <div className="absolute inset-0 bg-papel" />}
+      {/* Sin banner elegido: el patio del colegio (azul, vigas rojas y la franja del buzo). */}
+      {art.type === 'none' && colegio && (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1d3f73] via-[#102442] to-[#0c1a33]">
+          <div className="celosia absolute inset-x-0 top-0 h-full opacity-80 [mask-image:linear-gradient(black,transparent_85%)]" />
+          <div className="tesla-sparks absolute inset-0" />
+          <div className="franja-h absolute inset-x-0 top-0 h-[6px]" />
+        </div>
+      )}
     </div>
   )
 }
@@ -534,7 +542,7 @@ export function ProfileHero({ profile, preview, actions, glass }: { profile: Tes
   return (
     <section className={cn('tp-card tp-rise relative overflow-hidden rounded-2xl border border-linea', glass ? 'bg-superficie/85 shadow-2xl backdrop-blur-md' : 'bg-superficie shadow-sm')}>
       <div className="relative h-36 sm:h-56">
-        <ArtLayer value={preview?.banner ?? profile.banner?.value} />
+        <ArtLayer value={preview?.banner ?? profile.banner?.value} colegio />
         <div className="absolute inset-x-0 bottom-0 h-2/3" style={{ background: 'linear-gradient(180deg, transparent, rgb(var(--superficie) / 0.92))' }} aria-hidden />
         {actions && <div className="absolute right-3 top-3 z-10 flex flex-wrap justify-end gap-2">{actions}</div>}
       </div>
@@ -633,7 +641,7 @@ export function MiniCard({ profile, preview }: { profile: TeslaProfile; preview?
           <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgb(var(--superficie) / 0.05) 0%, rgb(var(--superficie) / 0.55) 45%, rgb(var(--superficie) / 0.92) 100%)' }} aria-hidden />
         </>
       )}
-      <div className="relative h-20">{!hasBg && <ArtLayer value={preview?.banner ?? profile.banner?.value} />}</div>
+      <div className="relative h-20">{!hasBg && <ArtLayer value={preview?.banner ?? profile.banner?.value} colegio />}</div>
       <div className="relative -mt-9 px-4 pb-4">
         <div className="flex items-end gap-3">
           <TeslaAvatar emoji={preview?.avatar ?? profile.avatar?.value} frame={preview?.frame ?? profile.frame?.value} aura={preview?.aura ?? profile.aura?.value} size={64} className="shadow-lg" />
@@ -713,7 +721,7 @@ export function TeslaSummaryCard({ studentId, forFamily }: { studentId: number; 
   const rank = rankOf(data.level, data.pin_levels)
   return (
     <section className="overflow-hidden rounded-2xl border border-linea bg-superficie">
-      <div className="relative h-12"><ArtLayer value={data.banner?.value} /></div>
+      <div className="relative h-12"><ArtLayer value={data.banner?.value} colegio /></div>
       <div className="p-4">
         <div className="flex items-center gap-3">
           <TeslaAvatar emoji={data.avatar?.value} frame={data.frame?.value} aura={data.aura?.value} size={52} />

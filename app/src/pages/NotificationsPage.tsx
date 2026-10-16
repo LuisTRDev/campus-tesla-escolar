@@ -109,15 +109,19 @@ export default function NotificationsPage() {
 /** Tarjeta para el inicio: invita a activar las notificaciones una sola vez. */
 export function PushPrompt() {
   const { status } = usePushStatus()
+  const formal = useAuth().profile?.role === 'GUARDIAN'
   const [hidden, setHidden] = useState(() => {
     try { return localStorage.getItem(DISMISS_KEY) === '1' } catch { return false }
   })
   if (hidden || !status || !['off', 'needs-install'].includes(status)) return null
   return (
-    <div className="mb-6 flex items-start gap-3 rounded-xl bg-tinta px-5 py-4 text-white">
+    <div className="relative mb-6 flex items-start gap-3 overflow-hidden rounded-xl bg-tinta px-5 py-4 text-white">
+      <span className="franja-v absolute inset-y-0 left-0 w-[6px]" aria-hidden />
       <BellRing className="mt-0.5 h-5 w-5 shrink-0 text-chispa" />
       <div className="flex-1 text-sm">
-        <p className="font-bold">{status === 'needs-install' ? 'Instala el campus para recibir avisos' : 'Recibe los avisos del colegio en tu celular'}</p>
+        <p className="font-bold">{status === 'needs-install'
+          ? (formal ? 'Instale el campus para recibir avisos' : 'Instala el campus para recibir avisos')
+          : (formal ? 'Reciba los avisos del colegio en su celular' : 'Recibe los avisos del colegio en tu celular')}</p>
         <p className="text-white/75">Tardanzas, comunicados, notas y mensajes al instante.</p>
         <Link to="/notificaciones" className="mt-2 inline-block font-bold text-chispa underline">{status === 'needs-install' ? 'Ver cómo' : 'Activar'}</Link>
       </div>

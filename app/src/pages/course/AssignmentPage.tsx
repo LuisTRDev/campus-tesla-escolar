@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Lock, Paperclip, Send, Trash2, Undo2, Unlock } from 'lucide-react'
 import { useAuth, useFocusStudent } from '@/auth/AuthProvider'
@@ -43,13 +43,15 @@ function SubmittedStamp({ at, late, animate }: { at: string; late: boolean; anim
     <div className="pointer-events-none absolute right-4 top-[4.25rem] z-10 sm:right-6" aria-hidden>
       <div className="relative">
         {animate && <span className="stamp-ink absolute inset-0 rounded-xl bg-estado-ok/40 blur-md" />}
+        {/* Chispas del colegio que saltan al estampar */}
+        {animate && <span className="chispa-burst">{Array.from({ length: 10 }, (_, i) => <i key={i} style={{ '--a': `${i * 36 + 8}deg` } as CSSProperties} />)}</span>}
         <div className={cn(
-          'relative -rotate-[14deg] rounded-xl border-[3px] border-double px-3 py-1.5 text-center font-display uppercase',
+          'relative -rotate-[14deg] rounded-xl border-[3px] border-double px-3 py-1.5 text-center font-slab uppercase',
           late ? 'border-estado-tarde text-estado-tarde' : 'border-estado-ok text-estado-ok',
           'bg-superficie/80',
           animate && 'stamp-in',
         )}>
-          <p className="text-lg font-bold leading-none tracking-[0.12em]">{late ? 'Entregado tarde' : 'Entregado'}</p>
+          <p className="text-lg font-extrabold leading-none tracking-[0.12em]">{late ? 'Entregado tarde' : 'Entregado'}</p>
           <p className="mt-0.5 text-[11px] font-bold normal-case tracking-normal opacity-90">{day} · {formatTime(at)}</p>
         </div>
       </div>
@@ -157,7 +159,7 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
       setStampedAt(Date.now())
       clearDraft()
       haptic('success')
-      toast(data ? 'Entrega actualizada.' : 'Tarea entregada.')
+      toast(data ? 'Entrega actualizada.' : '¡Tarea entregada! Eso es disciplina.')
       void reload(true)
     } catch (err) {
       toast(toMessage(err), 'error')
@@ -224,7 +226,7 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
             </div>
             <p className="text-xs text-texto-suave">Para cuidar la originalidad, tu docente puede ver si el texto se escribió o se pegó y si se parece a otras entregas.</p>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => void onSubmit()} loading={busy} className={cn('min-h-12 px-6 text-base', busy && 'progress-fill')}><Send className="h-4 w-4" />{data ? 'Actualizar entrega' : 'Entregar tarea'}</Button>
+              <Button variant="accion" onClick={() => void onSubmit()} loading={busy} className={cn('min-h-12 px-6 text-base', busy && 'progress-fill')}><Send className="h-4 w-4" />{data ? 'Actualizar entrega' : 'Entregar tarea'}</Button>
               {data && data.status !== 'RETURNED' && <Button variant="ghost" onClick={() => setEditing(false)}>Cancelar</Button>}
             </div>
           </div>

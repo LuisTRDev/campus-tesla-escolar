@@ -3,26 +3,30 @@
  * Hechas con la identidad del colegio: cuadernos forrados, la bobina de Tesla
  * y el dorado "chispa". Usan currentColor y variables, así funcionan en modo oscuro.
  */
-export type ArtName = 'notebook' | 'tasks' | 'mail' | 'chat' | 'calendar' | 'grades' | 'bell' | 'coil' | 'search'
+export type ArtName = 'notebook' | 'tasks' | 'mail' | 'chat' | 'calendar' | 'grades' | 'bell' | 'coil' | 'search' | 'patio' | 'sinred'
 
 const ink = 'rgb(var(--tinta-ink))'
 const soft = 'rgb(var(--texto-suave) / 0.35)'
 const paper = 'rgb(var(--superficie))'
 const line = 'rgb(var(--linea))'
-const gold = '#F0B429'
+const gold = '#F2B51C'
+// Colores del escudo (fijos en claro y oscuro)
+const rojo = '#D63620'
+const azul = '#1F3A5F'
+const navy = '#102442'
 
 function Notebook() {
   return (
     <>
-      <rect x="44" y="18" width="62" height="80" rx="6" fill="#2563EB" transform="rotate(8 75 58)" />
-      <rect x="30" y="22" width="62" height="80" rx="6" fill="#DC2626" transform="rotate(-6 61 62)" />
+      <rect x="44" y="18" width="62" height="80" rx="6" fill={azul} transform="rotate(8 75 58)" />
+      <rect x="30" y="22" width="62" height="80" rx="6" fill={rojo} transform="rotate(-6 61 62)" />
       <g transform="rotate(-6 61 62)">
         <rect x="30" y="22" width="12" height="80" rx="3" fill="rgba(0,0,0,.18)" />
         <rect x="50" y="40" width="34" height="14" rx="3" fill={paper} />
         <rect x="54" y="45" width="22" height="3" rx="1.5" fill={soft} />
       </g>
       <circle cx="104" cy="92" r="11" fill={gold} />
-      <path d="M99 92l3.5 3.5L109 88" stroke="#0B1D33" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M99 92l3.5 3.5L109 88" stroke={navy} strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
     </>
   )
 }
@@ -35,7 +39,7 @@ function Tasks() {
       {[36, 56, 76].map((y, i) => (
         <g key={y}>
           <rect x="42" y={y} width="12" height="12" rx="3" fill={i < 2 ? gold : 'none'} stroke={i < 2 ? gold : soft} strokeWidth="2" />
-          {i < 2 && <path d={`M45 ${y + 6}l2.5 2.5L52 ${y + 3.5}`} stroke="#0B1D33" strokeWidth="2" fill="none" strokeLinecap="round" />}
+          {i < 2 && <path d={`M45 ${y + 6}l2.5 2.5L52 ${y + 3.5}`} stroke={navy} strokeWidth="2" fill="none" strokeLinecap="round" />}
           <rect x="60" y={y + 3} width={i === 2 ? 22 : 32} height="5" rx="2.5" fill={soft} />
         </g>
       ))}
@@ -49,7 +53,7 @@ function Mail() {
       <rect x="20" y="34" width="88" height="60" rx="8" fill={paper} stroke={line} strokeWidth="2" />
       <path d="M22 38l42 30 42-30" stroke={ink} strokeWidth="3" fill="none" strokeLinejoin="round" />
       <circle cx="100" cy="34" r="12" fill={gold} />
-      <path d="M95 34h10M100 29v10" stroke="#0B1D33" strokeWidth="2.6" strokeLinecap="round" />
+      <path d="M95 34h10M100 29v10" stroke={navy} strokeWidth="2.6" strokeLinecap="round" />
     </>
   )
 }
@@ -130,7 +134,40 @@ function Search() {
   )
 }
 
-const ART = { notebook: Notebook, tasks: Tasks, mail: Mail, chat: Chat, calendar: Calendar, grades: Grades, bell: Bell, coil: Coil, search: Search }
+/** El patio techado del colegio: vigas rojas en celosía, columnas, el banner y el círculo de la cancha. */
+function Patio({ offline }: { offline?: boolean }) {
+  const up = (x: number) => { const t = (x - 10) / 108; return 44 - 60 * t * (1 - t) }
+  const low = (x: number) => { const t = (x - 10) / 108; return 50 - 52 * t * (1 - t) }
+  const zig = Array.from({ length: 12 }, (_, i) => { const x = 12 + i * 9.4; return `${x},${i % 2 ? low(x) : up(x)}` }).join(' ')
+  return (
+    <>
+      <path d="M10 44Q64 14 118 44L118 50Q64 24 10 50Z" fill={line} />
+      <path d="M10 44Q64 14 118 44" stroke={rojo} strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M10 50Q64 24 118 50" stroke={rojo} strokeWidth="2.4" fill="none" strokeLinecap="round" />
+      <polyline points={zig} stroke={rojo} strokeWidth="1.6" fill="none" strokeLinejoin="round" />
+      {[16, 44, 84, 112].map((x) => <rect key={x} x={x - 1.8} y={low(x)} width="3.6" height={100 - low(x)} rx="1" fill={rojo} />)}
+      <rect x="34" y="64" width="60" height="13" rx="2" fill={navy} />
+      <rect x="37" y="67" width="7" height="7" rx="1.5" fill={gold} />
+      <rect x="48" y="68" width="36" height="2.4" rx="1.2" fill="#fff" />
+      <rect x="48" y="72" width="22" height="1.8" rx="0.9" fill={gold} />
+      <path d="M8 100H120" stroke={ink} strokeOpacity=".25" strokeWidth="2" />
+      <ellipse cx="64" cy="106" rx="26" ry="5" stroke={ink} strokeOpacity=".35" strokeWidth="2" />
+      {offline && (
+        <g>
+          <circle cx="102" cy="26" r="13" fill={paper} stroke={ink} strokeWidth="2.5" />
+          <path d="M95 25a10 10 0 0 1 14 0M98 28.5a5 5 0 0 1 8 0" stroke={ink} strokeWidth="2.2" fill="none" strokeLinecap="round" />
+          <circle cx="102" cy="32" r="1.6" fill={ink} />
+          <path d="M94 18l16 16" stroke={rojo} strokeWidth="2.6" strokeLinecap="round" />
+        </g>
+      )}
+    </>
+  )
+}
+
+const ART = {
+  notebook: Notebook, tasks: Tasks, mail: Mail, chat: Chat, calendar: Calendar, grades: Grades, bell: Bell, coil: Coil, search: Search,
+  patio: () => <Patio />, sinred: () => <Patio offline />,
+}
 
 export function Illustration({ name, className }: { name: ArtName; className?: string }) {
   const Art = ART[name] ?? Coil

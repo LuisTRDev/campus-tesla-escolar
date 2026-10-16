@@ -294,7 +294,7 @@ export function QuizTake({ assignment, studentId }: { assignment: AssignmentWith
             <span className="text-sm text-texto-suave">{sequential ? `${step + 1} de ${total}` : `${done} de ${total} respondidas`}</span>
             {!isLast
               ? <Button onClick={() => void next()} loading={busy} className="min-h-12 px-5">Siguiente<ChevronRight className="h-5 w-5" /></Button>
-              : <Button onClick={() => setConfirmSend(true)} loading={busy} className="min-h-12 px-5"><Send className="h-4 w-4" />Enviar</Button>}
+              : <Button variant="accion" onClick={() => setConfirmSend(true)} loading={busy} className="min-h-12 px-5"><Send className="h-4 w-4" />Enviar</Button>}
           </div>
           {pendingFinish && <p className="mx-auto mt-2 max-w-2xl text-center text-xs font-bold text-estado-tarde">Esperando conexión para enviar tus respuestas…</p>}
         </footer>
@@ -311,7 +311,7 @@ export function QuizTake({ assignment, studentId }: { assignment: AssignmentWith
           <p className="text-texto-suave">{done < total ? `Te faltan ${total - done} pregunta${total - done === 1 ? '' : 's'} por responder. ` : ''}Después de enviar ya no podrás cambiarlas.</p>
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setConfirmSend(false)}>Seguir revisando</Button>
-            <Button onClick={() => void finish()} loading={busy}><Send className="h-4 w-4" />Enviar</Button>
+            <Button variant="accion" onClick={() => void finish()} loading={busy}><Send className="h-4 w-4" />Enviar</Button>
           </div>
         </Modal>
 

@@ -1,18 +1,19 @@
 import { cn } from '@/lib/utils'
 import type { Level } from '@/types'
 
+// Cada nivel es un sello de tinta (doble aro); AD va relleno, como un sello de excelencia.
 export const LEVEL_STYLES: Record<Level, string> = {
-  AD: 'bg-estado-ok text-white',
-  A: 'bg-estado-ok/15 text-estado-ok',
-  B: 'bg-estado-tarde/15 text-estado-tarde',
-  C: 'bg-estado-alerta/15 text-estado-alerta',
+  AD: 'sello-lleno bg-estado-ok text-white',
+  A: 'sello bg-estado-ok/10 text-estado-ok',
+  B: 'sello bg-estado-tarde/10 text-estado-tarde',
+  C: 'sello bg-estado-alerta/10 text-estado-alerta',
 }
 
 /** Nivel de logro como chip de color (vacío = guion). */
 export function LevelChip({ level, className }: { level: Level | null | undefined; className?: string }) {
   if (!level) return <span className={cn('inline-flex h-7 min-w-9 items-center justify-center rounded-md text-sm text-texto-suave/60', className)}>–</span>
   return (
-    <span className={cn('inline-flex h-7 min-w-9 items-center justify-center rounded-md px-1.5 font-display text-sm font-bold', LEVEL_STYLES[level], className)}>
+    <span className={cn('inline-flex h-7 min-w-9 items-center justify-center rounded-md px-1.5 font-slab text-sm font-extrabold tracking-wide', LEVEL_STYLES[level], className)}>
       {level}
     </span>
   )
@@ -32,7 +33,7 @@ export function LevelPicker({ value, onChange, disabled }: { value: Level | null
           disabled={disabled}
           onClick={() => onChange(value === l ? null : l)}
           className={cn(
-            'h-9 min-w-10 rounded-md border font-display text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+            'h-9 min-w-10 rounded-md border font-slab text-sm font-extrabold transition duration-rapido active:scale-95 disabled:cursor-not-allowed disabled:opacity-60',
             value === l ? cn(LEVEL_STYLES[l], 'border-transparent') : 'border-linea bg-superficie text-texto-suave hover:border-tinta-500',
           )}
         >

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
 import { CheckCircle2, AlertCircle } from 'lucide-react'
 import { haptic } from '@/lib/ux'
+import { cn } from '@/lib/utils'
 
 type ToastAction = { label: string; onClick: () => void }
 type Toast = { id: number; text: string; tone: 'ok' | 'error'; action?: ToastAction }
@@ -22,8 +23,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-[70] flex flex-col items-center gap-2 px-4 lg:bottom-6">
         {toasts.map((t) => (
-          <div key={t.id} role="status" className="toast-in pointer-events-auto flex max-w-md items-start gap-2 rounded-xl bg-tinta px-4 py-3 text-sm text-white shadow-lg">
-            {t.tone === 'ok' ? <CheckCircle2 className="check-pop mt-0.5 h-4 w-4 shrink-0 text-chispa" /> : <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />}
+          <div key={t.id} role="status" className="toast-in pointer-events-auto relative flex max-w-md items-start gap-2 overflow-hidden rounded-xl bg-[#102442] py-3 pl-5 pr-4 text-sm text-white shadow-lg">
+            <span className={cn('absolute inset-y-0 left-0 w-[5px]', t.tone === 'ok' ? 'franja-v' : 'bg-[#ff7f9f]')} aria-hidden />
+            {t.tone === 'ok' ? <CheckCircle2 className="check-pop mt-0.5 h-4 w-4 shrink-0 text-chispa" /> : <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#ff9fb6]" />}
             <span className="flex-1">{t.text}</span>
             {t.action && (
               <button

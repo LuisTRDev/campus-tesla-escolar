@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui'
 import { LevelBadge, PIN_TEXT, RankPin, badgeStyleOf } from '@/components/tesla'
+import { Cinta } from '@/components/brand'
 import { playSound } from '@/lib/teslaSound'
 import { useAsync } from '@/lib/useAsync'
 import { cn } from '@/lib/utils'
@@ -31,7 +32,8 @@ function writeCelebrated(studentId: number, level: number) {
   }
 }
 
-const CONFETTI_COLORS = ['#f0b429', '#ffd36b', '#60a5fa', '#f472b6', '#34d399', '#a78bfa', '#fb923c']
+// Los colores del escudo y del buzo: dorado, rojo, azul y blanco.
+const CONFETTI_COLORS = ['#F2B51C', '#D63620', '#ffffff', '#ffd86b', '#5b8fd6', '#F2B51C', '#D63620']
 
 export function TeslaCelebration({ studentId }: { studentId: number }) {
   const navigate = useNavigate()
@@ -79,9 +81,9 @@ export function TeslaCelebration({ studentId }: { studentId: number }) {
           </div>
         </div>
         <div className="celebrate-text mt-6">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-chispa">
+          <Cinta tone="oro" className="text-base">
             {newStar ? '¡Nueva Estrella Tesla!' : newBadge ? `¡Nueva insignia: ${badgeStyleOf(show.to).name}!` : '¡Subiste de nivel!'}
-          </p>
+          </Cinta>
           <h2 id="celebrate-title" className="mt-1 font-display text-4xl font-bold leading-tight">
             {newStar ? now.name : `Nivel ${show.to}`}
           </h2>

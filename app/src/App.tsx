@@ -1,8 +1,10 @@
 import { Suspense, type ReactNode } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { Shell } from '@/components/layout/Shell'
-import { Empty, Loading } from '@/components/ui'
+import { Loading } from '@/components/ui'
+import { CargaTesla, Escudo } from '@/components/brand'
+import { Illustration } from '@/components/illustrations'
 import { lazyPage, usePrefetch } from '@/lib/perf'
 import Login from '@/pages/Login'
 import ChangePassword from '@/pages/ChangePassword'
@@ -57,7 +59,15 @@ function Home() {
 }
 
 function NotFound() {
-  return <Empty title="Esta página no existe" art="search">Vuelve al inicio desde el menú.</Empty>
+  return (
+    <div className="mx-auto flex max-w-md flex-col items-center py-10 text-center">
+      <Illustration name="patio" className="h-40 w-40" />
+      <p className="lema mt-2 text-xs text-rojo">Error 404</p>
+      <h1 className="mt-1 font-display text-3xl font-bold">Esta página no está en el campus</h1>
+      <p className="mt-2 text-texto-suave">Puede que el enlace esté incompleto o que la sección ya no exista. Vuelve al patio y sigue desde ahí.</p>
+      <Link to="/" className="btn-parche mt-6 inline-flex min-h-11 items-center rounded-lg bg-tinta px-5 font-bold text-white">Volver al inicio</Link>
+    </div>
+  )
 }
 
 export default function App() {
@@ -74,7 +84,7 @@ export default function App() {
   )
 
   if (loading) {
-    return <div className="flex min-h-dvh items-center justify-center"><Loading label="Abriendo el campus…" /></div>
+    return <div className="flex min-h-dvh items-center justify-center bg-papel"><CargaTesla label="Abriendo el campus" /></div>
   }
 
   if (!session) return <Login />
@@ -82,6 +92,7 @@ export default function App() {
   if (!profile) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
+        <Escudo className="h-20 w-[4.4rem]" />
         <p className="max-w-md text-texto">{error || 'Tu cuenta no tiene acceso al campus.'}</p>
         <button onClick={() => void signOut()} className="font-bold text-tinta underline">Salir</button>
       </div>

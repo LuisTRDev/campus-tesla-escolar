@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Download, Keyboard, Share, WifiOff, X } from 'lucide-react'
 import { Button, Modal } from '@/components/ui'
@@ -23,8 +23,9 @@ export function OfflineBanner() {
   if (online && !back) return null
   return (
     <div role="status" className={cn('toast-in fixed inset-x-0 top-0 z-[65] flex justify-center px-4 pt-[max(0.5rem,env(safe-area-inset-top))]')}>
-      <div className={cn('flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-lg', online ? 'bg-estado-ok' : 'bg-[#334155]')}>
-        {online ? '¡Conexión recuperada!' : <><WifiOff className="h-4 w-4" />Sin conexión: verás lo último que se cargó</>}
+      <div className={cn('relative flex items-center gap-2 overflow-hidden rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-lg', online ? 'bg-estado-ok' : 'bg-tinta')}>
+        {!online && <span className="franja-h absolute inset-x-0 bottom-0 h-[3px]" aria-hidden />}
+        {online ? '¡Conexión recuperada!' : <><WifiOff className="h-4 w-4 text-chispa" />Sin conexión: verás lo último que se cargó</>}
       </div>
     </div>
   )
@@ -116,25 +117,42 @@ export function Kbd({ children }: { children: ReactNode }) {
 // ---------------------------------------------------------------------------
 // Saludo según la hora y decoración por fecha
 // ---------------------------------------------------------------------------
+// Siempre el azul del colegio; la hora se nota en el sol o la luna y en el tono del cielo.
 const GREETING_BG = {
-  morning: 'from-[#fde68a] via-[#fdba74] to-[#93c5fd]',
-  afternoon: 'from-[#60a5fa] via-[#38bdf8] to-[#fcd34d]',
-  night: 'from-[#0b1d33] via-[#1e3a8a] to-[#4c1d95]',
+  morning: 'from-[#173563] via-[#102442] to-[#102442]',
+  afternoon: 'from-[#1d3f73] via-[#132b50] to-[#102442]',
+  night: 'from-[#0a1830] via-[#0d1d3a] to-[#14203f]',
 }
 
-export function GreetingHero({ name, subtitle, children }: { name?: string | null; subtitle?: ReactNode; children?: ReactNode }) {
+export type TodayItem = { label: ReactNode; tone?: 'alerta' | 'ok' | 'aviso' }
+const TODAY_TONE = { alerta: 'bg-[#ff6b8f]/20 text-[#ffd1dc]', ok: 'bg-[#40c480]/20 text-[#c8f5dc]', aviso: 'bg-chispa/20 text-[#ffe7a8]' }
+
+/**
+ * "Formación del día": el saludo del inicio como la formación de la mañana en el patio.
+ * `today` resume lo que toca hoy (tareas que vencen, entregas por revisar…).
+ */
+export function GreetingHero({ name, subtitle, children, today }: { name?: string | null; subtitle?: ReactNode; children?: ReactNode; today?: TodayItem[] }) {
   const g = greeting()
   const season = currentSeason()
   const first = (name ?? '').trim().split(/\s+/)[0]
   const pretty = first ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() : ''
   return (
-    <section className={cn('greeting-hero relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br p-5 sm:p-6', GREETING_BG[g.period], g.period === 'night' ? 'text-white' : 'text-[#0b1d33]')}>
+    <section className={cn('greeting-hero relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br p-5 pb-6 text-white sm:p-6 sm:pb-7', GREETING_BG[g.period])}>
+      <span className="celosia pointer-events-none absolute inset-x-0 top-0 h-24 opacity-70 [mask-image:linear-gradient(black,transparent)]" aria-hidden />
       <span className={cn('greeting-orb', `greeting-${g.period}`)} aria-hidden />
       {season && <SeasonDecor season={season.key} />}
+      <span className="franja-h absolute inset-x-0 bottom-0 h-[6px]" aria-hidden />
       <div className="relative">
-        {season && <p className="mb-1 text-sm font-bold">{season.emoji} {season.label}</p>}
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">{g.text}{pretty ? `, ${pretty}` : ''}</h1>
-        {subtitle && <p className={cn('mt-1', g.period === 'night' ? 'text-white/80' : 'text-[#0b1d33]/75')}>{subtitle}</p>}
+        <p className="lema text-[11px] text-chispa">{season ? `${season.emoji} ${season.label}` : 'Formación del día'}</p>
+        <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">{g.text}{pretty ? `, ${pretty}` : ''}</h1>
+        {subtitle && <p className="mt-1 text-white/80">{subtitle}</p>}
+        {today && today.length > 0 && (
+          <ul className="mt-3 flex flex-wrap gap-2" aria-label="Para hoy">
+            {today.map((t, i) => (
+              <li key={i} className={cn('cinta-in rounded-full px-3 py-1 text-sm font-bold', t.tone ? TODAY_TONE[t.tone] : 'bg-white/10 text-white/90')} style={{ '--i': i - 3 } as CSSProperties}>{t.label}</li>
+            ))}
+          </ul>
+        )}
         {children}
       </div>
     </section>
@@ -148,7 +166,7 @@ function SeasonDecor({ season }: { season: string }) {
   if (season === 'navidad') {
     return <div className="season-snow" aria-hidden>{Array.from({ length: 18 }).map((_, i) => <span key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${-(i * 0.7) % 6}s`, animationDuration: `${5 + (i % 4)}s` }} />)}</div>
   }
-  return <div className="season-confetti" aria-hidden>{Array.from({ length: 14 }).map((_, i) => <span key={i} style={{ left: `${(i * 23) % 100}%`, animationDelay: `${-(i * 0.6) % 5}s`, background: ['#f0b429', '#60a5fa', '#f472b6', '#34d399'][i % 4] }} />)}</div>
+  return <div className="season-confetti" aria-hidden>{Array.from({ length: 14 }).map((_, i) => <span key={i} style={{ left: `${(i * 23) % 100}%`, animationDelay: `${-(i * 0.6) % 5}s`, background: ['#F2B51C', '#D63620', '#ffffff', '#5b8fd6'][i % 4] }} />)}</div>
 }
 
 // ---------------------------------------------------------------------------

@@ -980,3 +980,20 @@ export function getIdentity(profileId: string): Promise<TeslaIdentity | null> {
 export function cachedIdentity(profileId: string): TeslaIdentity | null | undefined {
   return identityCache.get(profileId)?.value
 }
+
+// ---------------------------------------------------------------------------
+// Valores del colegio: cada logro se agrupa según lo que premia su condición.
+// ---------------------------------------------------------------------------
+export type Valor = 'DISCIPLINA' | 'LIDERAZGO' | 'EXCELENCIA'
+
+export const VALOR_DE: Record<ConditionType, Valor> = {
+  TASKS_ON_TIME: 'DISCIPLINA', EARLY_TASKS: 'DISCIPLINA', STREAK: 'DISCIPLINA', MONTH_ATTENDANCE: 'DISCIPLINA', MONTH_PUNCTUALITY: 'DISCIPLINA',
+  RECOGNITIONS: 'LIDERAZGO', SPARKS: 'LIDERAZGO', WALL: 'LIDERAZGO', MANUAL: 'LIDERAZGO',
+  TASKS_HIGH: 'EXCELENCIA', LEVEL: 'EXCELENCIA', COLLECTION: 'EXCELENCIA',
+}
+
+export const VALORES: { key: Valor; label: string; hint: string }[] = [
+  { key: 'DISCIPLINA', label: 'Disciplina', hint: 'Puntualidad, asistencia y entregas a tiempo.' },
+  { key: 'LIDERAZGO', label: 'Liderazgo', hint: 'Reconocimientos, chispas y apoyo a tus compañeros.' },
+  { key: 'EXCELENCIA', label: 'Excelencia', hint: 'Notas altas, niveles y colecciones completas.' },
+]

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Download, Paperclip, Trash2, XCircle } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Loading, PageHeader, Panel, Segmented, Textarea } from '@/components/ui'
+import { Escudo } from '@/components/brand'
 import { SignaturePad } from '@/components/SignaturePad'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
@@ -89,7 +90,7 @@ function ConsentForm({ circular, recipient, child, onDone }: { circular: Circula
           <SignaturePad onChange={setSignature} />
         </div>
       )}
-      <Button onClick={() => void submit()} loading={busy}>Enviar respuesta</Button>
+      <Button variant="accion" onClick={() => void submit()} loading={busy}>Enviar respuesta</Button>
     </div>
   )
 }
@@ -252,7 +253,21 @@ export default function CircularDetailPage() {
       />
 
       <div className={cn('grid gap-6', canManage ? 'lg:grid-cols-[1fr_1.3fr]' : 'lg:grid-cols-[1.3fr_1fr]')}>
-        <Panel title="Comunicado" className="h-fit">
+        {/* Hoja membretada, como las circulares impresas del colegio. */}
+        <article className="relative h-fit overflow-hidden rounded-xl border border-linea bg-superficie">
+          <header className="flex items-center gap-3 px-5 pb-3 pt-4">
+            <Escudo className="h-12 w-10 shrink-0" />
+            <div className="min-w-0 flex-1 leading-tight">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-tinta">I.E.P. Nikola Tesla</p>
+              <p className="font-slab text-sm font-extrabold uppercase tracking-wide">Comunicado N.° {String(circular.id).padStart(4, '0')}</p>
+            </div>
+            <p className="cifras text-right text-xs text-texto-suave">{formatShort(circular.published_at)}</p>
+          </header>
+          <div className="franja-h h-[5px]" aria-hidden />
+          {isFamily && recipients.length > 0 && recipients.every((r) => r.read_at) && (
+            <span className="stamp-in pointer-events-none absolute right-5 top-20 rounded-lg border-[3px] border-double border-estado-ok px-2.5 py-0.5 font-slab text-sm font-extrabold uppercase tracking-[0.14em] text-estado-ok" style={{ rotate: '-12deg' }} aria-hidden>Leído</span>
+          )}
+          <div className="px-5 py-5">
           <p className="max-w-prosa whitespace-pre-line text-[15px] leading-relaxed">{circular.body}</p>
           {circular.attachment_path && (
             <button
@@ -262,7 +277,10 @@ export default function CircularDetailPage() {
               <Paperclip className="h-4 w-4" />{circular.attachment_name ?? 'Adjunto'}
             </button>
           )}
-        </Panel>
+          <p className="mt-8 text-sm font-bold">La Dirección</p>
+          <p className="lema text-[10px] text-texto-suave">Pasión por educar</p>
+          </div>
+        </article>
 
         {canManage ? (
           <Tracking circular={circular} recipients={recipients} />

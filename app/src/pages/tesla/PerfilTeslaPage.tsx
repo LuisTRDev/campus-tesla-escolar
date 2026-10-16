@@ -13,6 +13,7 @@ import {
 import { CofresTab, RetosTab, ShareButton, ShowcaseSection, SparkButton, TrayectoriaTab, WallTab } from '@/pages/tesla/PerfilTeslaExtras'
 import { AdjustModal, AwardModal, RecognizeModal } from '@/components/TeslaActions'
 import { ProgressRing } from '@/components/course'
+import { Cinta } from '@/components/brand'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
@@ -24,6 +25,7 @@ import {
   CONDITION_LABEL, DEFAULT_PIN_LEVELS, GOAL_METRIC_LABEL, KIND_LABEL, LEDGER_SOURCE, RARITIES, RARITY_LABEL, SHOWCASE_LABEL, SHOWCASE_MAX,
   buyCosmetic, clearBio, getAchievementRarity, getProfile, getProgress, listAchievements, listBoard, listClassroomCards, listCosmetics,
   listEarned, listGoals, listLedger, listOwnedCosmetics, moderateProfile, rankOf, rarityLabel, saveLoadout, saveMyProfile, statFor, unlockHint,
+  VALOR_DE, VALORES,
   type Achievement, type ClassroomGoal, type Cosmetic, type CosmeticKind, type Loadout, type Rarity, type ShowcaseBlock, type ShowcaseConfig,
   type TeslaProfile,
 } from '@/services/tesla'
@@ -84,12 +86,33 @@ function AchievementsTab({ profile }: { profile: TeslaProfile }) {
         )}
       </div>
 
+      {/* Los tres valores del escudo: cuánto de cada uno lleva el alumno. */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {VALORES.map((v, i) => {
+          const all = data.catalog.filter((a) => VALOR_DE[a.condition_type] === v.key && !a.is_secret)
+          const got = earned.filter((a) => VALOR_DE[a.condition_type] === v.key).length
+          const pct = all.length ? Math.min(1, got / all.length) : 0
+          return (
+            <div key={v.key} className="tp-card tp-rise rounded-2xl border border-linea bg-superficie p-4 text-center" style={{ '--i': i } as CSSProperties}>
+              <Cinta tone={i === 1 ? 'roja' : 'blanca'} className="text-[13px]">{v.label}</Cinta>
+              <p className="mt-2 font-display text-3xl font-bold cifras">{got}<span className="text-base font-semibold text-texto-suave"> / {all.length}</span></p>
+              <div className="mx-auto mt-2 h-1.5 max-w-[10rem] overflow-hidden rounded-full bg-[var(--meter-track)]">
+                <div className="xp-fill bar-grow-x h-full rounded-full" style={{ width: `${pct * 100}%` }} />
+              </div>
+              <p className="mt-2 text-xs text-texto-suave">{v.hint}</p>
+            </div>
+          )
+        })}
+      </div>
+
       <Panel title={`Obtenidos (${earned.length})`} className="tp-card">
         {earned.length === 0 ? (
-          <Empty title="Todavía no hay logros" art="grades" compact>Entregar a tiempo es la forma más rápida de ganar el primero.</Empty>
-        ) : (
+          <Empty title="Todavía no hay logros" art="grades" compact>Entregar a tiempo es la forma más rápida de ganar el primero: así empieza la disciplina.</Empty>
+        ) : VALORES.filter((v) => earned.some((a) => VALOR_DE[a.condition_type] === v.key)).map((v, vi) => (
+          <section key={v.key} className={cn(vi > 0 && 'mt-6')}>
+            <h3 className="mb-3"><Cinta tone={v.key === 'LIDERAZGO' ? 'roja' : v.key === 'EXCELENCIA' ? 'oro' : 'blanca'} className="text-xs">{v.label}</Cinta></h3>
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {earned.map((a, i) => {
+            {earned.filter((a) => VALOR_DE[a.condition_type] === v.key).map((a, i) => {
               const e = earnedBy.get(a.id)!
               const pct = pctOf(a.id)
               return (
@@ -113,7 +136,8 @@ function AchievementsTab({ profile }: { profile: TeslaProfile }) {
               )
             })}
           </ul>
-        )}
+          </section>
+        ))}
       </Panel>
 
       {(pending.length > 0 || secretsLeft > 0) && (
@@ -1096,7 +1120,7 @@ export default function PerfilTeslaPage() {
   const canReward = me?.role === 'TEACHER' || isAdmin
   const hasWall = profile?.wall_enabled !== undefined
 
-  const tabs: { value: Tab; label: string }[] = [
+  const tabs: { value: Tab; label: ReactNode }[] = [
     { value: 'perfil', label: 'Perfil' },
     { value: 'logros', label: 'Logros' },
     ...(hasWall ? [{ value: 'muro' as Tab, label: `Muro${profile?.wall_count ? ` · ${profile.wall_count}` : ''}` }] : []),
@@ -1105,7 +1129,7 @@ export default function PerfilTeslaPage() {
     { value: 'trayectoria', label: 'Trayectoria' },
     ...(priv ? [{ value: 'historial' as Tab, label: 'Historial' }] : []),
     { value: 'aula', label: 'Mi aula' },
-    ...(profile?.is_self ? [{ value: 'personalizar' as Tab, label: '✨ Personalizar' }] : []),
+    ...(profile?.is_self ? [{ value: 'personalizar' as Tab, label: <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-chispa-600" />Personalizar</span> }] : []),
   ]
   const requested = (search.get('vista') as Tab) || 'perfil'
   const tab = tabs.some((t) => t.value === requested) ? requested : 'perfil'

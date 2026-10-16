@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, Download, Eye, Keyboard, Moon, Save, Type, Zap } from 'lucide-react'
+import { Bell, Download, Eye, Keyboard, Moon, Rows3, Save, Type, Zap } from 'lucide-react'
+import { Escudo } from '@/components/brand'
 import { Button, Field, Input, Loading, PageHeader, Panel, Segmented } from '@/components/ui'
 import { Kbd } from '@/components/ux'
 import { useAsync } from '@/lib/useAsync'
@@ -113,11 +114,13 @@ export default function AjustesPage() {
               label="Alto contraste" hint="Textos secundarios y bordes más oscuros." />
             <Toggle checked={reading.reduceMotion} onChange={(v) => setReading({ reduceMotion: v })} icon={<Zap className="h-4 w-4" />}
               label="Menos movimiento" hint="Quita animaciones, fondos animados y transiciones." />
+            <Toggle checked={reading.dense ?? document.documentElement.dataset.personal === '1'} onChange={(v) => setReading({ dense: v })} icon={<Rows3 className="h-4 w-4" />}
+              label="Tablas compactas" hint="Más filas a la vista en notas, asistencia y listas. Viene activado para docentes y personal." />
           </Panel>
           <SaverPanel />
           <Panel title="App en tu celular">
             {installed ? (
-              <p className="text-sm text-texto-suave">Ya estás usando el campus como app. 🎉</p>
+              <p className="flex items-center gap-2 text-sm text-texto-suave"><Escudo className="h-6 w-5 shrink-0" />Ya estás usando el campus como app.</p>
             ) : canInstall ? (
               <Button onClick={() => void install()}><Download className="h-4 w-4" />Instalar el Campus Tesla</Button>
             ) : ios ? (

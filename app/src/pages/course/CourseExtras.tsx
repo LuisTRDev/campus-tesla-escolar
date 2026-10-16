@@ -116,7 +116,7 @@ function InteractiveVideo({ material, canManage }: { material: Material; canMana
               </div>
               {result && (
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <p className="text-sm font-bold">{result.correct == null ? '¡Gracias!' : result.correct ? '¡Correcto! 🎉' : 'Casi. Mira la respuesta marcada.'}</p>
+                  <p className="text-sm font-bold">{result.correct == null ? '¡Gracias!' : result.correct ? <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="check-pop h-4 w-4 text-estado-ok" />¡Correcto!</span> : 'Casi. Mira la respuesta marcada.'}</p>
                   <Button size="sm" onClick={resume}><PlayCircle className="h-4 w-4" />Seguir viendo</Button>
                 </div>
               )}

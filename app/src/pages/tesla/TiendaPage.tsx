@@ -29,8 +29,11 @@ export function RewardImage({ reward, className }: { reward: Pick<Reward, 'image
   if (url) return <img src={url} alt="" loading="lazy" className={cn('object-cover', className)} />
   const Icon = reward.kind === 'PHYSICAL' ? Package : Sparkles
   return (
-    <span className={cn('notebook-cover flex items-center justify-center bg-tinta text-chispa', className)}>
-      <Icon className="h-10 w-10" />
+    // Sin foto: un parche del colegio (azul, vigas rojas y la franja del buzo).
+    <span className={cn('notebook-cover relative flex items-center justify-center overflow-hidden bg-[#102442] text-chispa', className)}>
+      <span className="celosia absolute inset-0 opacity-70" aria-hidden />
+      <span className="franja-h absolute inset-x-0 bottom-0 h-[5px]" aria-hidden />
+      <Icon className="relative h-10 w-10 drop-shadow" />
     </span>
   )
 }

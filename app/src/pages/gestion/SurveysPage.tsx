@@ -60,7 +60,7 @@ function AnswerSurvey({ survey, onDone }: { survey: OpenSurvey; onDone: () => vo
           )}
         </fieldset>
       ))}
-      <Button type="submit" loading={busy}><Send className="h-4 w-4" />Enviar respuestas</Button>
+      <Button variant="accion" type="submit" loading={busy}><Send className="h-4 w-4" />Enviar respuestas</Button>
     </form>
   )
 }

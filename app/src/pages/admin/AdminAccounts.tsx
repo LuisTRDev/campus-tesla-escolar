@@ -91,7 +91,7 @@ function ResultPanel({ result, onClose }: { result: CredentialsResult; onClose: 
             <Button size="sm" variant="secondary" onClick={() => downloadCsv(result)}><Download className="h-4 w-4" />Descargar CSV</Button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[36rem] text-left text-sm">
+            <table className="tabla-colegio w-full min-w-[36rem] text-left text-sm">
               <thead className="text-texto-suave">
                 <tr><th className="py-2 pr-4">Tipo</th><th className="py-2 pr-4">Nombre</th><th className="py-2 pr-4">Usuario</th><th className="py-2">Contraseña temporal</th></tr>
               </thead>

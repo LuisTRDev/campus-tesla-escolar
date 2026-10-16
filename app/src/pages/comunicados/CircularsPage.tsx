@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useDraft } from '@/lib/ux'
 import { Link, useNavigate } from 'react-router-dom'
-import { FileSignature, Mail, MailOpen, Plus } from 'lucide-react'
+import { FileSignature, Mail, Plus } from 'lucide-react'
+import { IcoCircular } from '@/components/icons'
 import { useAuth } from '@/auth/AuthProvider'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeader, Panel, Select, Textarea } from '@/components/ui'
 import { useAsync } from '@/lib/useAsync'
@@ -152,9 +153,10 @@ export default function CircularsPage() {
                 <li key={c.id}>
                   <Link to={`/comunicados/${c.id}`} className="flex items-start gap-4 px-5 py-4 hover:bg-papel">
                     <span className={cn('mt-0.5 rounded-lg p-2', unread ? 'bg-chispa-100 text-tinta' : 'bg-papel text-texto-suave')}>
-                      {c.response_type === 'CONSENT' ? <FileSignature className="h-5 w-5" /> : unread ? <Mail className="h-5 w-5" /> : <MailOpen className="h-5 w-5" />}
+                      {c.response_type === 'CONSENT' ? <FileSignature className="h-5 w-5" /> : <IcoCircular className={cn('h-5 w-5', unread && 'ti-on')} />}
                     </span>
                     <div className="min-w-0 flex-1">
+                      <p className="font-slab text-[11px] font-bold uppercase tracking-wider text-texto-suave">Comunicado N.° {String(c.id).padStart(4, '0')}</p>
                       <p className={cn('truncate', unread ? 'font-bold' : 'font-semibold')}>{c.title}</p>
                       <p className="text-sm text-texto-suave">
                         {formatShort(c.published_at)} · {scopeLabel(c, data.classrooms)}

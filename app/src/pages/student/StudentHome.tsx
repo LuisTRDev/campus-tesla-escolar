@@ -2,10 +2,10 @@ import { CalendarCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { Empty, ErrorBox, Loading, Panel } from '@/components/ui'
-import { GreetingHero } from '@/components/ux'
+import { GreetingHero, type TodayItem } from '@/components/ux'
 import { CourseCover, TaskRow } from '@/components/course'
 import { AnnouncementFeed } from '@/pages/shared/AnnouncementFeed'
-import { formatDay, limaToday } from '@/lib/format'
+import { formatDay, isoDay, limaToday } from '@/lib/format'
 import { classroomLabel } from '@/services/campus'
 import { useStudentWork } from '@/services/useStudentWork'
 import { PushPrompt } from '@/pages/NotificationsPage'
@@ -23,10 +23,16 @@ export default function StudentHome() {
   const inAWeek = Date.now() + 7 * 86_400_000
   const thisWeek = groups.todo.filter((t) => !t.due_at || Date.parse(t.due_at) <= inAWeek)
   const later = groups.todo.filter((t) => t.due_at && Date.parse(t.due_at) > inAWeek)
+  const dueToday = groups.todo.filter((t) => t.due_at && isoDay(new Date(t.due_at)) === limaToday()).length
+  const today: TodayItem[] = loading ? [] : [
+    ...(groups.overdue.length ? [{ label: `${groups.overdue.length} atrasada${groups.overdue.length === 1 ? '' : 's'}`, tone: 'alerta' as const }] : []),
+    ...(dueToday ? [{ label: `${dueToday} vence${dueToday === 1 ? '' : 'n'} hoy`, tone: 'aviso' as const }] : []),
+    thisWeek.length ? { label: `${thisWeek.length} para esta semana` } : { label: '¡Al día con tus tareas!', tone: 'ok' as const },
+  ]
 
   return (
     <>
-      <GreetingHero name={selfStudent.first_name} subtitle={`${formatDay(limaToday())}. ${classroomLabel(selfStudent.classroom)}`} />
+      <GreetingHero name={selfStudent.first_name} subtitle={`${formatDay(limaToday())}. ${classroomLabel(selfStudent.classroom)}`} today={today} />
       <PushPrompt />
 
       {error && <ErrorBox message={error} onRetry={() => void reload()} />}

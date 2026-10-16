@@ -88,8 +88,9 @@ export function CourseCover({ offering, teacherName, meta, showClassroom, progre
         )}
       </div>
 
-      {/* Etiqueta blanca, como la de los cuadernos del colegio */}
-      <div className="relative mr-6 mt-3 rounded-lg bg-superficie px-3 py-2 text-texto shadow-sm">
+      {/* Etiqueta blanca, como la de los cuadernos del colegio, con la franja del buzo */}
+      <div className="relative mr-6 mt-3 overflow-hidden rounded-lg bg-superficie py-2 pl-5 pr-3 text-texto shadow-sm">
+        <span className="franja-v absolute inset-y-0 left-0 w-[7px]" aria-hidden />
         <p className="font-display text-[17px] font-semibold leading-snug group-hover:underline">{offering.subject.name}</p>
         {showClassroom && <p className="text-xs font-bold text-texto-suave">{classroomLabel(offering.classroom)}</p>}
         {teacherName && <p className="truncate text-xs text-texto-suave">{teacherName}</p>}

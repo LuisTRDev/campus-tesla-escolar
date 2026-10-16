@@ -19,7 +19,7 @@ const listeners = new Set<() => void>()
 function apply() {
   const dark = current === 'dark' || (current === 'system' && media().matches)
   document.documentElement.classList.toggle('dark', dark)
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0A1019' : '#0B1D33')
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#080F1E' : '#102442')
 }
 
 if (typeof window !== 'undefined') {

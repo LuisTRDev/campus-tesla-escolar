@@ -13,13 +13,13 @@ function stepsFor(role: Role, name: string): Step[] {
   switch (role) {
     case 'GUARDIAN':
       return [
-        { art: 'coil', title: `Bienvenida, familia ${name}`, body: 'Aquí ves la semana de tu hijo: asistencia, tareas, notas y avisos del colegio. Si tienes varios hijos, cámbialos desde arriba.' },
-        { art: 'mail', title: 'Comunicados y mensajes', body: 'Los comunicados reemplazan la agenda: léelos y firma las autorizaciones desde el celular. Escribe a los docentes sin dar tu WhatsApp.' },
-        { art: 'bell', title: 'Entérate al instante', body: 'Activa las notificaciones y te avisaremos de tardanzas, comunicados, notas y mensajes.', cta: { label: 'Activar notificaciones', to: '/notificaciones' } },
+        { art: 'patio', title: `Bienvenida, familia ${name}`, body: 'Aquí verá la semana de su hijo: asistencia, tareas, notas y avisos del colegio. Si tiene varios hijos, puede cambiar entre ellos desde arriba.' },
+        { art: 'mail', title: 'Comunicados y mensajes', body: 'Los comunicados reemplazan la agenda: léalos y firme las autorizaciones desde el celular. Puede escribir a los docentes sin compartir su WhatsApp.' },
+        { art: 'bell', title: 'Entérese al instante', body: 'Active las notificaciones y le avisaremos de tardanzas, comunicados, notas y mensajes.', cta: { label: 'Activar notificaciones', to: '/notificaciones' } },
       ]
     case 'STUDENT':
       return [
-        { art: 'coil', title: `¡Hola, ${name}!`, body: 'Este es tu campus: tus cursos, tus tareas y los avisos del colegio en un solo lugar.' },
+        { art: 'patio', title: `¡Hola, ${name}!`, body: 'Este es tu campus: tus cursos, tus tareas y los avisos del colegio en un solo lugar. Disciplina, liderazgo y excelencia, también en línea.' },
         { art: 'tasks', title: 'Entrega tus tareas', body: 'Abre una tarea, escribe tu respuesta o súbele una foto de tu cuaderno con la cámara, y entrégala antes de la fecha límite.' },
         { art: 'bell', title: 'No te pierdas nada', body: 'Activa las notificaciones para saber cuándo hay una tarea nueva o te ponen nota.', cta: { label: 'Activar notificaciones', to: '/notificaciones' } },
       ]
@@ -80,7 +80,7 @@ export function Onboarding() {
         }}
       >
         <div className="relative flex h-48 items-center justify-center overflow-hidden bg-tinta">
-          <div className="login-coils absolute inset-0 opacity-80" aria-hidden />
+          <div className="celosia absolute inset-0 opacity-80" aria-hidden />
           <div key={step} className="page-in relative rounded-full bg-superficie/95 p-4 shadow-lg">
             <Illustration name={current.art} className="h-28 w-28" />
           </div>

@@ -114,14 +114,15 @@ export function useInstallPrompt() {
 // ---------------------------------------------------------------------------
 // Preferencias de lectura (texto grande, menos movimiento)
 // ---------------------------------------------------------------------------
-export type ReadingPrefs = { largeText: boolean; reduceMotion: boolean; highContrast: boolean }
+/** `dense`: tablas compactas; null = automático (sí para docentes y personal, no para alumnos y familias). */
+export type ReadingPrefs = { largeText: boolean; reduceMotion: boolean; highContrast: boolean; dense: boolean | null }
 const READING_KEY = 'campus-reading'
 
 export function readReadingPrefs(): ReadingPrefs {
   try {
-    return { largeText: false, reduceMotion: false, highContrast: false, ...JSON.parse(localStorage.getItem(READING_KEY) ?? '{}') }
+    return { largeText: false, reduceMotion: false, highContrast: false, dense: null, ...JSON.parse(localStorage.getItem(READING_KEY) ?? '{}') }
   } catch {
-    return { largeText: false, reduceMotion: false, highContrast: false }
+    return { largeText: false, reduceMotion: false, highContrast: false, dense: null }
   }
 }
 
@@ -130,6 +131,8 @@ export function applyReadingPrefs(p: ReadingPrefs = readReadingPrefs()) {
   root.classList.toggle('text-large', p.largeText)
   root.classList.toggle('motion-off', p.reduceMotion)
   root.classList.toggle('contrast-high', p.highContrast)
+  // El menú marca <html data-personal> para docentes y personal (src/components/layout/Shell.tsx).
+  root.classList.toggle('denso', p.dense ?? root.dataset.personal === '1')
 }
 
 export function useReadingPrefs(): [ReadingPrefs, (p: Partial<ReadingPrefs>) => void] {

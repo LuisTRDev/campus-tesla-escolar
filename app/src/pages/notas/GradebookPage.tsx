@@ -282,7 +282,7 @@ function Gradebook({ offeringId }: { offeringId: number }) {
 
           <Panel bodyClassName="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[40rem] border-collapse text-sm">
+              <table className="tabla-colegio w-full min-w-[40rem] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-linea text-left">
                     <th className="sticky left-0 z-10 bg-superficie px-4 py-3 font-bold">Alumno</th>

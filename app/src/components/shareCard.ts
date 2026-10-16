@@ -2,6 +2,7 @@ import { avatarEmoji } from '@/components/avatars'
 import { SCENE_ACCENT, starPoints } from '@/components/scenes'
 import { PIN_METAL } from '@/components/tesla'
 import { RARITY_LABEL, parseArt, rankOf, type TeslaProfile } from '@/services/tesla'
+import { ESCUDO, escudoSvgMarkup } from '@/components/escudoPaths'
 
 // ---------------------------------------------------------------------------
 // Tarjeta del Perfil Tesla para descargar o compartir (1080 × 1350, PNG).
@@ -18,7 +19,8 @@ function accentOf(profile: TeslaProfile): [string, string, string] {
     if (art.type === 'scene' && SCENE_ACCENT[art.key]) return SCENE_ACCENT[art.key]
     if (art.type === 'colors') return [art.c2, '#ffd36b', art.c1]
   }
-  return ['#f0b429', '#60a5fa', '#0b1d33']
+  // Sin fondo elegido: los colores del escudo (dorado, rojo y el azul del blazer).
+  return [ESCUDO.oro, ESCUDO.rojo, ESCUDO.navy]
 }
 
 /** Corta el nombre en hasta dos líneas. */
@@ -77,14 +79,14 @@ export function buildShareSvg(profile: TeslaProfile): string {
     <radialGradient id="g1" cx="0.15" cy="0.1" r="0.7"><stop offset="0" stop-color="${a1}" stop-opacity="0.55"/><stop offset="1" stop-color="${a1}" stop-opacity="0"/></radialGradient>
     <radialGradient id="g2" cx="0.9" cy="0.85" r="0.7"><stop offset="0" stop-color="${a2}" stop-opacity="0.4"/><stop offset="1" stop-color="${a2}" stop-opacity="0"/></radialGradient>
     <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a1}"/><stop offset="1" stop-color="${a2}"/></linearGradient>
-    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${a1}"/><stop offset="1" stop-color="${a2}"/></linearGradient>
   </defs>
   <rect width="${W}" height="${H}" fill="url(#bg)"/>
   <rect width="${W}" height="${H}" fill="url(#g1)"/>
   <rect width="${W}" height="${H}" fill="url(#g2)"/>
   ${stars}
   <g opacity="0.12" stroke="#fff" fill="none">${[220, 300, 380, 460].map((r) => `<circle cx="540" cy="400" r="${r}"/>`).join('')}</g>
-  <text x="540" y="96" text-anchor="middle" font-size="30" font-weight="800" letter-spacing="10" fill="${a2}">PERFIL TESLA</text>
+  <g transform="translate(509 34) scale(0.6)"><g transform="translate(2 4)">${escudoSvgMarkup()}</g></g>
+  <text x="540" y="132" text-anchor="middle" font-size="26" font-weight="800" letter-spacing="10" fill="${ESCUDO.oro}">PERFIL TESLA</text>
   <circle cx="540" cy="400" r="170" fill="url(#ring)"/>
   <circle cx="540" cy="400" r="154" fill="#0b1222"/>
   <text x="540" y="404" text-anchor="middle" dominant-baseline="central" font-size="170">${esc(avatarEmoji(profile.avatar?.value))}</text>
@@ -98,8 +100,9 @@ export function buildShareSvg(profile: TeslaProfile): string {
   ${stat(540, String(profile.sparks ?? 0), 'chispas')}
   ${stat(880, String(profile.level), 'nivel')}
   ${featured.length ? `<text x="540" y="1232" text-anchor="middle" font-size="28" fill="#ffffff" fill-opacity="0.85">${esc(featured.map((f) => `${f.name} (${RARITY_LABEL[f.rarity]})`).join('  ·  '))}</text>` : ''}
-  <rect x="140" y="1276" width="800" height="6" rx="3" fill="url(#bar)" opacity="0.8"/>
-  <text x="540" y="1322" text-anchor="middle" font-size="26" fill="#ffffff" fill-opacity="0.65">Campus Virtual · I.E.P. Nikola Tesla</text>
+  <rect x="0" y="${H - 22}" width="${W}" height="11" fill="${ESCUDO.rojo}"/>
+  <rect x="0" y="${H - 11}" width="${W}" height="11" fill="${ESCUDO.oro}"/>
+  <text x="540" y="1296" text-anchor="middle" font-size="24" font-weight="700" letter-spacing="5" fill="#ffffff" fill-opacity="0.7">PASIÓN POR EDUCAR · I.E.P. NIKOLA TESLA</text>
 </svg>`
 }
 

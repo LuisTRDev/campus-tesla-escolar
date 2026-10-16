@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Copy, FileSignature, FileText, MessageCircle, Wallet } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Badge, Empty, ErrorBox, Loading, Panel } from '@/components/ui'
-import { GreetingHero } from '@/components/ux'
+import { GreetingHero, type TodayItem } from '@/components/ux'
 import { TaskRow } from '@/components/course'
 import { AnnouncementFeed } from '@/pages/shared/AnnouncementFeed'
 import { useAsync } from '@/lib/useAsync'
@@ -218,17 +218,27 @@ export default function GuardianHome() {
   }, [childId, first, last, today])
 
   if (!children.length) {
-    return <ErrorBox message="Tu cuenta aún no está vinculada a ningún alumno. Comunícate con secretaría." />
+    return <ErrorBox message="Su cuenta aún no está vinculada a ningún alumno. Comuníquese con secretaría." />
   }
   if (!activeChild) return <Loading shape="page" />
 
   const { groups } = work
   const nextDue = groups.todo.find((t) => t.due_at)?.due_at ?? null
   const monthAttendance = (tesla.data?.attendance ?? []).filter((r) => r.date >= first)
+  // Formación del día para la familia: cómo llegó hoy y qué tiene pendiente.
+  const todayRow = (tesla.data?.attendance ?? []).find((r) => r.date === today)
+  const childName = activeChild.first_name ?? 'Su hijo'
+  const todayItems: TodayItem[] = work.loading || tesla.loading ? [] : [
+    todayRow
+      ? { label: todayRow.status === 'LATE' ? `Hoy llegó tarde${todayRow.entry_time ? ` (${todayRow.entry_time.slice(0, 5)})` : ''}` : `Hoy llegó puntual${todayRow.entry_time ? ` (${todayRow.entry_time.slice(0, 5)})` : ''}`, tone: todayRow.status === 'LATE' ? 'aviso' : 'ok' }
+      : { label: 'Asistencia de hoy aún sin registrar' },
+    ...(groups.overdue.length ? [{ label: `${groups.overdue.length} tarea${groups.overdue.length === 1 ? '' : 's'} atrasada${groups.overdue.length === 1 ? '' : 's'}`, tone: 'alerta' as const }] : []),
+    ...(groups.todo.length ? [{ label: `${groups.todo.length} pendiente${groups.todo.length === 1 ? '' : 's'}` }] : []),
+  ]
 
   return (
     <>
-      <GreetingHero name={profile?.full_name} subtitle={`Así va la semana de ${activeChild.first_name ?? 'tu hijo'} · ${classroomLabel(activeChild.classroom)}. ${formatDay(today)}.`} />
+      <GreetingHero name={profile?.full_name} subtitle={`Así va la semana de ${childName} · ${classroomLabel(activeChild.classroom)}. ${formatDay(today)}.`} today={todayItems} />
       <PushPrompt />
       {profile && <FamilyPending profileId={profile.id} />}
 
@@ -322,7 +332,7 @@ export default function GuardianHome() {
                   ))}
                 </ul>
               ) : (
-                <Empty title="Sin notificaciones" art="bell" compact>Aquí verás tardanzas o incidencias que registre el colegio.</Empty>
+                <Empty title="Sin notificaciones" art="bell" compact>Aquí verá las tardanzas o incidencias que registre el colegio.</Empty>
               )}
             </Panel>
 

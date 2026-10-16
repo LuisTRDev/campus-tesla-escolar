@@ -47,8 +47,8 @@ export function StatTile({ label, value, detail, tone, meter }: {
 }) {
   return (
     <div className="flex flex-col rounded-xl border border-linea bg-superficie p-4">
-      <p className="text-sm text-texto-suave">{label}</p>
-      <p className="mt-1 font-display text-[2rem] font-bold leading-none tracking-tight text-texto">{value}</p>
+      <p className="flex items-center gap-2 text-sm text-texto-suave"><span className="franja-tick" aria-hidden />{label}</p>
+      <p className="cifras mt-1 font-display text-[2rem] font-bold leading-none tracking-tight text-texto">{value}</p>
       {meter != null && <Meter value={meter} className="mt-3" label={label} />}
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-texto-suave">
         {tone && tone !== 'ok' && <StatusTag tone={tone} />}
@@ -140,7 +140,7 @@ export function LevelDivergingChart({ rows, emptyText = 'Aún no hay notas regis
 
       {view === 'table' ? (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[32rem] text-sm">
+          <table className="tabla-colegio w-full min-w-[32rem] text-sm">
             <thead className="text-left text-texto-suave">
               <tr><th className="py-2 pr-3">Área</th><th className="px-2 text-right">AD</th><th className="px-2 text-right">A</th><th className="px-2 text-right">B</th><th className="px-2 text-right">C</th><th className="pl-2 text-right">A o AD</th></tr>
             </thead>

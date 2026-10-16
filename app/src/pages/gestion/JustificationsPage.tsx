@@ -73,7 +73,7 @@ function FamilyView() {
             <p className="mb-1.5 text-sm font-bold">Constancia <span className="font-normal text-texto-suave">(opcional: receta, certificado o foto)</span></p>
             <AttachmentInput file={file} onFile={setFile} link={link} onLink={setLink} maxBytes={5 * 1024 * 1024} accept="image/jpeg,image/png,image/webp,application/pdf" hint="Foto o PDF de hasta 5 MB." linkHint="Sube la foto o el PDF a Google Drive y pega el enlace." />
           </div>
-          <Button type="submit" loading={busy}><Send className="h-4 w-4" />Enviar justificación</Button>
+          <Button variant="accion" type="submit" loading={busy}><Send className="h-4 w-4" />Enviar justificación</Button>
         </form>
       </Panel>
       <Panel title="Enviadas">

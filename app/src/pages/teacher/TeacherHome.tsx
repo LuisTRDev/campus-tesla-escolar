@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom'
 import { BookOpen, Inbox } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Badge, Empty, ErrorBox, Loading, Panel } from '@/components/ui'
-import { GreetingHero } from '@/components/ux'
+import { GreetingHero, type TodayItem } from '@/components/ux'
 import { CourseCover, CourseTag } from '@/components/course'
 import { useAsync } from '@/lib/useAsync'
-import { formatDay, formatShort, formatTime, limaToday, relativeDue } from '@/lib/format'
+import { formatDay, formatShort, formatTime, isoDay, limaToday, relativeDue } from '@/lib/format'
 import { PushPrompt } from '@/pages/NotificationsPage'
 import { teacherCourseProgress } from '@/services/progress'
 import { currentPeriod, listPeriods } from '@/services/notas'
@@ -39,6 +39,12 @@ export default function TeacherHome() {
     .slice(0, 5)
 
   const firstName = profile?.full_name?.split(' ')[0] ?? ''
+  const dueToday = upcoming.filter((a) => isoDay(new Date(a.due_at!)) === limaToday()).length
+  const today: TodayItem[] = loading ? [] : [
+    toReview.length ? { label: `${toReview.length} por revisar`, tone: 'aviso' } : { label: 'Revisiones al día', tone: 'ok' },
+    ...(dueToday ? [{ label: `${dueToday} tarea${dueToday === 1 ? '' : 's'} vence${dueToday === 1 ? '' : 'n'} hoy` }] : []),
+    ...(data ? [{ label: `${data.offerings.length} curso${data.offerings.length === 1 ? '' : 's'}` }] : []),
+  ]
 
   return (
     <>
@@ -49,6 +55,7 @@ export default function TeacherHome() {
             : toReview.length ? `Tienes ${toReview.length} entrega${toReview.length === 1 ? '' : 's'} por revisar.`
             : 'Estás al día con las revisiones.'
         }
+        today={today}
       />
       <PushPrompt />
 

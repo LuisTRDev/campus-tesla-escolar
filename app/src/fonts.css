@@ -1,0 +1,38 @@
+/* Fuentes del campus, solo con el alfabeto latino (cubre todo el español).
+   Los paquetes de fontsource traen además cirílico, griego y vietnamita, que
+   sumaban unos 4 KB al CSS del primer arranque sin usarse nunca. */
+
+/* Titulares: Archivo con eje de ancho (los titulares van al 112 %, como el banner del patio). */
+@font-face {
+  font-family: 'Archivo Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  src: url('@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2') format('woff2-variations');
+}
+
+/* Cintas, sellos e insignias: slab, como las letras del escudo. */
+@font-face {
+  font-family: 'Roboto Slab Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/roboto-slab/files/roboto-slab-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+/* Texto: Atkinson Hyperlegible, pensada para leer bien. */
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-700-normal.woff2') format('woff2');
+}

@@ -195,7 +195,8 @@ function Bubble({ m, mine, onRetry, seen }: { m: UiMessage; mine: boolean; onRet
     <div className={cn('flex', mine ? 'justify-end' : 'justify-start')}>
       <div className={cn(
         'max-w-[85%] rounded-2xl px-4 py-2.5 transition-opacity',
-        mine ? 'rounded-br-md bg-tinta text-white' : 'rounded-bl-md bg-superficie ring-1 ring-linea',
+        // Mis mensajes: parche azul con ribete rojo, como los botones del campus.
+        mine ? 'rounded-br-md bg-tinta text-white shadow-[inset_0_-3px_0_rgb(var(--rojo))]' : 'rounded-bl-md bg-superficie ring-1 ring-linea',
         m.pending === 'sending' && 'opacity-70',
         m.pending === 'failed' && 'ring-2 ring-estado-alerta',
       )}>

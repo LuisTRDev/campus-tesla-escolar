@@ -2,17 +2,30 @@
 <html lang="es-PE">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icons/escudo.svg" />
     <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#0B1D33" />
+    <meta name="theme-color" content="#102442" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <!-- Abre la conexión con Supabase mientras se descarga la app (ahorra tiempo en el celular). -->
     <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
     <title>Campus Virtual Tesla</title>
     <script src="/theme-init.js"></script>
+    <style>
+      /* Presentación mientras llega la app: el monograma TN se dibuja (React la reemplaza al montar). */
+      #splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #f4f6f9; }
+      html.dark #splash { background: #080f1e; }
+      #splash svg { width: 84px; height: 84px; }
+      #splash path { stroke-dasharray: 420; stroke-dashoffset: 420; fill-opacity: 0; animation: s-t 1.3s cubic-bezier(.2,.8,.3,1) forwards, s-f .4s ease-out 1s forwards; }
+      #splash path + path { animation-delay: .25s, 1.15s; }
+      @keyframes s-t { to { stroke-dashoffset: 0; } }
+      @keyframes s-f { to { fill-opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) { #splash path { animation: none; stroke-dashoffset: 0; fill-opacity: 1; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div id="splash" role="status" aria-label="Abriendo el Campus Tesla"><svg viewBox="-4 -4 108 108" aria-hidden="true"><path d="M10 8H90V38H78V26H62V80H72V94H28V80H38V26H22V38H10Z" fill="#D63620" stroke="#F2B51C" stroke-width="7" paint-order="stroke"/><path d="M30 76V40H42L58 62V40H70V76H58L42 54V76Z" fill="#1F3A5F" stroke="#F2B51C" stroke-width="6" paint-order="stroke"/></svg></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

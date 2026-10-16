@@ -3,6 +3,7 @@ import { Copy, Plus, Trash2 } from 'lucide-react'
 import { useAuth, useFocusStudent } from '@/auth/AuthProvider'
 import { Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeader, Panel, Segmented, Select } from '@/components/ui'
 import { courseCode } from '@/components/course'
+import { IcoCampana } from '@/components/icons'
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
@@ -29,16 +30,23 @@ function BlockCard({ block, offering, showClassroom, isNow, onDelete }: {
   onDelete?: () => void
 }) {
   const color = offering?.subject.color ?? '#9AA8BC'
+  // Como el cuadro pegado en el aula: cada curso con su color; recreos y formación con la campana del colegio.
   return (
     <div
-      className={cn('group relative rounded-lg border-l-4 bg-superficie px-3 py-2 ring-1 ring-linea', isNow && 'ring-2 ring-chispa', !offering && 'bg-papel')}
-      style={{ borderLeftColor: color }}
+      className={cn(
+        'group relative rounded-lg border-l-4 px-3 py-2 ring-1 ring-linea transition duration-rapido',
+        offering ? 'bg-superficie' : 'border-dashed bg-papel',
+        isNow && 'ring-2 ring-chispa shadow-md',
+      )}
+      style={{ borderLeftColor: color, backgroundImage: offering ? `linear-gradient(90deg, ${color}1f, transparent 70%)` : undefined }}
     >
-      <p className="text-xs font-bold text-texto-suave">{block.starts_at} – {block.ends_at}</p>
-      <p className="font-bold leading-snug">{offering ? offering.subject.name : block.label}</p>
+      <p className="cifras text-xs font-bold text-texto-suave">{block.starts_at} – {block.ends_at}</p>
+      {offering
+        ? <p className="font-bold leading-snug">{offering.subject.name}</p>
+        : <p className="flex items-center gap-1.5 font-slab text-sm font-extrabold uppercase tracking-wide text-texto-suave"><IcoCampana className="ti-on h-4 w-4 shrink-0" />{block.label}</p>}
       {offering && block.label && <p className="text-xs text-texto-suave">{block.label}</p>}
       {showClassroom && offering && <p className="text-xs text-texto-suave">{classroomLabel(offering.classroom)}</p>}
-      {isNow && <span className="absolute right-2 top-2 rounded bg-chispa px-1.5 text-[10px] font-bold text-tinta">Ahora</span>}
+      {isNow && <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded bg-chispa px-1.5 text-[10px] font-bold uppercase text-[#102442]"><span className="rec-dot h-1.5 w-1.5 rounded-full bg-rojo" />Ahora</span>}
       {onDelete && (
         <button onClick={onDelete} className="absolute bottom-1.5 right-1.5 rounded p-1 text-texto-suave opacity-0 hover:text-estado-alerta focus:opacity-100 group-hover:opacity-100" aria-label="Quitar bloque">
           <Trash2 className="h-3.5 w-3.5" />
@@ -220,7 +228,7 @@ export default function SchedulePage() {
           {/* Escritorio: la semana completa */}
           <div className={cn('hidden gap-3 lg:grid', days.length === 6 ? 'lg:grid-cols-6' : 'lg:grid-cols-5')}>
             {days.map((d) => (
-              <Panel key={d} title={<span className={cn(d === now.weekday && 'text-tinta-500')}>{WEEKDAY_LABELS[d]}</span>} bodyClassName="p-2">
+              <Panel key={d} className={cn(d === now.weekday && 'ring-2 ring-chispa')} title={<span className="flex items-center gap-2">{WEEKDAY_LABELS[d]}{d === now.weekday && <span className="lema rounded bg-chispa-100 px-1.5 py-0.5 text-[9px] text-tinta">Hoy</span>}</span>} bodyClassName="p-2">
                 {dayColumn(d)}
               </Panel>
             ))}

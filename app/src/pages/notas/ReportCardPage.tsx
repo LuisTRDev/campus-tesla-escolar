@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { Minus, NotebookPen, Printer, TrendingDown, TrendingUp } from 'lucide-react'
 import { useAuth, useFocusStudent } from '@/auth/AuthProvider'
+import { Escudo } from '@/components/brand'
 import { Button, Empty, ErrorBox, Loading, PageHeader, Panel, Segmented } from '@/components/ui'
 import { LevelChip } from '@/components/levels'
 import { ObservationsPanel } from '@/components/Observations'
@@ -83,14 +84,17 @@ function ReportCardSheet({ data, student, upTo }: { data: ReportData; student: S
 
   return (
     <article className="report-card force-light mx-auto max-w-[210mm] bg-superficie p-8 text-[12px] leading-snug text-black ring-1 ring-linea print:p-0 print:ring-0">
-      <header className="flex items-center gap-4 border-b-2 border-tinta pb-3">
-        <img src="/images/logo-nikola-tesla.png" alt="" className="h-16 w-16 object-contain" />
+      {/* Membrete del colegio: escudo, nombre, lema y la franja del buzo. */}
+      <header className="flex items-center gap-4 pb-2">
+        <Escudo variant="completo" className="h-[5.5rem] w-[4.6rem] shrink-0" />
         <div className="flex-1">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-texto-suave">I.E.P. Nikola Tesla</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-tinta">Institución Educativa Privada «Nikola Tesla»</p>
           <h1 className="font-display text-lg font-bold leading-tight">Informe de progreso del aprendizaje del estudiante</h1>
           <p>Año escolar {data.year} · {upTo.name}</p>
         </div>
+        <p className="lema self-start text-right text-[9px] leading-relaxed text-rojo-600">Disciplina<br />Liderazgo<br />Excelencia</p>
       </header>
+      <div className="franja-h mb-1 h-[6px]" aria-hidden />
 
       <table className="mt-3 w-full text-[12px]">
         <tbody>
@@ -183,6 +187,7 @@ function ReportCardSheet({ data, student, upTo }: { data: ReportData; student: S
           <div key={s} className="border-t border-black pt-1">{s}</div>
         ))}
       </footer>
+      <p className="lema mt-6 text-center text-[9px] text-texto-suave">Pasión por educar · Nuevo Imperial, Cañete</p>
     </article>
   )
 }

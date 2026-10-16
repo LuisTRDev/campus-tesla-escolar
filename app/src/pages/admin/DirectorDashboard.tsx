@@ -61,7 +61,7 @@ function ClassroomTable({ rows, periodId }: { rows: RoomRow[]; periodId: number 
   const sorted = [...rows].sort(compare<RoomRow>((r, k) => (k === 'name' ? classroomLabel(r.room) : r[k])))
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[56rem] text-sm">
+      <table className="tabla-colegio w-full min-w-[56rem] text-sm">
         <thead className="border-b border-linea text-left">
           <tr>
             <SortTh k="name" sort={sort} onSort={onSort} className="pl-5">Aula</SortTh>
@@ -103,7 +103,7 @@ function TeacherTable({ rows, lateDays }: { rows: TeacherRow[]; lateDays: number
   const sorted = [...rows].sort(compare<TeacherRow>((r, k) => (k === 'name' ? r.full_name ?? '' : r[k])))
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[54rem] text-sm">
+      <table className="tabla-colegio w-full min-w-[54rem] text-sm">
         <thead className="border-b border-linea text-left">
           <tr>
             <SortTh k="name" sort={sort} onSort={onSort} className="pl-5">Docente</SortTh>
@@ -163,7 +163,7 @@ function FamiliesTable({ rows, rooms, canWrite }: { rows: UnreadFamily[]; rooms:
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[48rem] text-sm">
+      <table className="tabla-colegio w-full min-w-[48rem] text-sm">
         <thead className="border-b border-linea text-left text-texto-suave">
           <tr>
             <th className="py-2.5 pl-5 pr-3 font-bold">Alumno</th>
