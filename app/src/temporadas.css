@@ -1,0 +1,59 @@
+/* Tema de temporada (src/components/Temporada.tsx). Se carga solo los días con temporada.
+   --ta/--tb: colores de la guirnalda y del confeti. --th-a/--th-b: fondo del saludo. */
+
+html[data-temporada="halloween"] { --ta: #f58220; --tb: #8e44ad; --th-a: #34154f; --th-b: #150a24; --chispa: 245 130 30; --chispa-600: 214 100 10; --chispa-ink: 150 70 0; --chispa-100: 254 235 214; }
+html.dark[data-temporada="halloween"] { --chispa-ink: 250 160 70; --chispa-100: 66 36 10; }
+html[data-temporada="navidad"] { --ta: #d63620; --tb: #26a062; --th-a: #14503a; --th-b: #0b2a20; --chispa: 38 160 98; --chispa-600: 26 130 78; --chispa-ink: 14 100 56; --chispa-100: 214 243 226; }
+html.dark[data-temporada="navidad"] { --chispa-ink: 110 220 160; --chispa-100: 14 50 32; }
+html[data-temporada="patrias"] { --ta: #d91023; --tb: #ffffff; --th-a: #7a1420; --th-b: #3d0a12; --chispa: 217 16 35; --chispa-600: 180 10 28; --chispa-ink: 160 12 26; --chispa-100: 252 224 228; }
+html.dark[data-temporada="patrias"] { --chispa-ink: 250 120 130; --chispa-100: 70 14 20; }
+html[data-temporada="amor"], html[data-temporada="madre"], html[data-temporada="santarosa"] { --ta: #e65a8c; --tb: #ffd1e0; --th-a: #6b2350; --th-b: #3a1030; --chispa: 230 90 140; --chispa-600: 200 60 115; --chispa-ink: 160 30 80; --chispa-100: 253 228 238; }
+html.dark[data-temporada="amor"], html.dark[data-temporada="madre"], html.dark[data-temporada="santarosa"] { --chispa-ink: 250 150 190; --chispa-100: 72 20 40; }
+html[data-temporada="padre"] { --ta: #3a82dc; --tb: #f0b429; --th-a: #1d4a8a; --th-b: #0f2447; --chispa: 58 130 220; --chispa-600: 40 105 190; --chispa-ink: 24 80 160; --chispa-100: 219 233 252; }
+html.dark[data-temporada="padre"] { --chispa-ink: 140 190 250; --chispa-100: 16 36 70; }
+html[data-temporada="maestro"] { --ta: #f0b429; --tb: #ffffff; --th-a: #164a3c; --th-b: #0c2a22; }
+html[data-temporada="tesla"] { --ta: #28bee6; --tb: #f0b429; --th-a: #0e3d5c; --th-b: #081f35; --chispa: 40 190 230; --chispa-600: 20 160 200; --chispa-ink: 10 100 135; --chispa-100: 214 244 252; }
+html.dark[data-temporada="tesla"] { --chispa-ink: 110 220 245; --chispa-100: 8 46 60; }
+html[data-temporada="semanasanta"], html[data-temporada="santos"] { --ta: #7c50be; --tb: #e8dcff; --th-a: #3b2466; --th-b: #1b1136; --chispa: 124 80 190; --chispa-600: 100 60 165; --chispa-ink: 90 50 150; --chispa-100: 235 227 250; }
+html.dark[data-temporada="semanasanta"], html.dark[data-temporada="santos"] { --chispa-ink: 190 160 240; --chispa-100: 40 26 70; }
+html[data-temporada="primavera"] { --ta: #f2c230; --tb: #7cc04a; --th-a: #2d5a2a; --th-b: #14301a; --chispa: 120 170 40; --chispa-600: 95 140 25; --chispa-ink: 70 100 10; --chispa-100: 238 247 214; }
+html.dark[data-temporada="primavera"] { --chispa-ink: 190 230 100; --chispa-100: 36 50 12; }
+html[data-temporada="nino"] { --ta: #1eaac8; --tb: #f0b429; --th-a: #0f5a7a; --th-b: #0a2c46; --chispa: 30 170 200; --chispa-600: 15 140 175; --chispa-ink: 10 100 130; --chispa-100: 214 240 248; }
+html.dark[data-temporada="nino"] { --chispa-ink: 110 215 240; --chispa-100: 10 44 56; }
+html[data-temporada="anio"] { --ta: #f0b429; --tb: #ffffff; --th-a: #26204f; --th-b: #0d0a26; }
+html[data-temporada="inicio"] { --ta: #f0b429; --tb: #d63620; }
+
+/* Saludo del inicio con el color de la temporada. */
+html[data-temporada] .greeting-hero { background-image: linear-gradient(135deg, var(--th-a, #173563), var(--th-b, #102442)); }
+
+/* Capa de decoración: no atrapa toques y se oculta durante los exámenes. */
+.temporada-capa { position: fixed; inset: 0; z-index: 45; overflow: hidden; pointer-events: none; }
+html.focus-mode .temporada-capa { display: none; }
+
+/* Guirnalda de focos en el borde superior. */
+.temporada-guirnalda {
+  position: absolute; inset: 0 0 auto 0; height: 12px;
+  background:
+    radial-gradient(circle at 12px 6px, var(--ta) 0 4px, transparent 5px) 0 0 / 48px 12px repeat-x,
+    radial-gradient(circle at 36px 6px, var(--tb) 0 4px, transparent 5px) 0 0 / 48px 12px repeat-x;
+  animation: temporada-focos 2.4s ease-in-out infinite alternate;
+}
+@keyframes temporada-focos { from { opacity: 0.55; } to { opacity: 1; } }
+
+/* Partículas. */
+.temporada-capa > span { position: absolute; left: var(--x); font-size: var(--z); line-height: 1; opacity: 0.85; will-change: transform; animation-duration: var(--d); animation-delay: var(--s); animation-iteration-count: infinite; animation-timing-function: linear; }
+.temporada-capa > span.confeti { width: 7px; height: 11px; border-radius: 2px; background: var(--c); }
+.temporada-capa[data-mov="caer"] > span { top: -8vh; animation-name: temporada-caer; }
+.temporada-capa[data-mov="subir"] > span { bottom: -8vh; animation-name: temporada-subir; }
+.temporada-capa[data-mov="flotar"] > span { top: calc(10vh + var(--z) * 4); animation-name: temporada-flotar; animation-timing-function: ease-in-out; }
+@keyframes temporada-caer { 0% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(18px, 55vh) rotate(180deg); } 100% { transform: translate(-6px, 112vh) rotate(360deg); } }
+@keyframes temporada-subir { 0% { transform: translate(0, 0) rotate(-6deg); } 50% { transform: translate(14px, -55vh) rotate(6deg); } 100% { transform: translate(-6px, -112vh) rotate(-6deg); } }
+@keyframes temporada-flotar { 0% { transform: translate(0, 0) rotate(-8deg); opacity: 0; } 20% { opacity: 0.85; } 50% { transform: translate(28px, -22px) rotate(8deg); } 80% { opacity: 0.85; } 100% { transform: translate(-10px, -48px) rotate(-8deg); opacity: 0; } }
+
+/* Modo ahorro y menos movimiento: queda la guirnalda quieta, sin partículas. */
+html.lite .temporada-capa > span, html.motion-off .temporada-capa > span { display: none; }
+html.lite .temporada-guirnalda, html.motion-off .temporada-guirnalda { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .temporada-capa > span { display: none; }
+  .temporada-guirnalda { animation: none; }
+}

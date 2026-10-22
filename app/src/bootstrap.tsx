@@ -7,6 +7,7 @@ import App from './App'
 import { AuthProvider } from '@/auth/AuthProvider'
 import { ToastProvider } from '@/lib/toast'
 import { PreviewProvider } from '@/components/files'
+import { SeasonTheme } from '@/components/Temporada'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { hasCachedFileMode, loadFileMode } from '@/lib/links'
 import { onRefresh } from '@/lib/sync'
@@ -27,6 +28,7 @@ export async function mount(root: HTMLElement) {
       <ToastProvider>
         <AuthProvider>
           <PreviewProvider>
+            <SeasonTheme />
             <ErrorBoundary>
               <App />
             </ErrorBoundary>

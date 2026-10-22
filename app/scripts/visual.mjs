@@ -143,6 +143,9 @@ const SCREENS = [
   ['familia-retrato', '/expediente', 'guardian', {}],
   ['familia-retrato-movil', '/expediente', 'guardian', PHONE],
   ['familia-retrato-oscuro', '/expediente', 'guardian', { theme: 'dark' }],
+  ['tema-halloween-movil', '/?tema=halloween', 'student', PHONE],
+  ['tema-navidad-oscuro', '/?tema=navidad', 'teacher', { theme: 'dark' }],
+  ['tema-patrias-login', '/?tema=patrias', null, {}],
 ]
 
 // ---------------------------------------------------------------------------

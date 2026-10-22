@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Download, Keyboard, Share, WifiOff, X } from 'lucide-react'
 import { Button, Modal } from '@/components/ui'
 import { cn } from '@/lib/utils'
-import { currentSeason, greeting, isStandaloneApp, useInstallPrompt, useKey, useOnline } from '@/lib/ux'
+import { currentSeason } from '@/lib/temporadas'
+import { greeting, isStandaloneApp, useInstallPrompt, useKey, useOnline } from '@/lib/ux'
 
 // ---------------------------------------------------------------------------
 // Sin conexión
@@ -160,13 +161,8 @@ export function GreetingHero({ name, subtitle, children, today }: { name?: strin
 }
 
 function SeasonDecor({ season }: { season: string }) {
-  if (season === 'patrias') {
-    return <div className="season-flags" aria-hidden>{Array.from({ length: 14 }).map((_, i) => <span key={i} className={i % 2 ? 'bg-white' : 'bg-[#d91023]'} />)}</div>
-  }
-  if (season === 'navidad') {
-    return <div className="season-snow" aria-hidden>{Array.from({ length: 18 }).map((_, i) => <span key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${-(i * 0.7) % 6}s`, animationDuration: `${5 + (i % 4)}s` }} />)}</div>
-  }
-  return <div className="season-confetti" aria-hidden>{Array.from({ length: 14 }).map((_, i) => <span key={i} style={{ left: `${(i * 23) % 100}%`, animationDelay: `${-(i * 0.6) % 5}s`, background: ['#F2B51C', '#D63620', '#ffffff', '#5b8fd6'][i % 4] }} />)}</div>
+  if (season !== 'patrias') return null
+  return <div className="season-flags" aria-hidden>{Array.from({ length: 14 }).map((_, i) => <span key={i} className={i % 2 ? 'bg-white' : 'bg-[#d91023]'} />)}</div>
 }
 
 // ---------------------------------------------------------------------------

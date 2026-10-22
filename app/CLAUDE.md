@@ -22,7 +22,7 @@ Se ejecutan desde `app/`:
 - `npm run dev`: servidor de desarrollo en http://localhost:5173
 - `npm run build`: `tsc -b && vite build && node scripts/size-budget.mjs` (es también la única revisión de tipos). El último paso falla si el primer arranque (entrada + `bootstrap` + sus imports estáticos) supera el presupuesto en KB gzip: carga lo nuevo con `lazy` en vez de subir el límite.
 - `npm run preview`: sirve la carpeta `dist/` ya compilada
-- `npm run visual` (después de `npm run build`): pruebas visuales. Captura 14 pantallas con Supabase simulado, fecha congelada y sin animaciones, y las compara con `visual/base`; `npm run visual -- --actualizar` acepta los cambios. Usa Edge o Chrome instalados (o `BROWSER_PATH`). La carpeta `visual/` no se sube al repositorio (las capturas dependen de la máquina).
+- `npm run visual` (después de `npm run build`): pruebas visuales. Captura 20 pantallas con Supabase simulado, fecha congelada y sin animaciones, y las compara con `visual/base`; `npm run visual -- --actualizar` acepta los cambios. Usa Edge o Chrome instalados (o `BROWSER_PATH`). La carpeta `visual/` no se sube al repositorio (las capturas dependen de la máquina).
 
 No hay pruebas automáticas ni linter. `tsconfig.app.json` tiene `strict`, `noUnusedLocals` y `noUnusedParameters`, así que un import sin usar rompe el build.
 

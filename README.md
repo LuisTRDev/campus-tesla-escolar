@@ -382,7 +382,7 @@ Ejecuta en orden `campus_18_aprendizaje.sql`, `campus_19_gestion.sql` y `campus_
 - **Tutor IA** por curso (pestaña del curso): ayuda sin dar respuestas, con indicaciones y límite diario del docente. Requiere desplegar la Edge Function `campus-tutor` y el secreto `ANTHROPIC_API_KEY` (instrucciones en `supabase/functions/campus-tutor/index.ts`).
 
 ### Experiencia de uso
-App instalable con invitación propia, aviso sin conexión y lectura sin conexión de los materiales ya abiertos; borradores automáticos (entregas, tareas y comunicados); «Deshacer» al borrar materiales; atajos de teclado (`?`); ajustes de texto grande, alto contraste y menos movimiento; saludo según la hora con decoración por fecha (inicio de clases, Fiestas Patrias, Canción Criolla, Navidad); transiciones entre pantallas; gráficos animados; pantalla de error amable que se reporta sola.
+App instalable con invitación propia, aviso sin conexión y lectura sin conexión de los materiales ya abiertos; borradores automáticos (entregas, tareas y comunicados); «Deshacer» al borrar materiales; atajos de teclado (`?`); ajustes de texto grande, alto contraste y menos movimiento; saludo según la hora y temas de temporada automáticos (ver «Temas de temporada»); transiciones entre pantallas; gráficos animados; pantalla de error amable que se reporta sola.
 
 ### Pruebas
 `supabase/tests/campus_pruebas.sql`: pruebas de niveles, Estrellas, corrección de evaluaciones, libro de puntos, permisos de funciones, RLS y horario de silencio. Se ejecutan en el SQL Editor dentro de una transacción que se deshace (no cambia datos).
@@ -510,6 +510,14 @@ En **Retrato Tesla** (menú de la familia y banner en el inicio) se ve, en una s
 **Historial del índice** (script 27, `campus_27_historial_expediente.sql`, se puede volver a ejecutar): guarda una foto del índice por alumno y por semana (hora de Lima) y la app dibuja la línea de progreso con las franjas de cada rango. Empieza a guardarse al ejecutar el script (no reconstruye el pasado): la familia la guarda al abrir el Retrato, y para que no dependa de eso hay un bloque opcional con pg_cron al final del script (`expediente_snapshot_all()`). Cuando el índice **sube de rango** respecto de la última vez que se abrió en ese dispositivo, el Retrato lo celebra con confeti y el aviso «¡Sofía subió a Muy bien!». Sin el script 27, el historial se oculta y todo lo demás funciona.
 
 Privacidad: las notas de un bimestre no se ven hasta que dirección lo publica, y no se muestran observaciones privadas ni datos de integridad o anti-trampa. No sube archivos, así que funciona igual en modo enlaces y en modo archivos. Con «Menos movimiento», el modo ahorro o la preferencia del dispositivo, todo queda quieto en su estado final.
+
+## Temas de temporada
+
+El campus se viste solo según la fecha (hora de Lima), sin script SQL ni nada que activar.  es el calendario (la primera fecha que coincide gana);  () pone  en , carga  solo esos días y dibuja una guirnalda de focos arriba y partículas animadas. Cambia el color de acento y el saludo del inicio, y mantiene el azul del colegio de base. Cambia a medianoche sin recargar.
+
+Temporadas: Amor y Amistad (10–14 feb), inicio escolar (1–15 mar), Semana Santa (Ramos a Pascua, calculada), Día de la Madre y del Padre, Día del Maestro (6 jul), cumpleaños de Tesla (10 jul), Fiestas Patrias (20–31 jul), Santa Rosa (30 ago), Día del Niño Peruano, Primavera (20–23 sep), Halloween (24–31 oct; el 31 también es el Día de la Canción Criolla), Todos los Santos (1–2 nov), Navidad (1–26 dic) y Año Nuevo (27 dic–3 ene).
+
+Se apaga en el modo ahorro y con «menos movimiento» (queda la guirnalda quieta) y durante los exámenes. Para probar una temporada en un dispositivo: añadir  a la dirección ( la quita). Para agregar una, suma una entrada en  y su bloque de colores en .
 
 ## Qué sigue
 

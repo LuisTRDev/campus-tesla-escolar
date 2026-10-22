@@ -325,9 +325,6 @@ html.focus-mode main { padding-top: 1.25rem; }
 .season-flags span { width: 18px; height: 22px; clip-path: polygon(0 0, 100% 0, 50% 100%); opacity: 0.85; animation: flag-swing 2.4s ease-in-out infinite alternate; transform-origin: top; }
 .season-flags span:nth-child(odd) { animation-delay: -1.2s; }
 @keyframes flag-swing { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
-.season-snow span, .season-confetti span { position: absolute; top: -10px; width: 7px; height: 7px; border-radius: 9999px; background: #fff; opacity: 0.85; animation: season-fall linear infinite; }
-.season-confetti span { width: 6px; height: 10px; border-radius: 2px; }
-@keyframes season-fall { to { transform: translateY(260px) rotate(360deg); } }
 
 /* Gráficos: las barras crecen al aparecer. */
 @keyframes bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
@@ -372,7 +369,7 @@ html.lite *, html.lite *::before, html.lite *::after {
 }
 html.lite *:not(.animate-spin), html.lite *::before, html.lite *::after { animation-iteration-count: 1 !important; }
 html.lite [class*="blur"], html.lite [style*="blur("], html.lite .sc-nebula, html.lite .sc-aurora-band { filter: none !important; }
-html.lite .sc-nebula, html.lite .sc-aurora-band, html.lite .tp-particle, html.lite .season-snow, html.lite .season-confetti { display: none !important; }
+html.lite .sc-nebula, html.lite .sc-aurora-band, html.lite .tp-particle { display: none !important; }
 html.lite .shadow-2xl, html.lite .shadow-xl { box-shadow: 0 1px 3px rgb(0 0 0 / 0.12) !important; }
 
 /* Modo examen: sin rebote al deslizar ni selección accidental del texto de las preguntas. */
