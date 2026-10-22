@@ -513,11 +513,11 @@ Privacidad: las notas de un bimestre no se ven hasta que dirección lo publica, 
 
 ## Temas de temporada
 
-El campus se viste solo según la fecha (hora de Lima), sin script SQL ni nada que activar.  es el calendario (la primera fecha que coincide gana);  () pone  en , carga  solo esos días y dibuja una guirnalda de focos arriba y partículas animadas. Cambia el color de acento y el saludo del inicio, y mantiene el azul del colegio de base. Cambia a medianoche sin recargar.
+El campus se viste solo según la fecha (hora de Lima), sin script SQL ni nada que activar. `src/lib/temporadas.ts` es el calendario (la primera fecha que coincide gana); `SeasonTheme` (`src/components/Temporada.tsx`) pone `data-temporada` en `<html>`, carga `src/temporadas.css` solo esos días y dibuja una guirnalda de focos arriba y partículas animadas. Cambia el color de acento y el saludo del inicio, y mantiene el azul del colegio de base. Cambia a medianoche sin recargar.
 
 Temporadas: Amor y Amistad (10–14 feb), inicio escolar (1–15 mar), Semana Santa (Ramos a Pascua, calculada), Día de la Madre y del Padre, Día del Maestro (6 jul), cumpleaños de Tesla (10 jul), Fiestas Patrias (20–31 jul), Santa Rosa (30 ago), Día del Niño Peruano, Primavera (20–23 sep), Halloween (24–31 oct; el 31 también es el Día de la Canción Criolla), Todos los Santos (1–2 nov), Navidad (1–26 dic) y Año Nuevo (27 dic–3 ene).
 
-Se apaga en el modo ahorro y con «menos movimiento» (queda la guirnalda quieta) y durante los exámenes. Para probar una temporada en un dispositivo: añadir  a la dirección ( la quita). Para agregar una, suma una entrada en  y su bloque de colores en .
+Se apaga en el modo ahorro y con «menos movimiento» (queda la guirnalda quieta) y durante los exámenes. Para probar una temporada en un dispositivo: añadir `?tema=halloween` a la dirección (`?tema=ninguno` la quita). Para agregar una, suma una entrada en `TEMPORADAS` y su bloque de colores en `temporadas.css`.
 
 ## Qué sigue
 
