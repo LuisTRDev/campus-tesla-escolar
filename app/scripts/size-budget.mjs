@@ -7,7 +7,7 @@ import path from 'node:path'
 import zlib from 'node:zlib'
 
 const BUDGET_JS_KB = 180 // gzip
-const BUDGET_CSS_KB = 18 // gzip
+const BUDGET_CSS_KB = 20 // gzip
 
 const dist = path.resolve('dist')
 const manifestPath = path.join(dist, '.vite', 'manifest.json')

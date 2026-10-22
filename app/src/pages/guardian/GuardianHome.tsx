@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Copy, FileSignature, FileText, MessageCircle, Wallet } from 'lucide-react'
+import { ArrowRight, Copy, FileSignature, FileText, MessageCircle, Wallet } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Badge, Empty, ErrorBox, Loading, Panel } from '@/components/ui'
 import { GreetingHero, type TodayItem } from '@/components/ux'
@@ -15,6 +15,7 @@ import { listCirculars, listRecipients } from '@/services/comunicados'
 import { isUnread, listConversations, listReads } from '@/services/mensajes'
 import { PushPrompt } from '@/pages/NotificationsPage'
 import { TeslaSummaryCard } from '@/components/tesla'
+import { IcoRetrato } from '@/components/icons'
 import type { AttendanceRow, NotificationRow, PensionRow, StudentLite } from '@/types'
 
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre']
@@ -241,6 +242,15 @@ export default function GuardianHome() {
       <GreetingHero name={profile?.full_name} subtitle={`Así va la semana de ${childName} · ${classroomLabel(activeChild.classroom)}. ${formatDay(today)}.`} today={todayItems} />
       <PushPrompt />
       {profile && <FamilyPending profileId={profile.id} />}
+
+      <Link to="/expediente" className="btn-parche group mb-6 flex items-center gap-4 rounded-xl bg-tinta px-5 py-4 text-white transition-transform hover:-translate-y-0.5">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/10 text-chispa"><IcoRetrato className="h-7 w-7" /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-lg font-bold leading-tight">Retrato Tesla</span>
+          <span className="block text-sm text-white/75">El expediente de {childName} en un vistazo, con su Índice Tesla.</span>
+        </span>
+        <ArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1" aria-hidden />
+      </Link>
 
       {(work.error || tesla.error) && <div className="mb-6"><ErrorBox message={work.error || tesla.error} onRetry={() => { void work.reload(); void tesla.reload() }} /></div>}
 

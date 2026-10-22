@@ -274,6 +274,8 @@ Ejecuta `campus_13_crear_usuarios.sql` y `campus_14_admin_cuentas.sql`. Desde en
 | Cursos por aula → Por aula | Tutor, cursos y docente de cada aula; **Copiar a otras aulas** (por ejemplo 1.° A → 1.° B), con o sin docentes. |
 | Cursos por aula → Por docente | Elige un docente y toca las áreas de cada aula para asignarlas, quitarlas o reasignarlas; también lo haces tutor. |
 
+**Cuenta de una sola persona** (script 26, `campus_26_cuenta_individual.sql`): en **Cuentas → Alumnos y familias**, cada alumno o familia sin cuenta tiene su propio botón **Crear cuenta**, y un buscador por nombre o DNI para encontrarla. Crea solo esa cuenta y muestra su ficha imprimible; si ya tiene cuenta no la duplica, y a una familia sin DNI en Tesla no se le crea. Sin el script, la pantalla avisa que falta ejecutarlo. «Crear cuentas faltantes» sigue creando todas las del aula.
+
 Una cuenta desactivada no puede iniciar sesión (ni en el campus ni en Tesla) y pierde sus permisos; reactivarla los devuelve.
 
 ## Experiencia de uso
@@ -475,6 +477,39 @@ Ningún detector de IA es seguro: úsalo para conversar con el alumno (por ejemp
 - **Modo ahorro** (Ajustes → Ahorro de datos y batería): sin desenfoques ni animaciones infinitas y con datos actualizados cada 5 minutos. Se activa solo con el ahorro de datos del celular, en redes 2G o 3G o en equipos con poca memoria.
 - **Sincronización que no gasta de más**: se pausa tras 5 minutos sin usar la app y durante los exámenes, y se pone al día con el siguiente toque.
 - **Exámenes sin conexión**: las respuestas se guardan en el celular y se envían al volver internet, incluido el envío final.
+
+## Retrato Tesla: el expediente de la familia · script 25
+
+Ejecuta `campus_25_expediente.sql` después del 24 (se puede volver a ejecutar). Agrega una sola función de lectura, `child_overview(alumno)`, y no cambia datos ni permisos. Es **solo para la familia** (apoderado vinculado): el alumno, los docentes y la dirección no la abren. Sin el script, la pantalla avisa que todavía no está activada.
+
+En **Retrato Tesla** (menú de la familia y banner en el inicio) se ve, en una sola pantalla y con animaciones propias en SVG y CSS:
+
+| Bloque | Qué muestra |
+|---|---|
+| **Índice Tesla** | Un círculo animado de 0 a 100 que cambia de color según el rango (Sobresaliente, Muy bien, En buen camino, Podemos mejorar, Necesita apoyo; siempre con la palabra, nunca solo el color) y una frase para la familia. Al tocarlo se ve cómo se calculó. |
+| **Cuatro anillos** | Rendimiento, Tareas, Asistencia y Constancia, cada uno con su color y su explicación. |
+| **Para tener presente** | Avisos dichos con calma: comunicados por responder, tareas vencidas, tardanzas recientes, justificaciones en revisión y citas. |
+| **Rendimiento por áreas** | Radar de las áreas, evolución por bimestre (solo contra el propio alumno) y tabla de niveles AD/A/B/C. |
+| **Asistencia** | Conteos y calendario del año con puntuales, tardanzas, feriados y días sin registro. |
+| **Tareas, Perfil Tesla y familia** | Tareas del año, nivel y logros recientes, próximos exámenes y actividades, comunicados y estado de las pensiones. |
+| **Imprimir** | Una hoja limpia (A4) para guardar en PDF. |
+
+**El índice es referencial y no oficial**: no reemplaza la libreta ni las notas del colegio, y nunca compara a un alumno con otros. Se calcula en la base con estos pesos. Se pueden cambiar sin publicar la app, en `campus_private.settings` (clave `expediente_pesos`); si falta una parte, el índice se recalcula con las demás.
+
+| Parte | Peso | De dónde sale |
+|---|---|---|
+| Rendimiento | 45 | Niveles del último bimestre **publicado** (AD 100, A 85, B 65, C 40); si aún no hay bimestre publicado, el promedio de las tareas calificadas |
+| Tareas | 20 | Entregadas a tiempo (completas) o tarde (60 %) frente a las vencidas del año |
+| Asistencia | 20 | Puntual 100 %, tardanza 80 %, frente a los días de clase; las faltas justificadas y aprobadas no restan |
+| Constancia | 15 | Racha de tareas a tiempo (60 %) y XP de los últimos 30 días (40 %); solo si existe el Perfil Tesla |
+
+**¿Cómo subir el índice?** Cuatro ideas concretas con lo que pasaría: entregar a tiempo las próximas tareas, ponerse al día con las vencidas (si el docente todavía las recibe), cinco días puntuales, alargar la racha o subir de nivel el área más baja. Al pasar el cursor, enfocar o tocar una idea, el círculo dibuja hasta dónde llegaría; hay un botón para ver «todo junto». Usa las mismas fórmulas del índice y solo muestra mejoras de al menos 1 punto, y se aclara que es una simulación, no una promesa de nota.
+
+**Hoy en el colegio:** el horario del día con la clase en curso resaltada (barra de avance y minutos que faltan), las clases ya terminadas, lo que toca mañana o el lunes y las tareas por vencer. Se actualiza solo cada medio minuto y avisa si hoy es feriado o no hay clases.
+
+**Historial del índice** (script 27, `campus_27_historial_expediente.sql`, se puede volver a ejecutar): guarda una foto del índice por alumno y por semana (hora de Lima) y la app dibuja la línea de progreso con las franjas de cada rango. Empieza a guardarse al ejecutar el script (no reconstruye el pasado): la familia la guarda al abrir el Retrato, y para que no dependa de eso hay un bloque opcional con pg_cron al final del script (`expediente_snapshot_all()`). Cuando el índice **sube de rango** respecto de la última vez que se abrió en ese dispositivo, el Retrato lo celebra con confeti y el aviso «¡Sofía subió a Muy bien!». Sin el script 27, el historial se oculta y todo lo demás funciona.
+
+Privacidad: las notas de un bimestre no se ven hasta que dirección lo publica, y no se muestran observaciones privadas ni datos de integridad o anti-trampa. No sube archivos, así que funciona igual en modo enlaces y en modo archivos. Con «Menos movimiento», el modo ahorro o la preferencia del dispositivo, todo queda quieto en su estado final.
 
 ## Qué sigue
 

@@ -6,11 +6,12 @@ import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, Modal, PageHeade
 import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
+import { isMissingFunction } from '@/services/integridad'
 import { formatShort } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { classroomLabel, listClassrooms } from '@/services/campus'
 import {
-  classroomRoster, createClassroomAccounts, createStaff, listStaffAccounts, resetPassword, setAccountActive, studentCode, updateAccount,
+  classroomRoster, createClassroomAccounts, createPersonAccount, createStaff, listStaffAccounts, resetPassword, setAccountActive, studentCode, updateAccount,
   type Credential, type CredentialsResult, type RosterRow, type StaffAccount,
 } from '@/services/cuentas'
 import { ROLE_LABELS, type Role } from '@/types'
@@ -138,12 +139,18 @@ function FamiliesTab({ onResult, onReset }: { onResult: (r: CredentialsResult) =
   const roster = useAsync(async () => (classroomId ? classroomRoster(classroomId) : []), [classroomId])
   const [includeGuardians, setIncludeGuardians] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [creating, setCreating] = useState<string | null>(null)
+  const [find, setFind] = useState('')
 
   const rows = roster.data ?? []
-  const students = rows.filter((r) => r.kind === 'STUDENT')
-  const guardians = rows.filter((r) => r.kind === 'GUARDIAN')
-  const missing = students.filter((s) => !s.profile_id).length + (includeGuardians ? guardians.filter((g) => !g.profile_id && g.dni).length : 0)
-  const toDni = students.filter((s) => s.profile_id && s.dni && s.username && isCode(s.username)).length
+  const q = find.trim().toLowerCase()
+  const shown = q ? rows.filter((r) => `${r.name} ${r.dni ?? ''} ${r.student_name ?? ''}`.toLowerCase().includes(q)) : rows
+  const students = shown.filter((r) => r.kind === 'STUDENT')
+  const guardians = shown.filter((r) => r.kind === 'GUARDIAN')
+  const allStudents = rows.filter((r) => r.kind === 'STUDENT')
+  const allGuardians = rows.filter((r) => r.kind === 'GUARDIAN')
+  const missing = allStudents.filter((s) => !s.profile_id).length + (includeGuardians ? allGuardians.filter((g) => !g.profile_id && g.dni).length : 0)
+  const toDni = allStudents.filter((s) => s.profile_id && s.dni && s.username && isCode(s.username)).length
 
   async function onBulk() {
     if (!classroomId) return
@@ -156,6 +163,19 @@ function FamiliesTab({ onResult, onReset }: { onResult: (r: CredentialsResult) =
       toast(toMessage(err), 'error')
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function createOne(r: RosterRow) {
+    setCreating(`${r.kind}${r.person_id}`)
+    try {
+      onResult(await createPersonAccount(r.kind, r.person_id))
+      void roster.reload(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (err) {
+      toast(isMissingFunction(err) ? 'Falta ejecutar el script 26 en la base de datos.' : toMessage(err), 'error')
+    } finally {
+      setCreating(null)
     }
   }
 
@@ -193,6 +213,11 @@ function FamiliesTab({ onResult, onReset }: { onResult: (r: CredentialsResult) =
         </p>
       </div>
       {status(r)}
+      {!r.profile_id && !(r.kind === 'GUARDIAN' && !r.dni) && (
+        <Button size="sm" variant="ghost" loading={creating === `${r.kind}${r.person_id}`} onClick={() => void createOne(r)}>
+          <UserPlus className="h-4 w-4" />Crear cuenta
+        </Button>
+      )}
       {r.profile_id && (
         <div className="flex gap-1">
           <Button size="sm" variant="ghost" onClick={() => onReset(r.profile_id!, r.name)}><KeyRound className="h-4 w-4" />Nueva clave</Button>
@@ -226,6 +251,13 @@ function FamiliesTab({ onResult, onReset }: { onResult: (r: CredentialsResult) =
         </Button>
         <span className="text-sm text-texto-suave">Solo se crean las que faltan. Los alumnos sin DNI reciben un código provisional.</span>
       </div>
+      {rows.length > 0 && (
+        <div className="mt-4 max-w-md">
+          <Field label="Buscar en el aula" hint="Por nombre o DNI. Cada persona sin cuenta tiene su propio botón «Crear cuenta».">
+            <Input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Ej.: Zulema o 15437373" />
+          </Field>
+        </div>
+      )}
       {toDni > 0 && missing > 0 && <p className="mt-2 text-sm text-texto-suave">Además, {toDni} alumno{toDni === 1 ? '' : 's'} ya tiene{toDni === 1 ? '' : 'n'} DNI: su usuario pasará del código al DNI (sin cambiar la clave).</p>}
 
       {roster.loading ? <Loading /> : roster.error ? <div className="mt-4"><ErrorBox message={roster.error} /></div> : (

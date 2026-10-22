@@ -52,6 +52,10 @@ export const classroomRoster = async (classroomId: number) =>
 export const createClassroomAccounts = (classroomId: number, includeGuardians: boolean) =>
   rpc<CredentialsResult>('admin_classroom_accounts', { p_classroom_id: positiveInteger(classroomId), p_include_guardians: includeGuardians })
 
+/** Cuenta de una sola persona (script 26). */
+export const createPersonAccount = (kind: 'STUDENT' | 'GUARDIAN', personId: number) =>
+  rpc<CredentialsResult>('admin_create_person_account', { p_kind: kind, p_person_id: positiveInteger(personId) })
+
 export async function createStaff(email: string, fullName: string, role: Role): Promise<CredentialsResult> {
   const row = await rpc<Credential>('admin_create_staff', { p_email: email, p_full_name: fullName, p_role: role })
   return { created: [row], skipped: [] }

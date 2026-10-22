@@ -125,6 +125,17 @@ export function IcoRayo({ className }: P) {
   )
 }
 
+/** Retrato Tesla: medallón con un círculo de avance y la chispa dorada. */
+export function IcoRetrato({ className }: P) {
+  return (
+    <Svg className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path className="ti-fill" strokeWidth="1.6" d="M12 3a9 9 0 0 1 9 9h-4.2A4.8 4.8 0 0 0 12 7.2z" />
+      <path className="ti-acc" strokeWidth="1.6" d="M12.6 9 9.4 13.1h2.5l-.5 3 3.2-4.1h-2.5z" />
+    </Svg>
+  )
+}
+
 /** Mensajes: globo de conversación con tres puntos dorados. */
 export function IcoMensajes({ className }: P) {
   return (

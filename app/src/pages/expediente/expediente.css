@@ -1,0 +1,61 @@
+/* Retrato Tesla: el expediente de la familia. Todo se dibuja con SVG y CSS (sin imágenes). */
+
+.exp-ring { color: rgb(var(--texto)); isolation: isolate; }
+.exp-ring:focus-visible { outline: 3px solid var(--b1); outline-offset: 6px; }
+
+/* Halo que respira detrás del círculo, del color del rango */
+.exp-glow {
+  position: absolute; inset: -9%; z-index: -1; border-radius: 9999px;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--bg) 42%, transparent), transparent 72%);
+  animation: exp-breathe 4.2s ease-in-out infinite;
+}
+@keyframes exp-breathe { 0%, 100% { transform: scale(0.94); opacity: 0.75; } 50% { transform: scale(1.06); opacity: 1; } }
+
+.exp-arc { transition: stroke-dashoffset 1.7s var(--ease-out) 0.15s; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--bg) 55%, transparent)); }
+.exp-orbit { transform-origin: 100px 100px; animation: exp-turn 48s linear infinite; }
+@keyframes exp-turn { to { transform: rotate(360deg); } }
+.exp-tip { transition: opacity 0.5s 1.6s; }
+.exp-tip-pulse { animation: exp-ping 2.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes exp-ping { 0% { transform: scale(0.6); opacity: 0.7; } 100% { transform: scale(2.1); opacity: 0; } }
+
+.exp-chip { box-shadow: 0 6px 16px -6px var(--bg); animation: exp-pop 0.7s var(--ease-spring) both 1.2s; }
+.exp-chip-fast { animation-delay: 0s; animation-duration: 0.45s; }
+.exp-ghost { transition: stroke-dashoffset 0.8s var(--ease-out), opacity 0.4s; }
+@keyframes exp-pop { from { opacity: 0; transform: translateY(8px) scale(0.85); } to { opacity: 1; transform: none; } }
+
+/* Tarjetas que suben al entrar, una tras otra (el retraso se pone en línea) */
+.exp-rise { animation: exp-rise 0.6s var(--ease-out) both; }
+@keyframes exp-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+.exp-hero {
+  background:
+    radial-gradient(60rem 26rem at 85% -10%, color-mix(in srgb, var(--b1) 18%, transparent), transparent 60%),
+    radial-gradient(40rem 22rem at -5% 110%, color-mix(in srgb, var(--b2) 14%, transparent), transparent 60%),
+    rgb(var(--superficie));
+}
+
+.exp-mini { -webkit-tap-highlight-color: transparent; }
+.exp-mini:active { scale: 0.97; }
+
+/* Detalle que se abre al elegir un anillo */
+.exp-detail { animation: exp-rise 0.4s var(--ease-out) both; border-left: 4px solid var(--b1); }
+
+/* Con menos movimiento o modo ahorro: todo queda en su lugar final, sin efectos continuos */
+html.motion-off .exp-glow, html.motion-off .exp-orbit, html.motion-off .exp-tip-pulse, html.motion-off .exp-chip,
+html.lite .exp-glow, html.lite .exp-orbit, html.lite .exp-tip-pulse { animation: none; }
+html.motion-off .exp-arc, html.motion-off .exp-tip, html.lite .exp-arc { transition: none; }
+html.motion-off .confetti, html.lite .confetti { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .exp-glow, .exp-orbit, .exp-tip-pulse, .exp-chip, .exp-rise, .exp-detail { animation: none; }
+  .exp-arc, .exp-tip { transition: none; }
+  .confetti { display: none; }
+}
+
+/* Impresión: una hoja limpia, sin efectos, con los colores del índice */
+@media print {
+  .exp-glow, .exp-orbit, .exp-tip-pulse, .confetti { display: none !important; }
+  .exp-hero { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .exp-arc, .exp-mini svg, .exp-ring svg { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .exp-rise, .exp-detail, .exp-chip { animation: none !important; opacity: 1 !important; }
+  .exp-card { break-inside: avoid; }
+}

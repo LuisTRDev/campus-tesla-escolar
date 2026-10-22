@@ -143,6 +143,28 @@ begin
   perform pg_temp.check(public.push_send_after(v_profile) is null, 'sin horario de silencio el aviso sale al instante');
 end $$;
 
+-- ----------------------------------------------------------------------------
+-- 7) Retrato Tesla (script 25): niveles, puntos y permisos
+-- ----------------------------------------------------------------------------
+do $$
+begin
+  perform pg_temp.check(public.expediente_puntos('AD') = 100 and public.expediente_puntos('A') = 85
+    and public.expediente_puntos('B') = 65 and public.expediente_puntos('C') = 40, 'puntos de los niveles AD, A, B y C');
+  perform pg_temp.check(public.expediente_puntos('X') is null, 'un nivel desconocido no puntúa');
+  perform pg_temp.check(public.expediente_nivel(100) = 'AD' and public.expediente_nivel(92.4) = 'A'
+    and public.expediente_nivel(75) = 'A' and public.expediente_nivel(74.9) = 'B'
+    and public.expediente_nivel(52.5) = 'B' and public.expediente_nivel(52.4) = 'C', 'cortes de nivel del expediente');
+  perform pg_temp.check(public.expediente_nivel(null) is null, 'sin puntaje no hay nivel');
+  perform pg_temp.check(not has_function_privilege('anon', 'public.child_overview(bigint)', 'execute'), 'child_overview no es pública');
+  perform pg_temp.check(not has_function_privilege('authenticated', 'public.expediente_compute(bigint)', 'execute'), 'el cálculo del expediente no se llama directo');
+  -- Historial semanal (script 27, opcional)
+  if to_regclass('public.expediente_snapshots') is not null then
+    perform pg_temp.check((select relrowsecurity from pg_class where oid = 'public.expediente_snapshots'::regclass), 'RLS activo en expediente_snapshots');
+    perform pg_temp.check(not has_table_privilege('authenticated', 'public.expediente_snapshots', 'select'), 'el historial no se lee directo');
+    perform pg_temp.check(not has_function_privilege('anon', 'public.expediente_history(bigint)', 'execute'), 'expediente_history no es pública');
+  end if;
+end $$;
+
 select 'Todas las pruebas pasaron ✔' as resultado;
 
 rollback;

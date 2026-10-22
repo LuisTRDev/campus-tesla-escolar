@@ -48,6 +48,7 @@ const AjustesPage = lazyPage(() => import('@/pages/AjustesPage'))
 const CarnetPage = lazyPage(() => import('@/pages/carnet/CarnetPage'))
 const DiplomaPage = lazyPage(() => import('@/pages/diploma/DiplomaPage'))
 const AntitrampaPage = lazyPage(() => import('@/pages/integridad/AntitrampaPage'))
+const ExpedientePage = lazyPage(() => import('@/pages/expediente/ExpedientePage'))
 
 const L = ({ children }: { children: ReactNode }) => <Suspense fallback={<Loading shape="page" />}>{children}</Suspense>
 
@@ -80,7 +81,7 @@ export default function App() {
   const role = profile?.role
   usePrefetch(
     role === 'STUDENT' ? [CoursesPage, TasksPage, CoursePage, AssignmentPage, PerfilTeslaPage]
-      : role === 'GUARDIAN' ? [TasksPage, ReportCardPage, MessagesPage, CoursePage]
+      : role === 'GUARDIAN' ? [ExpedientePage, TasksPage, ReportCardPage, MessagesPage, CoursePage]
       : role === 'TEACHER' ? [CoursesPage, CoursePage, AssignmentPage, GradebookPage]
       : [AdminCourses, AnnouncementsPage, CircularsPage, GradebookPage],
     !!profile && !mustChangePassword,
@@ -121,6 +122,7 @@ export default function App() {
         <Route path="notas" element={isTeacher || isStaff ? <GradebookPage /> : home} />
         <Route path="notas/:offeringId" element={isTeacher || isStaff ? <GradebookPage /> : home} />
         <Route path="consolidado" element={isStaff || tutorClassrooms.length > 0 ? <ConsolidatedPage /> : home} />
+        <Route path="expediente" element={profile.role === 'GUARDIAN' ? <ExpedientePage /> : home} />
         <Route path="libreta" element={isFamily ? <ReportCardPage /> : home} />
         <Route path="libreta/:studentId" element={!isFamily ? <ReportCardPage /> : home} />
         <Route path="libretas/:classroomId" element={!isFamily ? <ReportCardPage bulk /> : home} />

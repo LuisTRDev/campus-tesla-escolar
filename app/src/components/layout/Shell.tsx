@@ -4,7 +4,7 @@ import { Bell, KeyRound, LogOut, Monitor, Moon, MoreHorizontal, RefreshCw, Searc
 import { Escudo } from '@/components/brand'
 import {
   IcoAgenda, IcoAjustes, IcoAlertas, IcoAntitrampa, IcoAulas, IcoBimestres, IcoCampana, IcoCarnet, IcoCircular, IcoCitas, IcoConsolidado, IcoCuaderno, IcoEncuestas, IcoEscudo,
-  IcoGrupos, IcoJustificacion, IcoLibreta, IcoMegafono, IcoMensajes, IcoNotas, IcoPanel, IcoPlanificador, IcoRayo, IcoRecursos, IcoSistema, IcoTareas, IcoTienda,
+  IcoGrupos, IcoJustificacion, IcoLibreta, IcoMegafono, IcoMensajes, IcoNotas, IcoPanel, IcoPlanificador, IcoRayo, IcoRecursos, IcoRetrato, IcoSistema, IcoTareas, IcoTienda,
 } from '@/components/icons'
 import type { ComponentType } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
@@ -47,6 +47,7 @@ const I = {
   adminCourses: { to: '/admin/cursos', label: 'Cursos por aula', icon: IcoAulas },
   accounts: { to: '/admin/cuentas', label: 'Cuentas', icon: IcoCarnet },
   periods: { to: '/admin/bimestres', label: 'Bimestres', icon: IcoBimestres },
+  retrato: { to: '/expediente', label: 'Retrato Tesla', icon: IcoRetrato },
   tesla: { to: '/perfil-tesla', label: 'Perfil Tesla', icon: IcoRayo },
   store: { to: '/tienda', label: 'Tienda', icon: IcoTienda },
   teslaClass: { to: '/tesla/aula', label: 'Perfil Tesla', icon: IcoRayo },
@@ -78,7 +79,7 @@ function navFor(role: Role, isTutor: boolean, perms: CampusPermission[] = []): N
       return [I.home, I.tasks, I.tesla, I.agenda, I.store, I.courses, I.carnet, I.channels, I.schedule, I.reportCard, I.announcements, I.surveys, I.settings]
     case 'GUARDIAN':
       return [
-        I.summary, I.circulars, I.messages, I.tasks, I.appointments, I.justifications, I.agenda, I.schedule, I.reportCard, I.tesla,
+        I.summary, I.retrato, I.messages, I.tasks, I.circulars, I.appointments, I.justifications, I.agenda, I.schedule, I.reportCard, I.tesla,
         I.store, I.courses, I.carnet, I.channels, I.announcements, I.surveys, I.settings,
       ]
     case 'ADMIN':
