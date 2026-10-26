@@ -9,8 +9,11 @@ import { useAsync } from '@/lib/useAsync'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
 import { formatBytes, formatShort, formatTime } from '@/lib/format'
-import { setFileMode, useFileUploads } from '@/lib/links'
+import { linkInfo, setFileMode, useFileUploads } from '@/lib/links'
+import { HELP_TOPICS } from '@/lib/ayudaTemas'
+import { loadHelpVideos, saveHelpVideos, useHelpVideos } from '@/lib/ayuda'
 import { downloadText } from '@/lib/ux'
+import { isMissingFunction } from '@/services/integridad'
 import { classroomLabel, listClassroomOfferings, listClassrooms, listSubjects, upsertOfferings } from '@/services/campus'
 import { createBlock } from '@/services/calendario'
 import { createStaff, listStaffAccounts, type Credential } from '@/services/cuentas'
@@ -20,7 +23,7 @@ import {
 } from '@/services/gestion'
 import { ROLE_LABELS, type Classroom } from '@/types'
 
-type Tab = 'auditoria' | 'uso' | 'errores' | 'permisos' | 'archivos' | 'carga' | 'anio' | 'respaldo'
+type Tab = 'auditoria' | 'uso' | 'errores' | 'permisos' | 'archivos' | 'ayuda' | 'carga' | 'anio' | 'respaldo'
 
 // ---------------------------------------------------------------------------
 // Auditoría
@@ -290,6 +293,64 @@ const TEMPLATES: Record<ImportKind, { headers: string[]; example: string[][]; hi
 const DAYS: Record<string, number> = { lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5, sabado: 6 }
 const norm = (s: unknown) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase()
 
+// ---------------------------------------------------------------------------
+// Ayuda: videos cortos del colegio para cada tema del botón «Ayuda»
+// ---------------------------------------------------------------------------
+const GROUP_NAMES: Record<string, string> = { ALL: 'Para todos',  GUARDIAN: 'Familias', STUDENT: 'Alumnos', TEACHER: 'Docentes', STAFF: 'Dirección y personal' }
+
+function HelpVideosTab() {
+  const toast = useToast()
+  const saved = useHelpVideos()
+  const [draft, setDraft] = useState<Record<string, string>>(saved)
+  const [busy, setBusy] = useState(false)
+  const [missing, setMissing] = useState(false)
+
+  useEffect(() => { void loadHelpVideos().then((v) => setDraft(v)) }, [])
+
+  const bad = (id: string) => { const v = (draft[id] ?? '').trim(); return v !== '' && !/^https:\/\/\S{4,}$/i.test(v) }
+  const dirty = HELP_TOPICS.some((t) => (draft[t.id] ?? '').trim() !== (saved[t.id] ?? ''))
+
+  async function save() {
+    if (HELP_TOPICS.some((t) => bad(t.id))) { toast('Revisa los enlaces marcados: deben empezar con https://', 'error'); return }
+    const clean: Record<string, string> = {}
+    for (const t of HELP_TOPICS) if ((draft[t.id] ?? '').trim()) clean[t.id] = draft[t.id].trim()
+    setBusy(true)
+    try {
+      await saveHelpVideos(clean)
+      setMissing(false)
+      toast('Videos de ayuda guardados.', 'ok')
+    } catch (err) {
+      if (isMissingFunction(err)) setMissing(true)
+      else toast(toMessage(err), 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <Panel title="Videos de ayuda del colegio">
+        <p className="text-sm text-texto-suave">
+          Grabe con el celular un video de 30 a 60 segundos por tema (muestre la pantalla y diga los pasos con calma), súbalo a YouTube como «No listado» o a Google Drive con «Cualquier persona con el enlace» y pegue aquí el enlace. Aparece dentro del botón «Ayuda». Deje vacío un tema para que muestre solo los pasos escritos.
+        </p>
+        {missing && <p role="alert" className="mt-3 rounded-lg bg-estado-alerta/10 px-3 py-2 text-sm font-bold text-estado-alerta">Falta ejecutar el script 28 (campus_28_ayuda.sql) en Supabase para guardar los videos.</p>}
+      </Panel>
+      {(['ALL', 'GUARDIAN', 'STUDENT', 'TEACHER', 'STAFF'] as const).map((g) => (
+        <Panel key={g} title={GROUP_NAMES[g]}>
+          <div className="space-y-4">
+            {HELP_TOPICS.filter((t) => (t.groups.length > 1 ? 'ALL' : t.groups[0]) === g).map((t) => (
+              <Field key={t.id} label={t.title} hint={bad(t.id) ? 'Debe empezar con https://' : draft[t.id] && linkInfo(draft[t.id]).embed ? 'Se verá dentro del campus.' : draft[t.id] ? 'Se abrirá en otra pestaña (YouTube y Drive se ven dentro del campus).' : undefined}>
+                <Input type="url" inputMode="url" placeholder="https://youtu.be/…" value={draft[t.id] ?? ''} onChange={(e) => setDraft({ ...draft, [t.id]: e.target.value })} aria-invalid={bad(t.id)} />
+              </Field>
+            ))}
+          </div>
+        </Panel>
+      ))}
+      <div className="sticky bottom-20 flex justify-end lg:bottom-4"><Button onClick={() => void save()} loading={busy} disabled={!dirty}>Guardar videos</Button></div>
+    </div>
+  )
+}
+
 function parseCsv(text: string): string[][] {
   const sep = (text.split('\n')[0].match(/;/g)?.length ?? 0) > (text.split('\n')[0].match(/,/g)?.length ?? 0) ? ';' : ','
   return text.split(/\r?\n/).filter((l) => l.trim()).map((l) => l.split(sep).map((c) => c.replace(/^"|"$/g, '').trim()))
@@ -501,7 +562,7 @@ export default function SystemPage() {
       <div className="mb-5 overflow-x-auto">
         <Segmented value={tab} onChange={(v) => setParams({ vista: v }, { replace: true })} options={[
           { value: 'auditoria', label: 'Auditoría' }, { value: 'uso', label: 'Uso' }, { value: 'errores', label: 'Errores' }, { value: 'permisos', label: 'Permisos' },
-          { value: 'archivos', label: 'Archivos' },
+          { value: 'archivos', label: 'Archivos' }, { value: 'ayuda', label: 'Ayuda' },
           { value: 'carga', label: 'Carga masiva' }, { value: 'anio', label: 'Año escolar' }, { value: 'respaldo', label: 'Respaldo' },
         ]} />
       </div>
@@ -510,6 +571,7 @@ export default function SystemPage() {
       {tab === 'errores' && <ErrorsTab />}
       {tab === 'permisos' && <PermissionsTab />}
       {tab === 'archivos' && <FilesModeTab />}
+      {tab === 'ayuda' && <HelpVideosTab />}
       {tab === 'carga' && <BulkImportTab />}
       {tab === 'anio' && <YearTab />}
       {tab === 'respaldo' && <BackupTab />}

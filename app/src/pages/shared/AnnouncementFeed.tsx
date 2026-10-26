@@ -62,7 +62,7 @@ export function AnnouncementFeed({ classroomId, offerings, limit = 10, compact }
   if (loading) return <Loading />
   if (error) return <ErrorBox message={error} onRetry={() => void reload()} />
   if (!data?.items.length) {
-    return <Empty title="Sin avisos por ahora" art="bell" compact icon={<Megaphone className="h-5 w-5" />} />
+    return <Empty title="Sin avisos por ahora" art="bell" compact icon={<Megaphone className="h-5 w-5" />}>Cuando el colegio publique algo importante, lo verá aquí.</Empty>
   }
   const byId = new Map(offerings.map((o) => [o.id, o]))
   return (

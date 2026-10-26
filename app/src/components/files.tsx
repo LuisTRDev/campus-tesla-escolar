@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react'
 import { Camera, Download, ExternalLink, FileText, FileSpreadsheet, FileImage, FileAudio, Film, Link2, Plus, UploadCloud, X } from 'lucide-react'
 import { Button, Input, Modal, Skeleton } from '@/components/ui'
+import { AyudaLink } from '@/components/AyudaLink'
 import { supabase } from '@/lib/supabase'
 import { formatBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -291,6 +292,7 @@ function ShareHint() {
   return (
     <p className="text-xs text-texto-suave">
       En Google Drive usa <b className="text-texto">Compartir → Cualquier persona con el enlace</b>; si no, los demás no podrán abrirlo.
+      <AyudaLink topic="compartir-drive" label="Ver los pasos" className="ml-1 min-h-9 py-0" />
     </p>
   )
 }

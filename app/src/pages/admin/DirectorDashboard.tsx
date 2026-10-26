@@ -13,6 +13,7 @@ import { classroomLabel, listClassrooms } from '@/services/campus'
 import { currentPeriod, listPeriods } from '@/services/notas'
 import { startConversation } from '@/services/mensajes'
 import { SchoolAlertsPanel } from '@/pages/admin/SchoolAlertsPanel'
+import { PrimerosPasos } from '@/components/PrimerosPasos'
 import {
   THRESHOLDS, dashboardAreas, dashboardClassrooms, dashboardTeachers, dashboardUnreadFamilies, ratio, toneFor,
   type ClassroomStats, type TeacherStats, type UnreadFamily,
@@ -289,6 +290,7 @@ export default function DirectorDashboard() {
   return (
     <>
       <PageHeader title="Panel de dirección" subtitle={`Indicadores del colegio · ${range.label} (${formatShort(range.from)} al ${formatShort(range.to)}). Se actualiza solo cada 2 minutos.`} />
+      <PrimerosPasos className="mb-6" />
       <SchoolAlertsPanel />
 
       {/* Filtros: una sola fila sobre todos los indicadores */}

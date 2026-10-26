@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
-import { Bell, KeyRound, LogOut, Monitor, Moon, MoreHorizontal, RefreshCw, Search, Settings, Sun, X } from 'lucide-react'
+import { Bell, CircleHelp, KeyRound, LogOut, Monitor, Moon, MoreHorizontal, RefreshCw, Search, Settings, Sun, X } from 'lucide-react'
 import { Escudo } from '@/components/brand'
 import {
   IcoAgenda, IcoAjustes, IcoAlertas, IcoAntitrampa, IcoAulas, IcoBimestres, IcoCampana, IcoCarnet, IcoCircular, IcoCitas, IcoConsolidado, IcoCuaderno, IcoEncuestas, IcoEscudo,
@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { studentName } from '@/services/campus'
 import { ROLE_LABELS, type Role } from '@/types'
 import { InstallBanner, OfflineBanner, ShortcutsHelp } from '@/components/ux'
+import { loadHelpVideos, markRoute, onOpenHelp, openHelp } from '@/lib/ayuda'
 import { applyReadingPrefs, installErrorReporting, trackPage } from '@/lib/ux'
 import { useAsync } from '@/lib/useAsync'
 import { publishDueContent } from '@/services/aprendizaje'
@@ -23,6 +24,7 @@ import { myPermissions, type CampusPermission } from '@/services/gestion'
 
 // Se descargan solo cuando hacen falta (no en el primer arranque).
 const CommandPalette = lazy(() => import('@/components/CommandPalette').then((m) => ({ default: m.CommandPalette })))
+const Ayuda = lazy(() => import('@/components/Ayuda').then((m) => ({ default: m.Ayuda })))
 const Onboarding = lazy(() => import('@/components/Onboarding').then((m) => ({ default: m.Onboarding })))
 const TeslaCelebration = lazy(() => import('@/components/TeslaCelebration').then((m) => ({ default: m.TeslaCelebration })))
 const SidebarRank = lazy(() => import('@/components/SidebarRank').then((m) => ({ default: m.SidebarRank })))
@@ -144,6 +146,7 @@ export function Shell() {
   const location = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [help, setHelp] = useState<{ topic: string | null } | null>(null)
   const searchUsed = useRef(false)
   if (searchOpen) searchUsed.current = true
   const updateAvailable = useUpdateAvailable()
@@ -153,6 +156,9 @@ export function Shell() {
   // Sincronización en segundo plano mientras la sesión está abierta.
   useEffect(() => startBackgroundSync(), [])
   useEffect(() => installErrorReporting(), [])
+  // Ayuda: se abre desde el botón, desde «¿Cómo se hace?» o desde la lista de primeros pasos.
+  useEffect(() => onOpenHelp((topic) => setHelp({ topic })), [])
+  useEffect(() => { void loadHelpVideos() }, [])
   // Docentes y personal: <html data-personal> activa las tablas compactas por defecto (Ajustes).
   const staff = !!profile && profile.role !== 'STUDENT' && profile.role !== 'GUARDIAN'
   useEffect(() => {
@@ -165,8 +171,9 @@ export function Shell() {
   // Cada pantalla: estadística de uso y publicación de lo programado.
   useEffect(() => {
     trackPage(location.pathname)
+    if (profile?.id) markRoute(profile.id, location.pathname)
     publishDueContent()
-  }, [location.pathname])
+  }, [location.pathname, profile?.id])
 
   // Los avisos push traen ?hijo=ID para abrir en el hijo correcto.
   const hijo = Number(params.get('hijo'))
@@ -234,6 +241,10 @@ export function Shell() {
           </button>
         )}
 
+        <button onClick={() => openHelp()} className={cn('flex items-center gap-2 rounded-lg border border-chispa/60 px-3 py-2 text-left text-[15px] font-bold text-chispa transition-colors hover:bg-chispa/15', canSearch ? 'mt-3' : 'mt-6')}>
+          <CircleHelp className="h-5 w-5" aria-hidden />¿Necesita ayuda?
+        </button>
+
         {profile.role === 'GUARDIAN' && children.length > 1 && (
           <div className="mt-8 px-1">
             <p className="mb-2 px-2 text-xs font-bold text-white/50">Viendo a</p>
@@ -278,10 +289,11 @@ export function Shell() {
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">
             <Escudo className="h-9 w-8 shrink-0" />
-            <p className="truncate font-display text-lg font-extrabold uppercase tracking-wide text-tinta">Campus Tesla</p>
+            <p className="truncate font-display text-[15px] font-extrabold uppercase leading-[1.05] text-tinta min-[400px]:text-lg min-[400px]:leading-normal min-[400px]:tracking-wide">Campus <span className="block min-[400px]:inline">Tesla</span></p>
           </div>
           <div className="flex items-center">
             {canSearch && <button onClick={() => setSearchOpen(true)} className="rounded-md p-2.5 text-texto-suave" aria-label="Buscar"><Search className="h-5 w-5" /></button>}
+            <button onClick={() => openHelp()} className="mr-0.5 inline-flex min-h-10 items-center gap-1 rounded-full bg-chispa-100 px-2.5 text-sm font-bold text-tinta" aria-label="Ayuda"><CircleHelp className="h-4 w-4" aria-hidden />Ayuda</button>
             <NavLink to="/notificaciones" className="rounded-md p-2.5 text-texto-suave" aria-label="Notificaciones"><Bell className="h-5 w-5" /></NavLink>
             <ThemeButton className="rounded-md p-2.5 text-texto-suave" />
           </div>
@@ -385,6 +397,7 @@ export function Shell() {
       )}
 
       {canSearch && searchUsed.current && <Suspense fallback={null}><CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} commands={items} /></Suspense>}
+      {help && <Suspense fallback={null}><Ayuda open topic={help.topic} onClose={() => setHelp(null)} /></Suspense>}
       <Suspense fallback={null}><Onboarding /></Suspense>
       <OfflineBanner />
       <ShortcutsHelp />

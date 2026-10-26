@@ -7,6 +7,7 @@ import { CourseCover, CourseTag } from '@/components/course'
 import { useAsync } from '@/lib/useAsync'
 import { formatDay, formatShort, formatTime, isoDay, limaToday, relativeDue } from '@/lib/format'
 import { PushPrompt } from '@/pages/NotificationsPage'
+import { PrimerosPasos } from '@/components/PrimerosPasos'
 import { teacherCourseProgress } from '@/services/progress'
 import { currentPeriod, listPeriods } from '@/services/notas'
 import { classroomLabel, listAssignmentsForOfferings, listStudentNames, listSubmissionsForAssignments, listTeacherOfferings } from '@/services/campus'
@@ -58,6 +59,7 @@ export default function TeacherHome() {
         today={today}
       />
       <PushPrompt />
+      <PrimerosPasos className="mb-6" />
 
       {error && <ErrorBox message={error} onRetry={() => void reload()} />}
       {loading ? <Loading shape="page" /> : data && (

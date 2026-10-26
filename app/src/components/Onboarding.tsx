@@ -5,6 +5,7 @@ import { useAuth } from '@/auth/AuthProvider'
 import { Button } from '@/components/ui'
 import { Illustration, type ArtName } from '@/components/illustrations'
 import { cn } from '@/lib/utils'
+import { onReplayTour } from '@/lib/ayuda'
 import type { Role } from '@/types'
 
 type Step = { art: ArtName; title: string; body: ReactNode; cta?: { label: string; to: string } }
@@ -38,6 +39,12 @@ function stepsFor(role: Role, name: string): Step[] {
   }
 }
 
+/** Antes del último paso, siempre se explica dónde está la Ayuda. */
+function withHelpStep(steps: Step[]): Step[] {
+  const help: Step = { art: 'chat', title: 'Si se pierde, toque «Ayuda»', body: 'Arriba encontrará el botón «Ayuda». Ahí están los pasos de cada tarea (justificar una falta, ver notas, entregar una tarea…) y los videos cortos del colegio. Puede volver a ver este recorrido desde ahí.' }
+  return [...steps.slice(0, -1), help, steps[steps.length - 1]]
+}
+
 const key = (id: string) => `campus_tour_done_${id}`
 
 export function Onboarding() {
@@ -54,8 +61,11 @@ export function Onboarding() {
     } catch { /* sin almacenamiento: no se muestra */ }
   }, [profile])
 
+  // «Ayuda → Ver otra vez el recorrido» lo vuelve a abrir desde el principio.
+  useEffect(() => onReplayTour(() => { setStep(0); setOpen(true) }), [])
+
   if (!open || !profile) return null
-  const steps = stepsFor(profile.role, profile.full_name?.split(' ')[0] ?? '')
+  const steps = withHelpStep(stepsFor(profile.role, profile.full_name?.split(' ')[0] ?? ''))
   const current = steps[step]
   const last = step === steps.length - 1
 

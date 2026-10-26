@@ -446,7 +446,7 @@ export default function MessagesPage() {
   const list = (
     <div>
       {loading ? <Loading /> : mine.length === 0 ? (
-        <div className="p-5"><Empty title="Sin conversaciones" art="chat" compact icon={<MessageCircle className="h-6 w-6" />}>Empieza una con “Nueva”.</Empty></div>
+        <div className="p-5"><Empty title="Sin conversaciones" art="chat" compact icon={<MessageCircle className="h-6 w-6" />}>Toque el botón «Nueva» para escribirle a un docente o a una familia.</Empty></div>
       ) : (
         <ul className="divide-y divide-linea">
           {mine.map((c) => {

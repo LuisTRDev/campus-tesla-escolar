@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Lock, Paperclip, Send, Trash2, Undo2, Unlock } from 'lucide-react'
 import { useAuth, useFocusStudent } from '@/auth/AuthProvider'
+import { AyudaLink } from '@/components/AyudaLink'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, PageHeader, Panel, Segmented, Select, Textarea } from '@/components/ui'
 import { TaskStateBadge, gradeText } from '@/components/course'
 import { FileDropzone, LinkListField, StoredFileCard, usePreview } from '@/components/files'
@@ -230,6 +231,7 @@ function StudentSubmit({ assignment, studentId, rubric }: { assignment: Assignme
             <div className="flex flex-wrap gap-2">
               <Button variant="accion" onClick={() => void onSubmit()} loading={busy} className={cn('min-h-12 px-6 text-base', busy && 'progress-fill')}><Send className="h-4 w-4" />{data ? 'Actualizar entrega' : 'Entregar tarea'}</Button>
               {data && data.status !== 'RETURNED' && <Button variant="ghost" onClick={() => setEditing(false)}>Cancelar</Button>}
+              <AyudaLink topic="entregar-tarea" />
             </div>
           </div>
         )}

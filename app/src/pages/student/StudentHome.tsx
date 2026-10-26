@@ -9,6 +9,7 @@ import { formatDay, isoDay, limaToday } from '@/lib/format'
 import { classroomLabel } from '@/services/campus'
 import { useStudentWork } from '@/services/useStudentWork'
 import { PushPrompt } from '@/pages/NotificationsPage'
+import { PrimerosPasos } from '@/components/PrimerosPasos'
 import { familyCourseProgress } from '@/services/progress'
 import { TeslaSummaryCard } from '@/components/tesla'
 
@@ -34,6 +35,7 @@ export default function StudentHome() {
     <>
       <GreetingHero name={selfStudent.first_name} subtitle={`${formatDay(limaToday())}. ${classroomLabel(selfStudent.classroom)}`} today={today} />
       <PushPrompt />
+      <PrimerosPasos className="mb-6" />
 
       {error && <ErrorBox message={error} onRetry={() => void reload()} />}
       {loading ? <Loading shape="page" /> : data && (

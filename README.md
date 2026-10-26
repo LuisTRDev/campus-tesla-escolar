@@ -519,6 +519,19 @@ Temporadas: Amor y Amistad (10–14 feb), inicio escolar (1–15 mar), Semana Sa
 
 Se apaga en el modo ahorro y con «menos movimiento» (queda la guirnalda quieta) y durante los exámenes. Para probar una temporada en un dispositivo: añadir `?tema=halloween` a la dirección (`?tema=ninguno` la quita). Para agregar una, suma una entrada en `TEMPORADAS` y su bloque de colores en `temporadas.css`.
 
+## Ayuda dentro de la app · script 28 (opcional)
+
+Pensado para familias y docentes que no están acostumbrados a la tecnología: la app enseña a usarse sin manuales.
+
+- **Botón «Ayuda» siempre visible** (arriba en el celular, «¿Necesita ayuda?» bajo el buscador en escritorio). Abre una lista de temas según el rol (justificar una falta, ver las notas, entregar una tarea, registrar notas, compartir un archivo de Drive, poner el campus en el celular…) y cada tema trae sus pasos numerados con los nombres reales de los botones, un dato útil y un atajo a la pantalla. Los textos viven en `src/lib/ayudaTemas.ts`.
+- **«¿Cómo se hace?»** junto a las tareas difíciles (`AyudaLink`): justificar, entregar tarea, crear tarea, registro de notas, responder un comunicado y cualquier campo de enlace de Drive abren la ayuda directo en ese tema.
+- **Videos del propio colegio:** en **Sistema → Ayuda** la dirección pega, por tema, el enlace de un video corto (YouTube «no listado» o Google Drive). Se ve dentro del botón Ayuda; los temas con video llevan un ícono de reproducir. Se guarda en `campus_private.settings` (clave `help_videos`) con las RPC `campus_help_videos()` y `set_campus_help_videos()` del script 28. Sin el script la ayuda funciona igual, solo sin videos (la pestaña avisa que falta ejecutarlo).
+- **Recorrido de bienvenida** repetible desde Ayuda → «Ver otra vez el recorrido de bienvenida»; ahora incluye un paso que explica dónde está la Ayuda.
+- **Primeros pasos:** tarjeta en el inicio de cada rol con una lista que se tilda sola (entrar, cambiar la contraseña, ver notas, leer un comunicado, activar avisos…) según lo que la persona hace; al completarla celebra y se puede ocultar. El progreso se guarda en el navegador de cada persona (`campus_primeros_pasos_<id>`), sin tablas nuevas.
+- **Estados vacíos que enseñan:** tareas, justificaciones, anuncios, mensajes y avisos dicen qué hacer en lugar de quedar en blanco.
+
+Para agregar un tema: suma una entrada en `HELP_TOPICS` (`ayudaTemas.ts`) con una clave en minúsculas; aparece solo en Sistema → Ayuda para pegarle un video. Los pasos citan botones reales: si cambias un nombre en la interfaz, cámbialo ahí también.
+
 ## Qué sigue
 
 Competencias transversales y comportamiento en la libreta, la plantilla oficial del SIAGIE (cuando el colegio comparta el formato exacto) y el campus en quechua.

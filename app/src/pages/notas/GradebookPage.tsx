@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, ArrowLeft, ClipboardList, Lock, MessageSquareText, Save, Sparkles, FileSpreadsheet } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
+import { AyudaLink } from '@/components/AyudaLink'
 import { Badge, Button, Empty, ErrorBox, Field, Loading, Modal, PageHeader, Panel, Segmented, Textarea } from '@/components/ui'
 import { CourseCover } from '@/components/course'
 import { LevelChip, LevelPicker } from '@/components/levels'
@@ -245,7 +246,8 @@ function Gradebook({ offeringId }: { offeringId: number }) {
         title={`Registro de ${offering.subject.name}`}
         subtitle={`${classroomLabel(offering.classroom)}. ${students.length} alumnos, ${competencies.length} competencias.`}
         action={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <AyudaLink topic="subir-notas" />
             <Button variant="secondary" onClick={() => void exportGradebook({ offering, period, competencies, students, cell })}><FileSpreadsheet className="h-4 w-4" />Excel</Button>
             {!readOnly && <Button variant="secondary" onClick={applySuggestions}><Sparkles className="h-4 w-4" />Completar con sugeridos</Button>}
             {!readOnly && <Button onClick={() => void onSave()} loading={saving} disabled={!dirty}><Save className="h-4 w-4" />Guardar{dirty ? ` (${drafts.size})` : ''}</Button>}

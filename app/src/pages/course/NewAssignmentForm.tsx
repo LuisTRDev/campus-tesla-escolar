@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AyudaLink } from '@/components/AyudaLink'
 import { Button, Field, Input, Segmented, Select, Textarea } from '@/components/ui'
 import { useToast } from '@/lib/toast'
 import { toMessage } from '@/lib/errors'
@@ -84,6 +85,7 @@ export function NewAssignmentForm({ offeringId, subjectId, onDone, defaultKind =
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <Segmented value={kind} onChange={setKind} options={[{ value: 'TASK', label: 'Tarea' }, { value: 'QUIZ', label: 'Evaluación en línea' }]} />
+      <AyudaLink topic="crear-tarea" className="-mt-2" />
       {kind === 'QUIZ' && <p className="-mt-2 text-sm text-texto-suave">Opción múltiple, verdadero o falso, relacionar y más, con corrección automática. Después de crearla agregas las preguntas.</p>}
       {hadDraft && <p className="rounded-lg bg-chispa-100 px-3 py-2 text-sm text-tinta">Recuperamos lo que estabas escribiendo.</p>}
       <Field label="Título"><Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} required /></Field>

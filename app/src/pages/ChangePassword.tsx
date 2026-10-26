@@ -5,6 +5,7 @@ import { useAuth } from '@/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { toMessage } from '@/lib/errors'
 import { useToast } from '@/lib/toast'
+import { markStep } from '@/lib/ayuda'
 
 export default function ChangePassword({ forced }: { forced?: boolean }) {
   const { profile, signOut } = useAuth()
@@ -25,6 +26,7 @@ export default function ChangePassword({ forced }: { forced?: boolean }) {
     const { error: updateError } = await supabase.auth.updateUser({ password, data: { must_change_password: false } })
     setBusy(false)
     if (updateError) return setError(toMessage(updateError, 'No se pudo cambiar la contraseña.'))
+    if (profile) markStep(profile.id, 'clave')
     toast('Contraseña actualizada.')
     navigate('/', { replace: true })
   }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Download, Paperclip, Trash2, XCircle } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
+import { AyudaLink } from '@/components/AyudaLink'
 import { Badge, Button, Empty, ErrorBox, Field, Loading, PageHeader, Panel, Segmented, Textarea } from '@/components/ui'
 import { Escudo } from '@/components/brand'
 import { SignaturePad } from '@/components/SignaturePad'
@@ -90,7 +91,10 @@ function ConsentForm({ circular, recipient, child, onDone }: { circular: Circula
           <SignaturePad onChange={setSignature} />
         </div>
       )}
-      <Button variant="accion" onClick={() => void submit()} loading={busy}>Enviar respuesta</Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="accion" onClick={() => void submit()} loading={busy}>Enviar respuesta</Button>
+        <AyudaLink topic="familia-comunicados" />
+      </div>
     </div>
   )
 }

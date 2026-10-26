@@ -113,7 +113,7 @@ export default function AnnouncementsPage() {
         )}
         <Panel title="Publicados" className={canPost ? '' : 'lg:col-span-2'}>
           {loading ? <Loading /> : !data?.items.length ? (
-            <Empty title="Todavía no hay anuncios" art="bell" icon={<Megaphone className="h-5 w-5" />} />
+            <Empty title="Todavía no hay anuncios" art="bell" icon={<Megaphone className="h-5 w-5" />}>{canPost ? 'Escriba un título y un mensaje en el cuadro de al lado y toque «Publicar anuncio».' : 'Cuando el colegio publique un aviso, lo verá aquí.'}</Empty>
           ) : (
             <div className="divide-y divide-linea">
               {data.items.map((item) => (

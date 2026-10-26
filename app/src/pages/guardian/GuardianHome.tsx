@@ -14,6 +14,7 @@ import { useStudentWork } from '@/services/useStudentWork'
 import { listCirculars, listRecipients } from '@/services/comunicados'
 import { isUnread, listConversations, listReads } from '@/services/mensajes'
 import { PushPrompt } from '@/pages/NotificationsPage'
+import { PrimerosPasos } from '@/components/PrimerosPasos'
 import { TeslaSummaryCard } from '@/components/tesla'
 import { IcoRetrato } from '@/components/icons'
 import type { AttendanceRow, NotificationRow, PensionRow, StudentLite } from '@/types'
@@ -241,6 +242,7 @@ export default function GuardianHome() {
     <>
       <GreetingHero name={profile?.full_name} subtitle={`Así va la semana de ${childName} · ${classroomLabel(activeChild.classroom)}. ${formatDay(today)}.`} today={todayItems} />
       <PushPrompt />
+      <PrimerosPasos className="mb-6" />
       {profile && <FamilyPending profileId={profile.id} />}
 
       <Link to="/expediente" className="btn-parche group mb-6 flex items-center gap-4 rounded-xl bg-tinta px-5 py-4 text-white transition-transform hover:-translate-y-0.5">

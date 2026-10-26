@@ -44,7 +44,11 @@ export default function TasksPage() {
       {error && <ErrorBox message={error} onRetry={() => void reload()} />}
       {loading ? <Loading /> : (
         <div className="space-y-6">
-          {nothing && <Empty title={filter === 'done' ? 'Todavía no hay entregas' : 'No hay tareas pendientes'} />}
+          {nothing && (
+            <Empty title={filter === 'done' ? 'Todavía no hay entregas' : '¡No hay tareas pendientes!'} art="tasks">
+              {filter === 'done' ? 'Cuando se entregue una tarea, aparecerá en esta lista. Cambie a «Por hacer» para ver lo que falta.' : 'Cuando un docente publique una tarea nueva, la verá aquí y le llegará un aviso.'}
+            </Empty>
+          )}
           {(filter === 'todo' || filter === 'all') && (
             <>
               <TaskList title="Atrasadas" tasks={groups.overdue} tone="alert" />

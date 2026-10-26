@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Check, FileCheck, Paperclip, Send, Trash2, X } from 'lucide-react'
 import { useAuth, useFocusStudent } from '@/auth/AuthProvider'
+import { AyudaLink } from '@/components/AyudaLink'
 import { Badge, Button, Empty, ErrorBox, Field, Input, Loading, PageHeader, Panel, Segmented, Textarea } from '@/components/ui'
 import { AttachmentInput, usePreview } from '@/components/files'
 import { useAsync } from '@/lib/useAsync'
@@ -61,7 +62,7 @@ function FamilyView() {
   if (!child) return <Empty title="Elige a tu hijo" art="tasks" />
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-      <Panel title={`Justificar a ${child.first_name ?? 'tu hijo'}`} className="h-fit">
+      <Panel title={`Justificar a ${child.first_name ?? 'tu hijo'}`} action={<AyudaLink topic="justificar" />} className="h-fit">
         <form onSubmit={submit} className="space-y-4">
           <Segmented value={form.kind} onChange={(v) => setForm({ ...form, kind: v })} options={[{ value: 'FALTA', label: 'Falta' }, { value: 'TARDANZA', label: 'Tardanza' }]} />
           <div className="grid grid-cols-2 gap-3">
@@ -78,7 +79,7 @@ function FamilyView() {
       </Panel>
       <Panel title="Enviadas">
         {error && <ErrorBox message={error} onRetry={() => void reload()} />}
-        {loading ? <Loading /> : !data?.length ? <Empty title="Sin justificaciones" art="tasks" compact /> : (
+        {loading ? <Loading /> : !data?.length ? <Empty title="Aún no ha enviado justificaciones" art="tasks" compact>Si su hijo faltó o llegó tarde, llene el formulario y toque «Enviar justificación». Aquí verá si fue aprobada.</Empty> : (
           <ul className="divide-y divide-linea">
             {data.map((j) => (
               <li key={j.id} className="py-3">
